@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+	  <meta charset="UTF-8">
+	  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	  <link rel="stylesheet" href="d3-hypertree-light.css" id="ldswitch">
+	  <script src="d3-hypertree.js"></script>
+	  <style>
+		@font-face {
+    font-family: "ParangoOtw01Bold-Regular";
+    src: url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.eot");
+    src: url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.eot?#iefix")format("embedded-opentype"),
+    url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.woff2")format("woff2"),
+    url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.woff")format("woff"),
+    url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.ttf")format("truetype"),
+    url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.svg#Parango OT W01 Bold")format("svg");
+}
+/* Top Navigation and Header */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.branding-header {
+	font-family: "ParangoOtw01Bold-Regular";
+  position: relative;
+  width: 100%;
+  background: #c9935b;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0.5rem 2rem;
+  gap: 1rem;
+  height: 71px;
+  z-index: 6;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.16); 
+}
+
+.contact-us {
+  color: white;
+  font-size: 1.25rem;
+  margin-left: auto;
+}
+
+.branding-header img {
+  height: 32px;
+  width: auto;
+  cursor: pointer;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.16);
+}
+
+.branding-header-large {
+  position: relative;
+  width: 100%;
+  background: #b21615;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0rem 1rem;
+  gap:1rem;
+  height: 200px;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.16);
+  z-index: 5;
+}
+
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 4rem;
+  height: 3rem;
+  cursor: pointer;
+  z-index: 1001;
+  position: relative;
+  touch-action: manipulation;
+  overflow: hidden;
+}
+
+.hamburger span {
+  display: block;
+  height: 4px;
+  background: white;
+  border-radius: 2px;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Animation when "open" class is applied */
+.hamburger.open span:nth-child(1) {
+  transform: translateY(22px) rotate(45deg);
+}
+
+.hamburger.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.open span:nth-child(3) {
+  transform: translateY(-22px) rotate(-45deg);
+}
+
+/* Sidebar menu */
+.sidebar {
+  font-family: "ParangoOtw01Bold-Regular";
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 70%;
+  max-width: 300px;
+  height: 100%;
+  background-color: #b21615;
+  color: white;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: right 0.3s ease-in-out;
+  z-index: 1000;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar ul li {  
+  margin-bottom: 1.5rem;
+}
+
+.sidebar ul li a {
+  color: white;
+  text-decoration: none;
+  font-size: 1.5rem;
+}
+
+.sidebar.active {
+  right: 0;
+}
+
+/* FLEX CONVERSION FOR FAMILY TREE SECTION WITH MATCHED HTML STRUCTURE */
+.family-tree-cannon {
+  background: #ffffff;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  overflow-x: auto;
+  width: 100%;
+}
+
+.family-tree-cannon .row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 1rem;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.family-tree-cannon .box {
+  background: #b21515;
+  color: white;
+  font-family: "SegoeUi-Bold", sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  padding: 0.75rem 1.25rem;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.family-tree-cannon .line {
+  height: 100%;
+  width: 2px;
+  background-color: #bf3c3c;
+  flex-shrink: 0;
+}
+
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .family-tree-cannon {
+    padding: 1rem;
+  }
+
+  .family-tree-cannon .box {
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .family-tree-cannon .line {
+    width: 1px;
+  }
+  .GalleryText {
+		display: none !important;
+	  }
+}
+
+.GalleryText {
+	font-family: "ParangoOtw01Bold-Regular";
+  color: #ffffff;
+  font-size: clamp(2rem, 5vw, 4.5rem);
+  margin-top: 0.5rem;
+  margin-left: auto;
+  text-align: center;
+}
+
+
+	  </style>
+	  </head>
+
+	  <!-- Footer/Header Icons and Branding -->
+    <header class="branding-header">
+	  <div class="contact-us">Contact Us:</div>
+      <a href="https://www.facebook.com/ThetaChiZK/"><img class="path-1" src="path-10.svg" alt="Facebook" /></a>
+      <a href="https://www.instagram.com/thetachizk/"><img class="path-2" src="path-20.svg" alt="Instagram" /></a>
+      <a href="tel:440-563-1851"><img class="path-3" src="path-30.svg" alt="Phone" /></a>
+    </header>
+
+	<header class="branding-header-large">
+      <div class="rectangle-1"></div>
+      <!-- Hamburger Menu Icon -->
+<div class="hamburger" onclick="toggleSidebar(this)">
+  <span></span>
+  <span></span>
+  <span></span>
+</div>
+
+<!-- Sidebar Menu -->
+<nav id="sidebar" class="sidebar">
+  <ul>
+    <br><br><br>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="Newsletter.html">Newsletter</a></li>
+    <li><a href="Gallery.html">Gallery</a></li>
+    <li><a href="Blog.html">Blog</a></li>
+    <li><a href="Rsvp.html">Anniversary</a></li>
+    <li><a href="FamilyTreeCannon.html">Family Trees</a></li>
+  </ul>
+</nav>
+	  <div class="empty"></div>
+	  <div class="empty"></div>
+	  <div class="empty"></div>
+	  <a href="index.html">
+        <img class="_248-zeta-kappa-ohio-northern-pdf-1" src="img/mainlogo.png" alt="Theta Chi Logo" style="padding-top: 1rem" />
+      </a>
+	  <div class="GalleryText">Family Trees</div>
+    </header>
+
+<body>
+<div class="family-tree-cannon">
+  <div class="row">
+	<a href="FamilyTreeCannon.html" style="text-decoration: none;">
+    <div class="box">Cannon</div>
+	</a>
+    <div class="line"></div>
+	<a href="FamilyTrees/Farst.html" style="text-decoration: none;">
+    <div class="box">Farst</div>
+	</a>
+    <div class="line"></div>
+	<a href="FamilyTrees/Knust.html" style="text-decoration: none;">
+    <div class="box">Knust</div>
+	</a>
+    <div class="line"></div>
+	<a href="FamilyTrees/Franz.html" style="text-decoration: none;">
+    <div class="box">Franz</div>
+	</a>
+    <div class="line"></div>
+	<a href="FamilyTrees/King.html" style="text-decoration: none;">
+    <div class="box">King</div>
+	</a>
+    <div class="line"></div>
+	<a href="FamilyTrees/Storch.html" style="text-decoration: none;">
+    <div class="box">Storch</div>
+	</a>
+    <div class="line"></div>
+	<a href="FamilyTrees/White.html" style="text-decoration: none;">
+    <div class="box">White</div>
+	</a>
+    <div class="line"></div>
+	<a href="FamilyTrees/McEwen.html" style="text-decoration: none;">
+    <div class="box">McEwen</div>
+	</a>
+    <div class="line"></div>
+	<a href="FamilyTrees/Huhn.html" style="text-decoration: none;">
+    <div class="box">Huhn</div>
+	</a>
+    <div class="line"></div>
+	<a href="FamilyTrees/Livezy.html" style="text-decoration: none;">
+    <div class="box">Livezy</div>
+	</a>
+    <div class="line"></div>
+	<a href="FamilyTrees/Hulton.html" style="text-decoration: none;">
+    <div class="box">Hulton</div>
+	</a>
+    <div class="line"></div>
+	<a href="FamilyTrees/Yeager.html" style="text-decoration: none;">
+    <div class="box">Yeager</div>
+	</a>
+    <div class="line"></div>
+	<a href="FamilyTrees/Pyle.html" style="text-decoration: none;">
+    <div class="box">Pyle</div>
+	</a>
+    <div class="line"></div>
+	<a href="FamilyTrees/Cooney.html" style="text-decoration: none;">
+    <div class="box">Cooney</div>
+	</a>
+    <div class="line"></div>
+	<a href="FamilyTrees/Hunt.html" style="text-decoration: none;">
+    <div class="box">Hunt</div>
+	</a>
+    <div class="line"></div>
+	<a href="FamilyTrees/Bryson.html" style="text-decoration: none;">
+    <div class="box">Bryson</div>
+	</a>
+  </div>
+</body>
+  <body>
+  <div id="hypertree-container"></div>
+	<script>  
+        async function loadCSV() {
+      const response = await fetch("Cannon/cannon.csv");
+      const text = await response.text();
+      return text.split("\n").map(row => row.split(",").map(cell => cell.trim()));
+    }
+
+    function buildTree(edges) {
+      let nodes = {};
+      edges.forEach(([parent, child]) => {
+        if (!nodes[parent]) nodes[parent] = { name: parent, children: [] };
+        if (!nodes[child]) nodes[child] = { name: child, children: [] };
+        nodes[parent].children.push(nodes[child]);
+      });
+      return nodes[edges[0][0]];
+    }
+
+    async function createHypertree() {
+      const container = document.getElementById("hypertree-container");
+      if (!container) {
+        console.error("Hypertree container not found!");
+        return;
+      }
+
+      const edges = await loadCSV();
+      const treeData = buildTree(edges);
+
+      const ht = new hyt.Hypertree(
+        { parent: container },
+        {
+          langInitBFS: (ht, n) => {
+            n.precalc.label = n.data.name;
+          },
+          dataloader: ok => ok(treeData),
+          interaction: {
+            λbounds: [0.05, 2],
+            onZoom: (ht, λ) => {
+              ht.hyper.updateScale(Math.exp(λ));
+            }
+          }
+        }
+      );
+
+      ht.initPromise
+        .then(() => new Promise((ok, err) => ht.animateUp(ok, err)))
+        .then(() => ht.drawDetailFrame());
+    }
+
+    // Wait until DOM is fully loaded
+    document.addEventListener("DOMContentLoaded", createHypertree);
+    </script>
+  <script>
+  function toggleSidebar(button) {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('active');
+    button.classList.toggle('open');
+  }
+  </script>
+</div>
+</body>
+</html>
