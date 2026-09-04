@@ -1,0 +1,476 @@
+.home-page,
+.home-page * {
+  box-sizing: border-box;
+}
+.home-page {
+  background: #ffffff;
+  height: 2555px;
+  position: relative;
+  overflow: hidden;
+}
+.rush {
+  border-style: solid;
+  border-color: #707070;
+  border-width: 1px;
+  width: 1920px;
+  height: 960px;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  object-fit: cover;
+}
+.rectangle-36 {
+  background: #bf3d3d;
+  border-radius: 64px;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 1px;
+  opacity: 0.75;
+  width: 578px;
+  height: 296px;
+  position: absolute;
+  left: 664px;
+  top: 184px;
+}
+.newsletter-is-out-give-it-a-read {
+  color: #ffffff;
+  text-align: center;
+  font-family: "ParangoOtw01Bold-Regular", sans-serif;
+  font-size: 72px;
+  font-weight: 400;
+  position: absolute;
+  left: 385px;
+  top: 276px;
+  width: 1150px;
+  -webkit-text-stroke: 1px transparent;
+}
+.rectangle-37 {
+  background: #000000;
+  border-radius: 28px;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 1px;
+  width: 280px;
+  height: 107px;
+  position: absolute;
+  left: 820px;
+  top: 650px;
+}
+.newsletter {
+  color: #ffffff;
+  text-align: center;
+  font-family: "ParangoOtw01Bold-Regular", sans-serif;
+  font-size: 48px;
+  font-weight: 400;
+  position: absolute;
+  left: 828px;
+  top: 674px;
+  width: 262px;
+  -webkit-text-stroke: 1px transparent;
+}
+.oxihq {
+  border-style: solid;
+  border-color: #707070;
+  border-width: 1px;
+  opacity: 0.75;
+  width: 1920px;
+  height: 800px;
+  position: absolute;
+  left: 0px;
+  top: 961px;
+  object-fit: cover;
+}
+.gallery {
+  border-style: solid;
+  border-color: #707070;
+  border-width: 1px;
+  width: 590px;
+  height: 442px;
+  position: absolute;
+  left: 27px;
+  top: 1165px;
+  object-fit: cover;
+}
+.blog {
+  border-style: solid;
+  border-color: #707070;
+  border-width: 1px;
+  width: 587px;
+  height: 442px;
+  position: absolute;
+  left: 669px;
+  top: 1165px;
+  object-fit: cover;
+}
+.rsvp {
+  border-style: solid;
+  border-color: #707070;
+  border-width: 1px;
+  width: 587px;
+  height: 442px;
+  position: absolute;
+  left: 1306px;
+  top: 1165px;
+  object-fit: cover;
+}
+.rectangle-38 {
+  background: #b83636;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 1px;
+  width: 396px;
+  height: 272px;
+  position: absolute;
+  left: 27px;
+  top: 1335px;
+}
+.rectangle-39 {
+  background: #b83636;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 1px;
+  width: 396px;
+  height: 272px;
+  position: absolute;
+  left: 669px;
+  top: 1335px;
+}
+.rectangle-40 {
+  background: #b83636;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 1px;
+  width: 396px;
+  height: 272px;
+  position: absolute;
+  left: 1306px;
+  top: 1335px;
+}
+.rectangle-41 {
+  border-radius: 13px;
+  border-style: solid;
+  border-color: #ffffff;
+  border-width: 2px;
+  width: 263px;
+  height: 78px;
+  position: absolute;
+  left: 45px;
+  top: 1502px;
+}
+.gallery2 {
+  color: #ffffff;
+  text-align: center;
+  font-family: "ParangoOtw01Bold-Regular", sans-serif;
+  font-size: 36px;
+  font-weight: 400;
+  position: absolute;
+  left: 68px;
+  top: 1520px;
+  width: 217px;
+  -webkit-text-stroke: 1px transparent;
+}
+.rectangle-42 {
+  border-radius: 13px;
+  border-style: solid;
+  border-color: #ffffff;
+  border-width: 2px;
+  width: 263px;
+  height: 78px;
+  position: absolute;
+  left: 685px;
+  top: 1502px;
+}
+.blog2 {
+  color: #ffffff;
+  text-align: center;
+  font-family: "ParangoOtw01Bold-Regular", sans-serif;
+  font-size: 36px;
+  font-weight: 400;
+  position: absolute;
+  left: 708px;
+  top: 1520px;
+  width: 217px;
+  -webkit-text-stroke: 1px transparent;
+}
+.rectangle-43 {
+  border-radius: 13px;
+  border-style: solid;
+  border-color: #ffffff;
+  border-width: 2px;
+  width: 263px;
+  height: 78px;
+  position: absolute;
+  left: 1325px;
+  top: 1502px;
+}
+.rsvp-form {
+  color: #ffffff;
+  text-align: center;
+  font-family: "ParangoOtw01Bold-Regular", sans-serif;
+  font-size: 36px;
+  font-weight: 400;
+  position: absolute;
+  left: 1348px;
+  top: 1520px;
+  width: 217px;
+  -webkit-text-stroke: 1px transparent;
+}
+.decades-of-brotherhood-in-one-convenient-place {
+  color: #ffffff;
+  text-align: left;
+  font-family: "ParangoOtw01Bold-Regular", sans-serif;
+  font-size: 36px;
+  font-weight: 400;
+  position: absolute;
+  left: 45px;
+  top: 1196px;
+  width: 364px;
+  -webkit-text-stroke: 1px transparent;
+}
+.wonderful-advice-stories-from-our-own {
+  color: #ffffff;
+  text-align: left;
+  font-family: "ParangoOtw01Bold-Regular", sans-serif;
+  font-size: 36px;
+  font-weight: 400;
+  position: absolute;
+  left: 685px;
+  top: 1196px;
+  width: 364px;
+  -webkit-text-stroke: 1px transparent;
+}
+.rsvp-for-cafe-theta-chi-today {
+  color: #ffffff;
+  text-align: left;
+  font-family: "ParangoOtw01Bold-Regular", sans-serif;
+  font-size: 36px;
+  font-weight: 400;
+  position: absolute;
+  left: 1325px;
+  top: 1196px;
+  width: 364px;
+  -webkit-text-stroke: 1px transparent;
+}
+.line-15 {
+  margin-top: -6px;
+  border-style: solid;
+  border-color: #d5ac82;
+  border-width: 6px 0 0 0;
+  width: 97px;
+  height: 0px;
+  position: absolute;
+  left: 45.5px;
+  top: 1305.5px;
+}
+.line-16 {
+  margin-top: -6px;
+  border-style: solid;
+  border-color: #d5ac82;
+  border-width: 6px 0 0 0;
+  width: 97px;
+  height: 0px;
+  position: absolute;
+  left: 685px;
+  top: 1305.5px;
+}
+.line-17 {
+  margin-top: -6px;
+  border-style: solid;
+  border-color: #d5ac82;
+  border-width: 6px 0 0 0;
+  width: 97px;
+  height: 0px;
+  position: absolute;
+  left: 1325px;
+  top: 1305.5px;
+}
+.we-have-a-gallery-with-dozens-of-photos-from-the-past-few-years-come-see-what-we-have-in-store {
+  color: #ffffff;
+  text-align: left;
+  font-family: "TimesNewRoman-Regular", sans-serif;
+  font-size: 24px;
+  font-weight: 400;
+  position: absolute;
+  left: 46px;
+  top: 1361px;
+  width: 339px;
+  -webkit-text-stroke: 1px transparent;
+}
+.our-new-blog-is-a-good-opportunity-for-brothers-and-alumni-to-share-their-experiences-and-thoughts {
+  color: #ffffff;
+  text-align: left;
+  font-family: "TimesNewRoman-Regular", sans-serif;
+  font-size: 24px;
+  font-weight: 400;
+  position: absolute;
+  left: 685px;
+  top: 1364px;
+  width: 339px;
+  -webkit-text-stroke: 1px transparent;
+}
+.cafe-theta-chi-is-happening-march-1st-this-year-rsvp-today-we-d-love-to-have-you-there {
+  color: #ffffff;
+  text-align: left;
+  font-family: "TimesNewRoman-Regular", sans-serif;
+  font-size: 24px;
+  font-weight: 400;
+  position: absolute;
+  left: 1325px;
+  top: 1361px;
+  width: 339px;
+  -webkit-text-stroke: 1px transparent;
+}
+.shawty-trifling {
+  border-style: solid;
+  border-color: #707070;
+  border-width: 1px;
+  width: 1920px;
+  height: 800px;
+  position: absolute;
+  left: 0px;
+  top: 1755px;
+  object-fit: cover;
+}
+.rectangle-44 {
+  background: #000000;
+  border-radius: 64px;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 1px;
+  opacity: 0.95;
+  width: 725px;
+  height: 263px;
+  position: absolute;
+  left: 600px;
+  top: 1892px;
+}
+.wanna-see-how-your-family-has-grown {
+  color: #ffffff;
+  text-align: center;
+  font-family: "ParangoOtw01Bold-Regular", sans-serif;
+  font-size: 72px;
+  font-weight: 400;
+  position: absolute;
+  left: 600px;
+  top: 1937px;
+  width: 744px;
+  -webkit-text-stroke: 1px transparent;
+}
+.rectangle-45 {
+  background: #b83636;
+  border-radius: 43px;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 1px;
+  opacity: 0.95;
+  width: 339px;
+  height: 113px;
+  position: absolute;
+  left: 796px;
+  top: 2261px;
+}
+.family-trees {
+  color: #ffffff;
+  text-align: center;
+  font-family: "ParangoOtw01Bold-Regular", sans-serif;
+  font-size: 48px;
+  font-weight: 400;
+  position: absolute;
+  left: 681px;
+  top: 2284px;
+  width: 583px;
+  -webkit-text-stroke: 1px transparent;
+}
+.rectangle-1 {
+  background: #ab0000;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 1px;
+  opacity: 0.76;
+  width: 1920px;
+  height: 181px;
+  position: absolute;
+  left: 0px;
+  top: 71px;
+  box-shadow: 0px 3px 3px 0px rgba(0, 0, 0, 0.16);
+}
+._248-zeta-kappa-ohio-northern-pdf-1 {
+  border-style: solid;
+  border-color: transparent;
+  border-width: 1px;
+  width: 255px;
+  height: 255px;
+  position: absolute;
+  left: 169px;
+  top: 43px;
+  object-fit: cover;
+  aspect-ratio: 1;
+}
+.hamburber {
+  height: auto;
+  position: absolute;
+  left: 46.5px;
+  top: 131.5px;
+  overflow: visible;
+}
+.rectangle-2 {
+  background: #ffffff;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 1px;
+  width: 1920px;
+  height: 71px;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+}
+.rectangle-16 {
+  background: #c9935b;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 1px;
+  opacity: 0.76;
+  width: 1920px;
+  height: 71px;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  box-shadow: 0px 3px 3px 0px rgba(0, 0, 0, 0.16);
+}
+.path-1 {
+  width: 52px;
+  height: 52px;
+  position: absolute;
+  left: 1743.98px;
+  top: 9px;
+  overflow: visible;
+}
+.path-2 {
+  width: 51px;
+  height: 51px;
+  position: absolute;
+  left: 1664.98px;
+  top: 9px;
+  overflow: visible;
+}
+.path-3 {
+  width: 51.02px;
+  height: 51px;
+  position: absolute;
+  left: 1833.98px;
+  top: 9px;
+  overflow: visible;
+}
+.contact-us {
+  color: #ffffff;
+  text-align: left;
+  font-family: "ParangoOtw03Regular-Regular", sans-serif;
+  font-size: 24px;
+  font-weight: 400;
+  position: absolute;
+  left: 1489px;
+  top: 19px;
+  width: 138px;
+  -webkit-text-stroke: 1px transparent;
+}
+

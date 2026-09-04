@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ZK Blog</title>
+  <!-- <link rel="stylesheet" href="./styleNewsletter.css"> -->
+  <link rel="icon" type="image/x-icon" href="img/icon.png">
+  <style>
+	@font-face {
+    font-family: "ParangoOtw01Bold-Regular";
+    src: url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.eot");
+    src: url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.eot?#iefix")format("embedded-opentype"),
+    url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.woff2")format("woff2"),
+    url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.woff")format("woff"),
+    url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.ttf")format("truetype"),
+    url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.svg#Parango OT W01 Bold")format("svg");
+}
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Times New Roman", serif;
+      background-color: #fff;
+    }
+
+    .branding-header {
+  position: relative;
+  width: 100%;
+  background: #c9935b;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0.5rem 2rem;
+  gap: 1rem;
+  height: 71px;
+  z-index: 6;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.16); 
+}
+
+.contact-us {
+  color: white;
+  font-size: 1.25rem;
+  margin-left: auto;
+  font-family: "ParangoOtw01Bold-Regular", sans-serif;
+}
+
+.branding-header img {
+  height: 32px;
+  width: auto;
+  cursor: pointer;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.16);
+}
+
+.branding-header-large {
+  position: relative;
+  width: 100%;
+  background: #b21615;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0rem 1rem;
+  gap:1rem;
+  height: 200px;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.16);
+  z-index: 5;
+}
+
+    .hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 4rem;
+  height: 3rem;
+  cursor: pointer;
+  z-index: 1001;
+  position: relative;
+  touch-action: manipulation;
+  overflow: hidden;
+}
+
+.hamburger span {
+  display: block;
+  height: 4px;
+  background: white;
+  border-radius: 2px;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Animation when "open" class is applied */
+.hamburger.open span:nth-child(1) {
+  transform: translateY(22px) rotate(45deg);
+}
+
+.hamburger.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.open span:nth-child(3) {
+  transform: translateY(-22px) rotate(-45deg);
+}
+
+
+    .sidebar {
+	font-family: "ParangoOTW01Bold-Regular", sans-serif;
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: 70%;
+      max-width: 300px;
+      height: 100%;
+      background: #b21615;
+      color: white;
+      padding: 2rem;
+      transition: right 0.3s ease;
+      z-index: 1000;
+    }
+
+    .red-section {
+      background-color: #b21615; /* Light red background */
+    border-radius: 12px; /* Rounded edges */
+    padding: 2rem; /* Internal spacing */
+    box-shadow: 0 2px 8px rgb(0, 0, 0); /* Subtle shadow for depth */
+    margin: 1rem 0; /* External spacing */
+    color: white
+
+    }
+
+    .sidebar.active {
+      right: 0;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .sidebar ul li {
+      margin-bottom: 1.5rem;
+    }
+
+    .sidebar ul li a {
+      color: white;
+      text-decoration: none;
+      font-size: 1.5rem;
+    }
+
+    .main-content {
+      padding: 2rem;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .section {
+      margin-bottom: 3rem;
+    }
+
+    .flex-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+
+    .flex-row img {
+      max-width: 48%;
+      height: auto;
+    }
+
+    .text-block {
+      flex: 1;
+      min-width: 250px;
+      font-size: 1.25rem;
+      line-height: 1.6;
+    }
+
+    h1 {
+      font-family: "ParangoOTW01Bold-Regular", sans-serif;
+      font-size: 48px;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    h2 {
+      font-family: "ParangoOTW01Bold-Regular", sans-serif;
+      font-size: 36px;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .flex-row {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .flex-row img,
+      .text-block {
+        max-width: 100%;
+      }
+	  .GalleryText {
+		display: none !important;
+	  }
+    }
+	.GalleryText {
+		font-family: "ParangoOtw01Bold-Regular", sans-serif;
+  color: #ffffff;
+  font-size: clamp(2rem, 5vw, 4.5rem);
+  margin-top: 0.5rem;
+  margin-left: auto;
+}
+  </style>
+  <script>
+    function toggleSidebar(el) {
+      el.classList.toggle("open");
+      document.getElementById("sidebar").classList.toggle("active");
+    }
+  </script>
+</head>
+<body>
+  <!-- Footer/Header Icons and Branding -->
+    <header class="branding-header">
+	  <div class="contact-us">Contact Us:</div>
+      <a href="https://www.facebook.com/ThetaChiZK/"><img class="path-1" src="path-10.svg" alt="Facebook" /></a>
+      <a href="https://www.instagram.com/onuthetachi/"><img class="path-2" src="path-20.svg" alt="Instagram" /></a>
+      <a href="tel:440-563-1851"><img class="path-3" src="path-30.svg" alt="Phone" /></a>
+    </header>
+
+	<header class="branding-header-large">
+      <div class="rectangle-1"></div>
+      <!-- Hamburger Menu Icon -->
+<div class="hamburger" onclick="toggleSidebar(this)">
+  <span></span>
+  <span></span>
+  <span></span>
+</div>
+
+<!-- Sidebar Menu -->
+<nav id="sidebar" class="sidebar">
+  <ul>
+    <br><br><br>
+    <li><a href="index.html">Home</a></li>
+    <li><a href="Newsletter.html">Newsletter</a></li>
+    <li><a href="Gallery.html">Gallery</a></li>
+    <li><a href="Blog.html">Blog</a></li>
+    <!--<li><a href="Rsvp.html">Anniversary RSVP</a></li>/-->
+    <li><a href="FamilyTree.html">Family Trees</a></li>
+  </ul>
+</nav>
+	  <div class="empty"></div>
+	  <div class="empty"></div>
+	  <div class="empty"></div>
+	  <a href="index.html">
+        <img class="_248-zeta-kappa-ohio-northern-pdf-1" src="img/mainlogo.png" alt="Theta Chi Logo" style="padding-top: 1rem" />
+      </a>
+	  <div class="GalleryText">Newsletter</div>
+    </header>
+
+  <main class="main-content">
+    <div style="padding-top: 2.5%; text-align: center;">
+  <img class="logo" src="img/Theta Chi Fall 2025 Header.jpg" alt="Newsletter Header" style="width: 80%; height: auto;">
+</div>
+    <div class="section  red-section">
+      <h1>Theta Chi Zeta Kappa Newsletter: Fall 2025</h1>
+      <div class="text-block">
+        The Brothers of Theta Chi Fraternity are happy to present the Fall 2025 edition of the Zeta Kappa Newsletter! In this issue, read about how well the Zeta Kappa Chapter did last Fall semester and get info on upcoming events for next Spring. And keep an eye out for future editions, with even more news by visiting <a href="https://www.facebook.com/ThetaChiZK/">@Theta Chi - Zeta Kappa on Facebook</a> or <a href="https://www.instagram.com/thetachizk/">@thetachizk on Instagram!</a>
+      </div>
+    </div>
+
+    <div class="section flex-row">
+      <div class="text-block">
+        <h2>Recruitment</h2>
+     The brothers of Zeta Kappa did a fantastic job with Recruitment last Fall! With events ranging from classics like Game Night and Bowling to newbies such as Volleyball / Cookout and Blitzball, the chapter was able to close, bid, and educate a total of 3 Pledges, with a retention rate of 100%, as well as many new connections for future recruitment. The chapter is now sitting at a total of 28 active members. With that, here’s a warm welcome and shout out to the Fall Class of 2025! Welcome Brother William Lewis, Gabe Benton, and Violet Phillips!
+      </div>
+      <img src="img/Fall_2025_Class.jpg" alt="Layout Example">
+    </div>
+
+    <div class="title section red-section flex-row">
+      <img src="img/Service_Fall_2025.png" alt="Chapter Image">
+      <div class="text-block">
+        <h2>Philanthropic Events/Community Service</h2>
+        When it comes to Community Service and Philanthropic events, the Brothers of Theta Chi are always willing to lend an assisting hand! Last Fall, the Brothers of Zeta Kappa Chapter joined with the Hardin County Historical Museums and Phi Alpha Theta to host a Haunted Museum event. The Brothers dressed up in Halloween costumes to scare guests to help raise money for the Hardin County Haunted Museum! In addition to this the Brothers of Zeta Kappa Chapter hosted their annual Rock The Tundra event, but this time having Alpha Xi Delta, the American Institute of Graphic Arts, the Biology Student Association, Phi Mu Alpha to help sell plants, food, drinks, posters, and token bags. We were able to raise $1,230! This money helps support our philanthropies, the United Service Organizations and Music Will! 
+          <br><br>
+The Zeta Kappa chapter is also proud to announce that in the Fall semester we partnered with Wreaths Across America and raised over $900 and volunteered to put wreaths on veteran’s graves. We are always happy to give back to our veterans and perform this duty to our committee.
+          <br><br>
+Looking forward, keep an eye out for updates on Theta Chi’s annual “Cafe Theta Chi” charity cafe, which will be held at the Theta Chi house! Come enjoy some home cooked meals, beverages, coffee, and milkshakes! (Date and Time Coming Soon)
+
+      </div>
+    </div>
+
+    <div class="section flex-row">
+      <div class="text-block">
+        <h2>Living Brotherhood</h2>
+        The past Fall semester kept up with the Chapter focusing on strengthening their Brotherhood with events such as watching movies or shows, going on weekly trips to the Fillian Station in Kenton OH, visiting Sheetz as a group, or watching sports out in the Hut! All of these events prove that Theta Chi is built upon the Brotherhood.
+          <br><br>
+        Three of our brothers also had the exclusive opportunity to attend an experience through our International Headquarters. Brothers KJ Durand, Pablo Frontera-Mendez, and James Plott traveled to our headquarters in Indianapolis to discuss the management of non-profit organizations. Only eight of our brothers internationally were selected, which makes this experience particularly exclusive. At the conclusion of the experience, all three of them were bestowed one of the highest honors our chapter can give a member: the Resolute Man badge. They join the ranks among brothers both locally and internationally as the true role models of our chapter.
+      </div>
+      <img src="img/Brotherhood_Fall_2025.jpg" alt="Layout Example">
+    </div>
+
+    <div class="title section red-section flex-row">
+      <img src="img/Scholarship_Fall_2025.jpg" alt="Chapter Image">
+      <div class="text-block">
+        <h2>Scholarship Highlights</h2>
+        The Zeta Kappa Chapter absolutely decimated it academically last Fall! With a term average GPA of 3.31, and a cumulative of 3.40, the Brothers are knocking it out of the park. In comparison, the ONU All Men’s Average GPA sits at 3.12, while the ONU All Greek Average GPA of 3.11. They are definitely crushing expectations and pulling those averages up. Special thanks to the many 4.0’s within the Chapter this semester! 
+      </div>
+    </div>
+
+    <div class="section flex-row">
+      <div class="text-block">
+        <h2>Alumni Engagement</h2>
+          During the Fall semester the Zeta Kappa chapter had a blast during homecoming with alumni coming out to see the homecoming football game and at the Zeta Kappa tailgate! We are preparing for the 60th Anniversary on April 10th - 12th. Be sure to get your <a href="Rsvp.html">registrations</a> in on time to come and join!
+      </div>
+      <img src="img/Alumni_Fall_2025.jpg" alt="Layout Example">
+    </div>
+
+<div class="title section red-section flex-row">
+        <img src="img/Rush_Spring_2026.png" alt="Layout Example">
+      <div class="text-block">
+        <h2>Schedule</h2>
+        The Zeta Kappa Chapter has many important events coming up:
+          <li> <b> Spring 2026 Rush</b>: January 21st - February 4th
+          <li> <b> Bid Handout</b>: February 4th 5pm 
+          <li> <b> Pledge Ceremony</b>: February 6th 7pm
+          <li> <b> Big Brother Ceremony</b>: February 22nd 1pm 
+          <li> <b> Spring Break </b>: March 7th-15th
+          <li> <b> Cafe Theta Chi</b>: Tenatively March 21st
+          <li> <b> Initiation</b>: March 27th 6pm 
+          <li> <b> 60th Anniversary</b>: April 10th-12th
+          <li> <b> Greek Week</b>: April 12th-18th
+          <li> <b> Alumni Ceremony</b>: May 2nd
+          <li> <b> Finals Week</b>: May 11th-15th
+          <li> <b> Graduation</b>: May 16th
+
+        </div>
+    </div>
+
+    <div class="title section red-section flex-row">
+      <img src="img/Conclusion_Fall_2025.jpg" alt="Chapter Image">
+      <div class="text-block">
+        <h2>Conclusion</h2>
+          Thanks for reading the Fall 2025 issue of the Zeta Kappa Newsletter. Look out for future issues on here and on our  <a href="https://www.facebook.com/ThetaChiZK/">Facebook</a> and <a href="https://www.instagram.com/thetachizk/">Instagram! </a>
+      </div>
+    </div>
+
+  </main>
+</body>
+</html>

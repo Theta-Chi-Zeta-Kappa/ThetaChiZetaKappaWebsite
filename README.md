@@ -1,8 +1,6 @@
 # Zeta Kappa Family Tree — Website-Integrated v13
 
-This package integrates the Version 11 live family-tree viewer with the published Zeta Kappa website header and hamburger navigation.
-
-Version 13 explicitly centers the member-details dialog and removes all visitor-facing data reload controls. The page performs one automatic live-data request when it loads. Visitors cannot manually select a workbook, enter another database URL, or trigger repeated refreshes from the interface.
+This update brings a partially integrated designed family tree system to replace the existing setup the website was using. 
 
 ## Install
 
