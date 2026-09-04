@@ -1,155 +1,122 @@
 <!DOCTYPE html>
+
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ZK Blog</title>
-    <link rel="icon" type="image/x-icon" href="img/icon.png">
-	<link rel="stylesheet" href="./styleBlog.css">
-  </head>
-  <body>
-    <!-- Footer/Header Icons and Branding -->
-    <header class="branding-header">
-	  <div class="contact-us">Contact Us:</div>
-      <a href="https://www.facebook.com/ThetaChiZK/"><img class="path-1" src="path-10.svg" alt="Facebook" /></a>
-      <a href="https://www.instagram.com/onuthetachi/"><img class="path-2" src="path-20.svg" alt="Instagram" /></a>
-      <a href="tel:440-563-1851"><img class="path-3" src="path-30.svg" alt="Phone" /></a>
-    </header>
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ZK Blog</title>
+<link href="assets/img/icon.png" rel="icon" type="image/x-icon"/>
 
-	<header class="branding-header-large">
-      <div class="rectangle-1"></div>
-      <!-- Hamburger Menu Icon -->
+<link href="css/base.css" rel="stylesheet"/><link href="css/blog.css" rel="stylesheet"/></head>
+<body>
+<!-- Footer/Header Icons and Branding -->
+<header class="branding-header">
+<div class="contact-us">Contact Us:</div>
+<a href="https://www.facebook.com/ThetaChiZK/"><img alt="Facebook" class="path-1" src="assets/icons/path-10.svg"/></a>
+<a href="https://www.instagram.com/onuthetachi/"><img alt="Instagram" class="path-2" src="assets/icons/path-20.svg"/></a>
+<a href="tel:440-563-1851"><img alt="Phone" class="path-3" src="assets/icons/path-30.svg"/></a>
+</header>
+<header class="branding-header-large">
+<div class="rectangle-1"></div>
+<!-- Hamburger Menu Icon -->
 <div class="hamburger" onclick="toggleSidebar(this)">
-  <span></span>
-  <span></span>
-  <span></span>
+<span></span>
+<span></span>
+<span></span>
 </div>
-
 <!-- Sidebar Menu -->
-<nav id="sidebar" class="sidebar">
-  <ul>
-    <br><br><br>
-    <li><a href="index.html">Home</a></li>
-    <li><a href="Newsletter.html">Newsletter</a></li>
-    <li><a href="Gallery.html">Gallery</a></li>
-    <li><a href="Blog.html">Blog</a></li>
-    <!--<li><a href="Rsvp.html">Anniversary RSVP</a></li>/-->
-    <li><a href="FamilyTree.html">Family Trees</a></li>
-  </ul>
+<nav class="sidebar" id="sidebar">
+<ul>
+<br/><br/><br/>
+<li><a href="index.html">Home</a></li>
+<li><a href="Newsletter.html">Newsletter</a></li>
+<li><a href="Gallery.html">Gallery</a></li>
+<li><a href="Blog.html">Blog</a></li>
+<!--<li><a href="Rsvp.html">Anniversary RSVP</a></li>/-->
+<li><a href="FamilyTree.html">Family Trees</a></li>
+</ul>
 </nav>
-	  <div class="empty"></div>
-	  <div class="empty"></div>
-	  <div class="empty"></div>
-	  <a href="index.html">
-        <img class="_248-zeta-kappa-ohio-northern-pdf-1" src="img/mainlogo.png" alt="Theta Chi Logo" style="padding-top: 1rem" />
-      </a>
-	  <div class="gallery-text">Blog</div>
-    </header>
-
-   <main class="blog">
-      <section class="blog-entry">
-        <img
-          src="img/Theta Chi Fall 2025 Header.jpg"
-          alt="Newsletter Cover"
-          class="blog-image"
-        />
-        <div class="entry-content">
-          <a href="Newsletter.html">
-          <div class="blog-title">Zeta Kappa Newsletter Fall 2025: A Year in Review</div>
-          <div class="blog-subtitle">Coming Out of a Fantastic Fall Semester</div>
-          </a>
-          <div class="author-box">
-            <img src="img/austin_hutton.jpg" alt="Austin Hutton" class="author-image" />
-            <div class="blog-author">Austin Hutton</div>
-          </div>
-        </div>
-      </section>
-      <hr />
-
-      <section class="blog-entry">
-        <img
-          src="img/Newsletter Spring 2025 Header.jpg"
-          alt="Newsletter Cover"
-          class="blog-image"
-        />
-        <div class="entry-content">
-          <a href="Newsletter_spring_2025.html">
-          <div class="blog-title">Zeta Kappa Newsletter Spring 2025: A Year in Review</div>
-          <div class="blog-subtitle">What have the brothers been up to?</div>
-          </a>
-          <div class="author-box">
-            <img src="img/screenshot-2025-01-29-1608050.png" alt="Mason DuVernay" class="author-image" />
-            <div class="blog-author">Mason DuVernay</div>
-          </div>
-        </div>
-      </section>
-      <hr />
-
-      <section class="blog-entry">
-        <a href="Blogs/RTT25.html">
-        <img
-          src="img/Scholarship 2025.jpg"
-          alt="Rock the Tundra 2025"
-          class="blog-image"
-        />
-        <div class="entry-content">
-          <div class="blog-title">Rock The Tundra 2025</div>
-          <div class="blog-subtitle">Coming October 25th to a Tundra near you!</div>
-          <div class="author-box">
-          </a>
-            <img src="img/img-19190.png" alt="Sam Miller" class="author-image" />
-            <div class="blog-author">Sam Miller</div>
-          </div>
-        </div>
-      </section>
-      <hr />
-
-      <section class="blog-entry"> 
-        <a href="Blogs/Homecoming25.html">
-        <img
-          src="img/461324033-853264133611051-7747087528235502411-n0.png"
-          alt="Homecoming 2025"
-          class="blog-image"
-        />
-        <div class="entry-content">
-          <div class="blog-title">Homecoming Begins on October 3rd!</div>
-          <div class="blog-subtitle">Theta Chi welcomes you back!</div>
-          <div class="author-box">
-              </a>
-
-            <img src="img/img-19190.png" alt="Sam Miller" class="author-image" />
-            <div class="blog-author">Sam Miller</div>
-          </div>
-        </div>
-      </section>
-<hr />
-    <section class="blog-entry">
-        <a href="Blogs/Rush25.html">
-        <img
-          src="img/rush2025.png"
-          alt="Homecoming 2025"
-          class="blog-image"
-        />
-        <div class="entry-content">
-          <div class="blog-title">Theta Chi Rush Coming Soon!
+<div class="empty"></div>
+<div class="empty"></div>
+<div class="empty"></div>
+<a href="index.html">
+<img alt="Theta Chi Logo" class="_248-zeta-kappa-ohio-northern-pdf-1" src="assets/img/mainlogo.png" style="padding-top: 1rem"/>
+</a>
+<div class="gallery-text">Blog</div>
+</header>
+<main class="blog">
+<section class="blog-entry">
+<img alt="Newsletter Cover" class="blog-image" src="assets/img/Theta Chi Fall 2025 Header.jpg"/>
+<div class="entry-content">
+<a href="Newsletter.html">
+<div class="blog-title">Zeta Kappa Newsletter Fall 2025: A Year in Review</div>
+<div class="blog-subtitle">Coming Out of a Fantastic Fall Semester</div>
+</a>
+<div class="author-box">
+<img alt="Austin Hutton" class="author-image" src="assets/img/austin_hutton.jpg"/>
+<div class="blog-author">Austin Hutton</div>
 </div>
-          <div class="blog-subtitle">The brothers look forward to seeing you the first week of school!</div>
-          <div class="author-box">
-            </a>
-            <img src="img/img-19190.png" alt="Sam Miller" class="author-image" />
-            <div class="blog-author">Sam Miller</div>
-          </div>
-        </div>
-      </section>
-    </main>
+</div>
+</section>
+<hr/>
+<section class="blog-entry">
+<img alt="Newsletter Cover" class="blog-image" src="assets/img/Newsletter Spring 2025 Header.jpg"/>
+<div class="entry-content">
+<a href="oldPages/newsletter/Newsletter_spring_2025.html">
+<div class="blog-title">Zeta Kappa Newsletter Spring 2025: A Year in Review</div>
+<div class="blog-subtitle">What have the brothers been up to?</div>
+</a>
+<div class="author-box">
+<img alt="Mason DuVernay" class="author-image" src="assets/img/screenshot-2025-01-29-1608050.png"/>
+<div class="blog-author">Mason DuVernay</div>
+</div>
+</div>
+</section>
+<hr/>
+<section class="blog-entry">
+<a href="Blogs/RTT25.html">
+<img alt="Rock the Tundra 2025" class="blog-image" src="assets/img/Scholarship 2025.jpg"/>
+<div class="entry-content">
+<div class="blog-title">Rock The Tundra 2025</div>
+<div class="blog-subtitle">Coming October 25th to a Tundra near you!</div>
+<div class="author-box">
+</div></div></a>
+<img alt="Sam Miller" class="author-image" src="assets/img/img-19190.png"/>
+<div class="blog-author">Sam Miller</div>
 
-	<script>
-  function toggleSidebar(button) {
-    const sidebar = document.getElementById('sidebar');
-    sidebar.classList.toggle('active');
-    button.classList.toggle('open');
-  }
-  </script>
-  </body>
+
+</section>
+<hr/>
+<section class="blog-entry">
+<a href="Blogs/Homecoming25.html">
+<img alt="Homecoming 2025" class="blog-image" src="assets/img/461324033-853264133611051-7747087528235502411-n0.png"/>
+<div class="entry-content">
+<div class="blog-title">Homecoming Begins on October 3rd!</div>
+<div class="blog-subtitle">Theta Chi welcomes you back!</div>
+<div class="author-box">
+</div></div></a>
+<img alt="Sam Miller" class="author-image" src="assets/img/img-19190.png"/>
+<div class="blog-author">Sam Miller</div>
+
+
+</section>
+<hr/>
+<section class="blog-entry">
+<a href="Blogs/Rush25.html">
+<img alt="Homecoming 2025" class="blog-image" src="assets/img/rush2025.png"/>
+<div class="entry-content">
+<div class="blog-title">Theta Chi Rush Coming Soon!
+</div>
+<div class="blog-subtitle">The brothers look forward to seeing you the first week of school!</div>
+<div class="author-box">
+</div></div></a>
+<img alt="Sam Miller" class="author-image" src="assets/img/img-19190.png"/>
+<div class="blog-author">Sam Miller</div>
+
+
+</section>
+</main>
+
+<script src="js/base.js"></script></body>
 </html>

@@ -1,0 +1,379 @@
+/* Global reset */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Top Navigation and Header */
+.branding-header {
+  position: relative;
+  width: 100%;
+  background: #c9935b;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0.5rem 2rem;
+  gap: 1rem;
+  height: 71px;
+  z-index: 6;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.16); 
+}
+
+.contact-us {
+  color: white;
+  font-size: 1.25rem;
+  margin-left: auto;
+}
+
+.branding-header img {
+  height: 32px;
+  width: auto;
+  cursor: pointer;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.16);
+}
+
+.branding-header-large {
+  position: relative;
+  width: 100%;
+  background: #b21615;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0rem 1rem;
+  gap:1rem;
+  height: 200px;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.16);
+  z-index: 5;
+}
+
+
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 4rem;
+  height: 3rem;
+  cursor: pointer;
+  z-index: 1001;
+  position: relative;
+  touch-action: manipulation;
+  overflow: hidden;
+}
+
+.hamburger span {
+  display: block;
+  height: 4px;
+  background: white;
+  border-radius: 2px;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Animation when "open" class is applied */
+.hamburger.open span:nth-child(1) {
+  transform: translateY(22px) rotate(45deg);
+}
+
+.hamburger.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.open span:nth-child(3) {
+  transform: translateY(-22px) rotate(-45deg);
+}
+
+
+
+/* Sidebar menu */
+.sidebar {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 70%;
+  max-width: 300px;
+  height: 100%;
+  background-color: #b21615;
+  color: white;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: right 0.3s ease-in-out;
+  z-index: 1000;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar ul li {
+  margin-bottom: 1.5rem;
+}
+
+.sidebar ul li a {
+  color: white;
+  text-decoration: none;
+  font-size: 1.5rem;
+}
+
+.sidebar.active {
+  right: 0;
+}
+
+/* Show hamburger on mobile */
+@media (max-width: 768px) {
+  .hamburger {
+    display: flex;
+  }
+}
+
+.newsletter {
+  background: #ffffff;
+  height: 3144px;
+  position: relative;
+  overflow: hidden;
+}
+.rectangle-1 {
+  background: #ab0000;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 1px;
+  opacity: 0.76;
+  width: 1920px;
+  height: 181px;
+  position: absolute;
+  left: 0px;
+  top: 71px;
+  box-shadow: 0px 3px 3px 0px rgba(0, 0, 0, 0.16);
+}
+.rectangle-2 {
+  background: #ffffff;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 1px;
+  width: 1920px;
+  height: 71px;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+}
+._248-zeta-kappa-ohio-northern-pdf-1 {
+  border-style: solid;
+  border-color: transparent;
+  border-width: 1px;
+  width: 255px;
+  height: 255px;
+  position: absolute;
+  left: 169px;
+  top: 43px;
+  object-fit: cover;
+  aspect-ratio: 1;
+}
+.hamburber {
+  height: auto;
+  position: absolute;
+  left: 46.5px;
+  top: 131.5px;
+  overflow: visible;
+}
+.rectangle-3 {
+  background: #ab0000;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 1px;
+  opacity: 0.76;
+  width: 387px;
+  height: 88px;
+  position: absolute;
+  left: 1533px;
+  top: 252px;
+}
+.rectangle-4 {
+  border-style: solid;
+  border-color: transparent;
+  border-width: 1px;
+  width: 323px;
+  height: 128px;
+  position: absolute;
+  left: 1562px;
+  top: 252px;
+}
+.newsletter2 {
+  color: #ffffff;
+  text-align: left;
+  font-family: "ParangoOtw01Bold-Regular", sans-serif;
+  font-size: 36px;
+  font-weight: 400;
+  position: absolute;
+  left: 1561.8px;
+  top: 267.5px;
+  -webkit-text-stroke: 1px transparent;
+}
+.rectangle-16 {
+  background: #c9935b;
+  border-style: solid;
+  border-color: transparent;
+  border-width: 1px;
+  opacity: 0.76;
+  width: 1920px;
+  height: 71px;
+  position: absolute;
+  left: 0px;
+  top: 0px;
+  box-shadow: 0px 3px 3px 0px rgba(0, 0, 0, 0.16);
+}
+.path-1 {
+  width: 52px;
+  height: 52px;
+  position: absolute;
+  left: 1743.98px;
+  top: 9px;
+  overflow: visible;
+}
+.path-2 {
+  width: 51px;
+  height: 51px;
+  position: absolute;
+  left: 1664.98px;
+  top: 9px;
+  overflow: visible;
+}
+.path-3 {
+  width: 51.02px;
+  height: 51px;
+  position: absolute;
+  left: 1833.98px;
+  top: 9px;
+  overflow: visible;
+}
+.contact-us {
+  color: #ffffff;
+  text-align: left;
+  font-family: "ParangoOtw03Regular-Regular", sans-serif;
+  font-size: 24px;
+  font-weight: 400;
+  position: absolute;
+  left: 1489px;
+  top: 19px;
+  width: 138px;
+  -webkit-text-stroke: 1px transparent;
+}
+._20241208-200731 {
+  border-style: solid;
+  border-color: #707070;
+  border-width: 1px;
+  width: 1595px;
+  height: 541px;
+  position: absolute;
+  left: 150px;
+  top: 512px;
+  object-fit: cover;
+}
+.theta-chi-zeta-kappa-newsletter-may-2025-newsletter-blog-template {
+  color: #000000;
+  text-align: center;
+  font-family: "ParangoOtw01Bold-Regular", sans-serif;
+  font-size: 48px;
+  font-weight: 400;
+  position: absolute;
+  left: 504.22px;
+  top: 334px;
+  -webkit-text-stroke: 1px transparent;
+}
+.this-page-is-where-we-will-post-our-newsletter-to-our-alumni-i-think-having-it-displayed-like-a-news-article-will-be-an-interesting-change-we-can-make-it-here-or-copy-paste-from-a-google-doc-whatever-s-easier-honestly-below-is-my-design-philosophy-writ {
+  color: #000000;
+  text-align: left;
+  font-family: "TimesNewRoman-Regular", sans-serif;
+  font-size: 24px;
+  font-weight: 400;
+  position: absolute;
+  left: 149px;
+  top: 1105px;
+  width: 1595px;
+  -webkit-text-stroke: 1px transparent;
+}
+.we-can-layout-photos-in-many-different-ways-like-positioned-left-positioned-right-spread-center-here-are-the-fonts-sizes-i-ve-used-for-the-site-headers-parango-otw-01-bold-48-pt-subheaders-parango-otw-03-bold-or-regular-36-pt-bodyc {
+  color: #000000;
+  text-align: left;
+  font-family: "-", sans-serif;
+  font-size: 24px;
+  font-weight: 400;
+  position: absolute;
+  left: 149px;
+  top: 1311px;
+  width: 576px;
+  -webkit-text-stroke: 1px transparent;
+}
+.we-can-layout-photos-in-many-different-ways-like-positioned-left-positioned-right-spread-center-here-are-the-fonts-sizes-i-ve-used-for-the-site-headers-parango-otw-01-bold-48-pt-subheaders-parango-otw-03-bold-or-regular-36-pt-bodyc-span {
+  font-family: "TimesNewRoman-Bold", sans-serif;
+  font-weight: 700;
+}
+.we-can-layout-photos-in-many-different-ways-like-positioned-left-positioned-right-spread-center-here-are-the-fonts-sizes-i-ve-used-for-the-site-headers-parango-otw-01-bold-48-pt-subheaders-parango-otw-03-bold-or-regular-36-pt-bodyc-span2 {
+  font-family: "TimesNewRoman-Regular", sans-serif;
+}
+.we-can-layout-photos-in-many-different-ways-like-positioned-left-positioned-right-spread-center-here-are-the-fonts-sizes-i-ve-used-for-the-site-headers-parango-otw-01-bold-48-pt-subheaders-parango-otw-03-bold-or-regular-36-pt-bodyc-span3 {
+  font-family: "SegoeUi-Regular", sans-serif;
+}
+.screenshot-2025-01-16-154605 {
+  border-style: solid;
+  border-color: #707070;
+  border-width: 1px;
+  width: 971px;
+  height: 463px;
+  position: absolute;
+  left: 773px;
+  top: 1263px;
+  object-fit: cover;
+}
+.i-think-that-keeping-it-simple-with-a-red-white-color-scheme-with-splashes-of-gold-and-black-would-be-best-images-from-our-chapter-as-the-background-for-homepage-in-either-red-white-or-black-white-colors-in-the-future-we-can-move-towards-a-bl {
+  color: #000000;
+  text-align: left;
+  font-family: "-", sans-serif;
+  font-size: 24px;
+  font-weight: 400;
+  position: absolute;
+  left: 141px;
+  top: 1823px;
+  width: 1639px;
+  -webkit-text-stroke: 1px transparent;
+}
+.i-think-that-keeping-it-simple-with-a-red-white-color-scheme-with-splashes-of-gold-and-black-would-be-best-images-from-our-chapter-as-the-background-for-homepage-in-either-red-white-or-black-white-colors-in-the-future-we-can-move-towards-a-bl-span {
+  font-family: "TimesNewRoman-Bold", sans-serif;
+  font-weight: 700;
+}
+.i-think-that-keeping-it-simple-with-a-red-white-color-scheme-with-splashes-of-gold-and-black-would-be-best-images-from-our-chapter-as-the-background-for-homepage-in-either-red-white-or-black-white-colors-in-the-future-we-can-move-towards-a-bl-span2 {
+  font-family: "TimesNewRoman-Regular", sans-serif;
+}
+.pxl-20231028-182854264 {
+  border-style: solid;
+  border-color: transparent;
+  border-width: 1px;
+  width: 672px;
+  height: 896px;
+  position: absolute;
+  left: 141px;
+  top: 2172px;
+  object-fit: cover;
+  aspect-ratio: 672/896;
+}
+.that-s-the-gist-everything-else-was-brought-to-brothers-du-vernay-berei-please-send-me-more-photos-this-laptop-is-new-and-converting-the-historian-folder-from-heic-to-jpg-will-take-5-hours-i-ll-do-it-for-the-photos-page-once-i-finish-everything-els {
+  color: #000000;
+  text-align: left;
+  font-family: "-", sans-serif;
+  font-size: 24px;
+  font-weight: 400;
+  position: absolute;
+  left: 859px;
+  top: 2172px;
+  width: 885px;
+  -webkit-text-stroke: 1px transparent;
+}
+.that-s-the-gist-everything-else-was-brought-to-brothers-du-vernay-berei-please-send-me-more-photos-this-laptop-is-new-and-converting-the-historian-folder-from-heic-to-jpg-will-take-5-hours-i-ll-do-it-for-the-photos-page-once-i-finish-everything-els-span {
+  font-family: "TimesNewRoman-Bold", sans-serif;
+  font-weight: 700;
+}
+.that-s-the-gist-everything-else-was-brought-to-brothers-du-vernay-berei-please-send-me-more-photos-this-laptop-is-new-and-converting-the-historian-folder-from-heic-to-jpg-will-take-5-hours-i-ll-do-it-for-the-photos-page-once-i-finish-everything-els-span2 {
+  font-family: "TimesNewRoman-Regular", sans-serif;
+}

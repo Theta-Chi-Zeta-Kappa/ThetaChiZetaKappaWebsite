@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<!-- <link rel="stylesheet" href="./styleNewsletter.css"> -->
+<style>
+	@font-face {
+    font-family: "ParangoOtw01Bold-Regular";
+    src: url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.eot");
+    src: url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.eot?#iefix")format("embedded-opentype"),
+    url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.woff2")format("woff2"),
+    url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.woff")format("woff"),
+    url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.ttf")format("truetype"),
+    url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.svg#Parango OT W01 Bold")format("svg");
+}
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Times New Roman", serif;
+      background-color: #fff;
+    }
+
+    .branding-header {
+  position: relative;
+  width: 100%;
+  background: #c9935b;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0.5rem 2rem;
+  gap: 1rem;
+  height: 71px;
+  z-index: 6;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.16); 
+}
+
+.contact-us {
+  color: white;
+  font-size: 1.25rem;
+  margin-left: auto;
+  font-family: "ParangoOtw01Bold-Regular", sans-serif;
+}
+
+.branding-header img {
+  height: 32px;
+  width: auto;
+  cursor: pointer;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.16);
+}
+
+.branding-header-large {
+  position: relative;
+  width: 100%;
+  background: #b21615;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0rem 1rem;
+  gap:1rem;
+  height: 200px;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.16);
+  z-index: 5;
+}
+
+    .hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 4rem;
+  height: 3rem;
+  cursor: pointer;
+  z-index: 1001;
+  position: relative;
+  touch-action: manipulation;
+  overflow: hidden;
+}
+
+.hamburger span {
+  display: block;
+  height: 4px;
+  background: white;
+  border-radius: 2px;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Animation when "open" class is applied */
+.hamburger.open span:nth-child(1) {
+  transform: translateY(22px) rotate(45deg);
+}
+
+.hamburger.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.open span:nth-child(3) {
+  transform: translateY(-22px) rotate(-45deg);
+}
+
+
+    .sidebar {
+	font-family: "ParangoOTW01Bold-Regular", sans-serif;
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: 70%;
+      max-width: 300px;
+      height: 100%;
+      background: #b21615;
+      color: white;
+      padding: 2rem;
+      transition: right 0.3s ease;
+      z-index: 1000;
+    }
+
+    .sidebar.active {
+      right: 0;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .sidebar ul li {
+      margin-bottom: 1.5rem;
+    }
+
+    .sidebar ul li a {
+      color: white;
+      text-decoration: none;
+      font-size: 1.5rem;
+    }
+
+    .main-content {
+      padding: 2rem;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .section {
+      margin-bottom: 3rem;
+    }
+
+    .red-section {
+      background-color: #b21615; /* Light red background */
+    border-radius: 12px; /* Rounded edges */
+    padding: 2rem; /* Internal spacing */
+    box-shadow: 0 2px 8px rgb(0, 0, 0); /* Subtle shadow for depth */
+    margin: 1rem 0; /* External spacing */
+    color: white
+
+    }
+
+    .flex-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+
+    .flex-row img {
+      max-width: 48%;
+      height: auto;
+    }
+
+    .text-block {
+      flex: 1;
+      min-width: 250px;
+      font-size: 1.25rem;
+      line-height: 1.6;
+    }
+
+    h1 {
+      font-family: "ParangoOTW01Bold-Regular", sans-serif;
+      font-size: 48px;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    h2 {
+      font-family: "ParangoOTW01Bold-Regular", sans-serif;
+      font-size: 36px;
+      margin-bottom: 1rem;
+    }
+
+    .logo {
+        width: 25%;
+      }
+
+
+    @media (max-width: 768px) {
+      .flex-row {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .logo {
+        width: 100%;
+      }
+
+      .flex-row img,
+      .text-block {
+        max-width: 100%;
+      }
+	  .GalleryText {
+		display: none !important;
+	  }
+    }
+	.GalleryText {
+		font-family: "ParangoOtw01Bold-Regular", sans-serif;
+  color: #ffffff;
+  font-size: clamp(2rem, 5vw, 4.5rem);
+  margin-top: 0.5rem;
+  margin-left: auto;
+}
+  </style>
+<script>
+    function toggleSidebar(el) {
+      el.classList.toggle("open");
+      document.getElementById("sidebar").classList.toggle("active");
+    }
+  </script>
+</head>
+<body>
+<!-- Footer/Header Icons and Branding -->
+<header class="branding-header">
+<div class="contact-us">Contact Us:</div>
+<a href="https://www.facebook.com/ThetaChiZK/"><img alt="Facebook" class="path-1" src="../../assets/icons/path-10.svg"/></a>
+<a href="https://www.instagram.com/thetachizk/"><img alt="Instagram" class="path-2" src="../../assets/icons/path-20.svg"/></a>
+<a href="tel:440-563-1851"><img alt="Phone" class="path-3" src="../../assets/icons/path-30.svg"/></a>
+</header>
+<header class="branding-header-large">
+<div class="rectangle-1"></div>
+<!-- Hamburger Menu Icon -->
+<div class="hamburger" onclick="toggleSidebar(this)">
+<span></span>
+<span></span>
+<span></span>
+</div>
+<!-- Sidebar Menu -->
+<nav class="sidebar" id="sidebar">
+<ul>
+<br/><br/><br/>
+<li><a href="../../index.html">Home</a></li>
+<li><a href="../../Newsletter.html">Newsletter</a></li>
+<li><a href="../../Gallery.html">Gallery</a></li>
+<li><a href="../../Blog.html">Blog</a></li>
+<li><a href="Rsvp.html">Anniversary RSVP</a></li>
+<li><a href="../../FamilyTree.html">Family Trees</a></li>
+</ul>
+</nav>
+<div class="empty"></div>
+<div class="empty"></div>
+<div class="empty"></div>
+<a href="../../index.html">
+<img alt="Theta Chi Logo" class="_248-zeta-kappa-ohio-northern-pdf-1" src="../../assets/img/mainlogo.png" style="padding-top: 1rem"/>
+</a>
+<div class="GalleryText">60th Anniversary</div>
+</header>
+<div style="padding-top: 2.5%; text-align: center;">
+<img alt="60th Anniversary Logo" class="logo" src="../../assets/img/60th_Logo_Real_1.png" style="width: 40%; height: auto;"/>
+</div>
+<main class="main-content">
+<div class="section">
+<h1>Sign Up Today!</h1>
+<div class="text-block" style="text-align: center;">
+          The Undergraduate Chapter and the 60th Committee are honored and proud to present the <b>60th Annual Anniversary </b> of the <i>Theta Chi Zeta Kappa Chapter</i>. For 60 years, this chapter has uplifted young men on the campus of <i>Ohio Northern University</i>, extending the Helping Hand to the community and to our fellow brothers, and created generations of leaders. <br/><br/>
+            It is only right that we come together in this moment to reflect and celebrate those successes and share in those stories. I hope to see each and every brother who can make it. <br/><br/>
+            Follow the <b>three steps</b> below to get your RSVP, your room reservations, and your fees paid for the event.
+      </div>
+</div>
+<div class="section flex-row red-section">
+<h2>Updates</h2>
+<div class="text-block">
+<h3>3/17/2026</h3> <br/>
+<b>Last Chance to Register!</b> Sign up as soon as possible to ensure your spot in the Inn. 
+          <br/><br/>
+          Additionally, the alumni panel has been <i>cancelled</i>. Another hour has been also been added to the house walk to ensure that a house visit is not rushed. Because of this, lunch will be pushed back to 1pm instead. Please be aware of the schedule changes and plan accordingly.
+        </div>
+</div>
+<br/>
+<div class="section flex-row">
+<h2>Schedule</h2>
+<div class="text-block">
+<strong>Friday (April 10th, 2026):</strong><br/>
+          - <i>Check-In</i>: 4pm (EST)<br/>
+          - <i>Board of Directors Meeting:</i> 6pm <br/>
+        - <i>Route 69 Brewery Dinner</i>: 7pm<br/>
+</div>
+<div class="text-block">
+<strong>Saturday (April 11th, 2026):</strong><br/>
+          - <i>Breakfast Open House</i>: 9-11am<br/>
+        - <i>House Walk</i>: 11am-1pm<br/>
+        - <i>Lunch Break (Not Provided)</i>: 1-2pm<br/>
+        - <s><i>Alumni Panel @ Commons</i>: 1-2pm</s><br/>
+        - <i>Jeopardy @ Commons</i>: 2-3pm<br/>
+        - <i>Free Time </i>: 3-5pm<br/>
+        - <i>Pre-Dinner Hour </i>: 5-6pm <br/>
+        - <i>Dinner</i>: 6pm<br/>
+</div>
+<div class="text-block">
+<strong>Sunday (April 12th, 2026):</strong><br/>
+        - <i>Free Time</i>: 9am-12pm<br/>
+        - <i>Check-Out</i>: 12pm<br/>
+</div>
+</div>
+<div class="section flex-row red-section">
+<div class="text-block">
+<h2>Step 1: Fill Out General Registration Form</h2>
+<strong>Fill out the Google Form Below:</strong>
+<br/><br/><a href="https://forms.gle/3X3m2x9VzJy8vQwr5">Alternative Link</a>
+</div>
+<img alt="Layout Example" src="../../assets/img/shawty-trifling0.png"/>
+<iframe frameborder="0" height="1200" marginheight="0" marginwidth="0" src="https://docs.google.com/forms/d/e/1FAIpQLSflfHSokcTa0oWs7JfIHsTRiW16JudiJrWeW_K5Ffjs7ZbvHA/viewform?embedded=true" width="100%">Loading…</iframe>
+</div>
+<div class="title section flex-row">
+<img alt="Chapter Image" src="../../assets/img/screenshot-2025-01-29-1636200.png"/>
+<div class="text-block">
+<h2>Step 2: Signup for Your Hotel Room</h2>
+        Rooms will be held at <b>the Inn at Ohio Northern University</b>. Reservations are OPEN NOW, and we highly recommend you get your rooms ASAP!
+        <br/><br/>
+        Reservations are being taken either <i>online</i> or <i>by phone</i>. If a code is asked, put in the following Group Attendee code: <b>129350</b>
+<a href="https://bookings.travelclick.com/113953?groupID=4751015">You may access the hotel reservations page from here!</a>
+<br/><br/>
+        To reserve by phone call, call the the number and make sure you ask to be placed within the <b>Theta Chi Block</b> for <b>April 10-12th</b>: 
+        <a href="tel:419-772-2500">(419) 772-2500</a>
+</div>
+</div>
+<div class="section flex-row red-section">
+<div class="text-block">
+<h2>Step 3: Send Dinner Reservation Money to The Committee</h2>
+<h3>Payments Online</h3>
+        Send the following amount of money for yourself and each of your guests to the PayPal Link.<br/>
+        - <b>Alumni</b>: <b>$55</b> per person<br/>
+          - <b>Undergraduate</b>: <b>$45</b> per person <br/>
+<br/><br/>
+<a href="https://www.paypal.com/paypalme/oxzkalumnicorp"> <h1>Pay Here Using PayPal!</h1> </a>
+<br/><br/>
+<h3>Payments Over Check</h3>
+        Send a check to the following address to the <b>ZK Alumni Corporation</b>:
+        <br/><br/>
+    402 W. College Ave. <br/>
+    Unit 1058 <br/>
+    Ada, OH 45810<br/>
+    USA
+
+    </div>
+</div></main>
+</body>
+</html>

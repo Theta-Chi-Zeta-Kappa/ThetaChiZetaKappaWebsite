@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gallery</title>
+<!--Not quiet sure why it breaks when I try to use the css... Just gotta fucking suffer ig-->
+<style>
+    @font-face {
+    font-family: "ParangoOtw01Bold-Regular";
+    src: url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.eot");
+    src: url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.eot?#iefix")format("embedded-opentype"),
+    url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.woff2")format("woff2"),
+    url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.woff")format("woff"),
+    url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.ttf")format("truetype"),
+    url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.svg#Parango OT W01 Bold")format("svg");
+}
+   * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "ParangoOtw01Bold-Regular", sans-serif;
+      background-color: #fff;
+    }
+
+    nav {
+      background-color: #ab0000;
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 3px 3px rgba(0, 0, 0, 0.16);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    nav .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    nav .nav-links {
+      display: flex;
+      gap: 1rem;
+    }
+
+	.branding-header {
+  position: relative;
+  width: 100%;
+  background: #c9935b;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0.5rem 2rem;
+  gap: 1rem;
+  height: 71px;
+  z-index: 6;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.16); 
+}
+
+.contact-us {
+  color: white;
+  font-size: 1.25rem;
+  margin-left: auto;
+}
+
+.branding-header img {
+  height: 32px;
+  width: auto;
+  cursor: pointer;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.16);
+}
+
+.branding-header-large {
+  position: relative;
+  width: 100%;
+  background: #b21615;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0rem 1rem;
+  gap:1rem;
+  height: 200px;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.16);
+  z-index: 5;
+}
+
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 4rem;
+  height: 3rem;
+  cursor: pointer;
+  z-index: 1001;
+  position: relative;
+  touch-action: manipulation;
+  overflow: hidden;
+}
+
+.hamburger span {
+  display: block;
+  height: 4px;
+  background: white;
+  border-radius: 2px;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Animation when "open" class is applied */
+.hamburger.open span:nth-child(1) {
+  transform: translateY(22px) rotate(45deg);
+}
+
+.hamburger.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.open span:nth-child(3) {
+  transform: translateY(-22px) rotate(-45deg);
+}
+
+
+
+/* Sidebar menu */
+.sidebar {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 70%;
+  max-width: 300px;
+  height: 100%;
+  background-color: #b21615;
+  color: white;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: right 0.3s ease-in-out;
+  z-index: 1000;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar ul li {
+  margin-bottom: 1.5rem;
+}
+
+.sidebar ul li a {
+  color: white;
+  text-decoration: none;
+  font-size: 1.5rem;
+}
+
+.sidebar.active {
+  right: 0;
+}
+
+/* FLEX CONVERSION FOR FAMILY TREE SECTION WITH MATCHED HTML STRUCTURE */
+.family-tree-cannon {
+  background: #ffffff;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow-x: auto;
+  width: 100%;
+}
+
+.family-tree-cannon .row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 1rem;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.family-tree-cannon .box {
+  background: #bf3c3c;
+  color: white;
+  font-family: "SegoeUi-Bold", sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  padding: 0.75rem 1.25rem;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.family-tree-cannon .line {
+  height: 100%;
+  width: 2px;
+  background-color: #bf3c3c;
+  flex-shrink: 0;
+}
+
+/* Show hamburger on mobile */
+@media (max-width: 768px) {
+  .hamburger {
+    display: flex;
+  }
+  .GalleryText {
+		display: none !important;
+	  }
+}
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1rem;
+      height: 71px;
+      background-color: #ffffff;
+      color: white;
+      box-shadow: 0 3px 3px rgba(0, 0, 0, 0.16);
+      flex-wrap: wrap;
+    }
+
+    .search-directory {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #bf3c3c;
+    }
+
+    .search-box {
+      margin-top: -2.3rem;
+      flex-basis: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    .search-box input[type="text"] {
+      padding: 0.5rem;
+      width: 50%;
+      border: 2px solid #bf3c3c;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+
+    .gallery-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+      padding: 1rem;
+      width: 100%
+    }
+
+    .gallery-item {
+      flex: 1 1 300px;
+      max-width: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      aspect-ratio: auto;
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: auto;
+      aspect-ratio: attr(width) / attr(height);
+      display: block;
+      object-fit: contain;
+    }
+
+    .caption {
+      padding: 0.5rem;
+      text-align: center;
+      font-size: 1rem;
+      background-color: #c9935b;
+      color: #ffffff;
+    }
+
+	.GalleryText {
+  color: #ffffff;
+  font-size: clamp(2rem, 5vw, 4.5rem);
+  margin-top: 0.5rem;
+  margin-left: auto;
+}
+  </style>
+</head>
+<body>
+<!-- Footer/Header Icons and Branding -->
+<header class="branding-header">
+<div class="contact-us">Contact Us:</div>
+<a href="https://www.facebook.com/ThetaChiZK/"><img alt="Facebook" class="path-1" src="../../assets/icons/path-10.svg"/></a>
+<a href="https://www.instagram.com/thetachizk/"><img alt="Instagram" class="path-2" src="../../assets/icons/path-20.svg"/></a>
+<a href="tel:440-563-1851"><img alt="Phone" class="path-3" src="../../assets/icons/path-30.svg"/></a>
+</header>
+<header class="branding-header-large">
+<div class="rectangle-1"></div>
+<!-- Hamburger Menu Icon -->
+<div class="hamburger" onclick="toggleSidebar(this)">
+<span></span>
+<span></span>
+<span></span>
+</div>
+<!-- Sidebar Menu -->
+<nav class="sidebar" id="sidebar">
+<ul>
+<br/><br/><br/>
+<li><a href="../../index.html">Home</a></li>
+<li><a href="../../Newsletter.html">Newsletter</a></li>
+<li><a href="../../Gallery.html">Gallery</a></li>
+<li><a href="../../Blog.html">Blog</a></li>
+<li><a href="Rsvp.html">Anniversary RSVP</a></li>
+<li><a href="../../FamilyTree.html">Family Trees</a></li>
+</ul>
+</nav>
+<div class="empty"></div>
+<div class="empty"></div>
+<div class="empty"></div>
+<a href="../../index.html">
+<img alt="Theta Chi Logo" class="_248-zeta-kappa-ohio-northern-pdf-1" src="../../assets/img/mainlogo.png" style="padding-top: 1rem"/>
+</a>
+<div class="GalleryText">Gallery: 2020s</div>
+</header>
+<main>
+<div class="top-bar">
+<div class="search-directory">Search Directory</div>
+<div class="search-box">
+<input placeholder="Search by name or tag..." type="text"/>
+</div>
+</div>
+<div class="family-tree-cannon">
+<div class="row">
+<a href="Gallery Pages/1960s.html" style="text-decoration: none;">
+<div class="box">1960s</div>
+</a>
+<div class="line"></div>
+<a href="Gallery Pages/1970s.html" style="text-decoration: none;">
+<div class="box">1970s</div>
+</a>
+<div class="line"></div>
+<a href="Gallery Pages/1980s.html" style="text-decoration: none;">
+<div class="box">1980s</div>
+</a>
+<div class="line"></div>
+<a href="Gallery Pages/1990s.html" style="text-decoration: none;">
+<div class="box">1990s</div>
+</a>
+<div class="line"></div>
+<a href="Gallery Pages/2000s.html" style="text-decoration: none;">
+<div class="box">2000s</div>
+</a>
+<div class="line"></div>
+<a href="Gallery Pages/2010s.html" style="text-decoration: none;">
+<div class="box">2010s</div>
+</a>
+<div class="line"></div>
+<a href="../../Gallery.html" style="text-decoration: none;">
+<div class="box">2020s</div>
+</a>
+</div>
+</div>
+<div class="gallery-container">
+<!-- 
+    <div class="gallery-item">
+      <img src="img/screenshot-2025-01-29-1632330.png" alt="img1" />
+      <div class="caption">Group photo in front of banner</div>
+    </div>
+    <div class="gallery-item">
+      <img src="img/screenshot-2025-01-29-1636200.png" alt="img2" />
+      <div class="caption">Classic glasses pose</div>
+    </div>
+    <div class="gallery-item">
+      <img src="img/screenshot-2025-01-29-1636350.png" alt="img3" />
+      <div class="caption">Peace sign outside the hall</div>
+    </div>
+    <div class="gallery-item">
+      <img src="img/_469480560-18209960536292052-8303238593953119621-n0.png" alt="img4" />
+      <div class="caption">Formal group photo</div>
+    </div>
+    <div class="gallery-item">
+      <img src="img/_20250123-1817290.png" alt="img5" />
+      <div class="caption">Smiling at the table</div>
+    </div>
+    <div class="gallery-item">
+      <img src="img/screenshot-2025-01-29-1608450.png" alt="img6" />
+      <div class="caption">Laughing in the sun</div>
+    </div>
+    <div class="gallery-item">
+      <img src="img/screenshot-2025-01-29-1609050.png" alt="img7" />
+      <div class="caption">Close-up shot</div>
+    </div>
+    <div class="gallery-item">
+      <img src="img/screenshot-2025-01-29-1703190.png" alt="img8" />
+      <div class="caption">Evening hangout</div>
+    </div>
+    <div class="gallery-item">
+      <img src="img/pxl-20231028-1828542640.png" alt="img9" />
+      <div class="caption">Fall outing</div>
+    </div>
+    <div class="gallery-item">
+      <img src="img/img-19190.png" alt="img10" />
+      <div class="caption">Chapter event</div>
+    </div>
+    <div class="gallery-item">
+      <img src="img/img-18570.png" alt="img11" />
+      <div class="caption">Game night</div>
+    </div>
+    <div class="gallery-item">
+      <img src="img/screenshot-2025-01-29-1608050.png" alt="img12" />
+      <div class="caption">Sunhat selfie</div>
+    -->
+</div>
+<script>
+  function toggleSidebar(button) {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.toggle('active');
+    button.classList.toggle('open');
+  }
+  </script>
+<script>
+const API_KEY   = 'AIzaSyBfRfXym_BgeS4jXCnnxnQUiAUJDTsGi9k';   // your key
+const FOLDER_ID = '1Efapk_aAjpDmMpCksZFK8j2_eMAfqfCy';         // public folder
+const TARGET    = document.querySelector('.gallery-container');
+
+/* -------------------------------------------------- *
+ * Helper: build a download-URL that ALWAYS works     *
+ * -------------------------------------------------- */
+function getImageURL(file) {
+  /* Drive files.get alt=media supports CORS and doesn't
+     require the resourceKey, but we add it if present   */
+  let url = `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&key=${API_KEY}`;
+  if (file.resourceKey) url += `&resourceKey=${file.resourceKey}`;
+  return url;
+}
+
+/* Create one <div class="gallery-item"> ••• */
+function addImageCard(file) {
+  const item = document.createElement('div');
+  item.className = 'gallery-item';
+  item.innerHTML = `
+    <img src="${getImageURL(file)}" alt="${file.name}">
+    <div class="caption">${file.name.replace(/\.\w+$/, '')}</div>`;
+  TARGET.appendChild(item);
+}
+
+/* Pull one page of image files */
+async function listDriveFiles(pageToken = '') {
+  const q = `'${FOLDER_ID}' in parents and mimeType contains 'image/' and trashed = false`;
+  const params = new URLSearchParams({
+    key: API_KEY,
+    q,
+    pageSize: 1000,
+    fields: 'nextPageToken,files(id,name,resourceKey)',
+    pageToken,
+    supportsAllDrives: 'true',
+    includeItemsFromAllDrives: 'true'
+  });
+  const url = `https://www.googleapis.com/drive/v3/files?${params}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+/* Stream every page, render every image */
+async function loadDriveImages() {
+  let pageToken = '';
+  do {
+    const { files = [], nextPageToken } = await listDriveFiles(pageToken);
+    files.forEach(addImageCard);
+    pageToken = nextPageToken || '';
+  } while (pageToken);
+}
+
+loadDriveImages().catch(err => {
+  console.error('Drive load failed →', err);
+  TARGET.insertAdjacentHTML(
+    'beforeend',
+    '<p style="color:#b00;font-weight:bold">Gallery failed to load images.</p>'
+  );
+});
+</script>
+</main></body>
+</html>

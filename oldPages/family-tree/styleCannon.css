@@ -1,0 +1,190 @@
+@font-face {
+    font-family: "ParangoOtw01Bold-Regular";
+    src: url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.eot");
+    src: url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.eot?#iefix")format("embedded-opentype"),
+    url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.woff2")format("woff2"),
+    url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.woff")format("woff"),
+    url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.ttf")format("truetype"),
+    url("https://db.onlinewebfonts.com/t/9a1ec757a67db911a72c635dfecceb72.svg#Parango OT W01 Bold")format("svg");
+}
+/* Top Navigation and Header */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+      font-family: "ParangoOtw01Bold-Regular", sans-serif;
+      background-color: #fff;
+    }
+
+.branding-header {
+  position: relative;
+  width: 100%;
+  background: #c9935b;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0.5rem 2rem;
+  gap: 1rem;
+  height: 71px;
+  z-index: 6;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.16); 
+}
+
+.contact-us {
+  color: white;
+  font-size: 1.25rem;
+  margin-left: auto;
+}
+
+.branding-header img {
+  height: 32px;
+  width: auto;
+  cursor: pointer;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.16);
+}
+
+.branding-header-large {
+  position: relative;
+  width: 100%;
+  background: #b21615;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0rem 1rem;
+  gap:1rem;
+  height: 200px;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.16);
+  z-index: 5;
+}
+
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 4rem;
+  height: 3rem;
+  cursor: pointer;
+  z-index: 1001;
+  position: relative;
+  touch-action: manipulation;
+  overflow: hidden;
+}
+
+.hamburger span {
+  display: block;
+  height: 4px;
+  background: white;
+  border-radius: 2px;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Animation when "open" class is applied */
+.hamburger.open span:nth-child(1) {
+  transform: translateY(22px) rotate(45deg);
+}
+
+.hamburger.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.open span:nth-child(3) {
+  transform: translateY(-22px) rotate(-45deg);
+}
+
+
+
+/* Sidebar menu */
+.sidebar {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 70%;
+  max-width: 300px;
+  height: 100%;
+  background-color: #b21615;
+  color: white;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: right 0.3s ease-in-out;
+  z-index: 1000;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar ul li {
+  margin-bottom: 1.5rem;
+}
+
+.sidebar ul li a {
+  color: white;
+  text-decoration: none;
+  font-size: 1.5rem;
+}
+
+.sidebar.active {
+  right: 0;
+}
+
+/* FLEX CONVERSION FOR FAMILY TREE SECTION WITH MATCHED HTML STRUCTURE */
+.family-tree-cannon {
+  background: #ffffff;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  overflow-x: auto;
+  width: 100%;
+}
+
+.family-tree-cannon .row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 1rem;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.family-tree-cannon .box {
+  background: #bf3c3c;
+  color: white;
+  font-family: "SegoeUi-Bold", sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  padding: 0.75rem 1.25rem;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.family-tree-cannon .line {
+  height: 100%;
+  width: 2px;
+  background-color: #bf3c3c;
+  flex-shrink: 0;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .family-tree-cannon {
+    padding: 1rem;
+  }
+
+  .family-tree-cannon .box {
+    font-size: 1rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .family-tree-cannon .line {
+    width: 1px;
+  }
+}
