@@ -1,0 +1,229 @@
+* {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: sans-serif;
+      background-color: #fff;
+    }
+
+    nav {
+      background-color: #ab0000;
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 3px 3px rgba(0, 0, 0, 0.16);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    nav .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+    }
+
+    nav .nav-links {
+      display: flex;
+      gap: 1rem;
+    }
+
+	.branding-header {
+  position: relative;
+  width: 100%;
+  background: #c9935b;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0.5rem 2rem;
+  gap: 1rem;
+  height: 71px;
+  z-index: 6;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.16); 
+}
+
+.contact-us {
+  color: white;
+  font-size: 1.25rem;
+  margin-left: auto;
+}
+
+.branding-header img {
+  height: 32px;
+  width: auto;
+  cursor: pointer;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.16);
+}
+
+.branding-header-large {
+  position: relative;
+  width: 100%;
+  background: #b21615;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0rem 1rem;
+  gap:1rem;
+  height: 200px;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.16);
+  z-index: 5;
+}
+
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 4rem;
+  height: 3rem;
+  cursor: pointer;
+  z-index: 1001;
+  position: relative;
+  touch-action: manipulation;
+  overflow: hidden;
+}
+
+.hamburger span {
+  display: block;
+  height: 4px;
+  background: white;
+  border-radius: 2px;
+  transition: all 0.3s ease-in-out;
+}
+
+/* Animation when "open" class is applied */
+.hamburger.open span:nth-child(1) {
+  transform: translateY(22px) rotate(45deg);
+}
+
+.hamburger.open span:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.open span:nth-child(3) {
+  transform: translateY(-22px) rotate(-45deg);
+}
+
+
+
+/* Sidebar menu */
+.sidebar {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 70%;
+  max-width: 300px;
+  height: 100%;
+  background-color: #b21615;
+  color: white;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: right 0.3s ease-in-out;
+  z-index: 1000;
+}
+
+.sidebar ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar ul li {
+  margin-bottom: 1.5rem;
+}
+
+.sidebar ul li a {
+  color: white;
+  text-decoration: none;
+  font-size: 1.5rem;
+}
+
+.sidebar.active {
+  right: 0;
+}
+
+/* Show hamburger on mobile */
+@media (max-width: 768px) {
+  .hamburger {
+    display: flex;
+  }
+}
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 1rem;
+      height: 71px;
+      background-color: #ffffff;
+      color: white;
+      box-shadow: 0 3px 3px rgba(0, 0, 0, 0.16);
+      flex-wrap: wrap;
+    }
+
+    .search-directory {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #bf3c3c;
+    }
+
+    .search-box {
+      margin-top: -2.3rem;
+      flex-basis: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    .search-box input[type="text"] {
+      padding: 0.5rem;
+      width: 50%;
+      border: 2px solid #bf3c3c;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+
+    .gallery-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+      padding: 1rem;
+    }
+
+    .gallery-item {
+      flex: 1 1 300px;
+      max-width: 100%;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background: #fff;
+      aspect-ratio: auto;
+    }
+
+    .gallery-item img {
+      width: 100%;
+      height: auto;
+      aspect-ratio: attr(width) / attr(height);
+      display: block;
+      object-fit: contain;
+    }
+
+    .caption {
+      padding: 0.5rem;
+      text-align: center;
+      font-size: 1rem;
+      background-color: #c9935b;
+      color: #ffffff;
+    }
+
+	.GalleryText {
+  color: #ffffff;
+  font-size: clamp(2rem, 5vw, 4.5rem);
+  margin-top: 0.5rem;
+  margin-left: 73rem;
+}
