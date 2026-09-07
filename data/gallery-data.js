@@ -943,7 +943,7 @@ window.GALLERY_IMAGES = [
     "display": "https://pub-05d60b8c7fd242b1a2d873d6fdce99be.r2.dev/display/20260111-110205-ebce5a2b47.webp",
     "alt": "20260111 110205",
     "caption": "",
-    "decade": "2020",
+    "decade": "2020s",
     "year": 2026,
     "event": "January Conferences ",
     "source": ""
@@ -954,7 +954,7 @@ window.GALLERY_IMAGES = [
     "display": "https://pub-05d60b8c7fd242b1a2d873d6fdce99be.r2.dev/display/20260222-195915-1126df377b.webp",
     "alt": "20260222 195915",
     "caption": "",
-    "decade": "2020",
+    "decade": "2020s",
     "year": 2026,
     "event": "2025 SOE award ceremony",
     "source": ""
@@ -965,7 +965,7 @@ window.GALLERY_IMAGES = [
     "display": "https://pub-05d60b8c7fd242b1a2d873d6fdce99be.r2.dev/display/20260301-151200-ad8043c50e.webp",
     "alt": "20260301 151200",
     "caption": "Spring 2026",
-    "decade": "2020",
+    "decade": "2020s",
     "year": 2026,
     "event": "Big Brother Ceremony",
     "source": ""
@@ -1031,7 +1031,7 @@ window.GALLERY_IMAGES = [
     "display": "https://pub-05d60b8c7fd242b1a2d873d6fdce99be.r2.dev/display/img-1353-530a095242.webp",
     "alt": "IMG 1353",
     "caption": "",
-    "decade": "2020",
+    "decade": "2020s",
     "year": 2026,
     "event": "Serenade",
     "source": ""
@@ -1086,7 +1086,7 @@ window.GALLERY_IMAGES = [
     "display": "https://pub-05d60b8c7fd242b1a2d873d6fdce99be.r2.dev/display/img-1676-5bc98f155a.webp",
     "alt": "IMG 1676",
     "caption": "Recruitment chair is passed on on the way to San Antonio, TX",
-    "decade": "2020",
+    "decade": "2020s",
     "year": 2026,
     "event": "170th convention",
     "source": ""
@@ -1097,7 +1097,7 @@ window.GALLERY_IMAGES = [
     "display": "https://pub-05d60b8c7fd242b1a2d873d6fdce99be.r2.dev/display/img-3103-4e41914735.webp",
     "alt": "IMG 3103",
     "caption": "",
-    "decade": "2020",
+    "decade": "2020s",
     "year": 2026,
     "event": "",
     "source": ""
@@ -1108,7 +1108,7 @@ window.GALLERY_IMAGES = [
     "display": "https://pub-05d60b8c7fd242b1a2d873d6fdce99be.r2.dev/display/img-3119-31b0eaf0a1.webp",
     "alt": "IMG 3119",
     "caption": "Walking back from placing third",
-    "decade": "2020",
+    "decade": "2020s",
     "year": 2026,
     "event": "Greek Sing 2026",
     "source": ""
@@ -1119,7 +1119,7 @@ window.GALLERY_IMAGES = [
     "display": "https://pub-05d60b8c7fd242b1a2d873d6fdce99be.r2.dev/display/img-6411-1-d45e9f4e9e.webp",
     "alt": "IMG 6411 1",
     "caption": "",
-    "decade": "2020",
+    "decade": "2020s",
     "year": 2026,
     "event": "Highway clean up",
     "source": ""
@@ -1130,7 +1130,7 @@ window.GALLERY_IMAGES = [
     "display": "https://pub-05d60b8c7fd242b1a2d873d6fdce99be.r2.dev/display/img-9493-1-13faa27b4a.webp",
     "alt": "IMG 9493 1",
     "caption": "Plants vs Zombies Theme",
-    "decade": "2020",
+    "decade": "2020s",
     "year": 2026,
     "event": "Greek Sing 2026",
     "source": ""
@@ -1141,7 +1141,7 @@ window.GALLERY_IMAGES = [
     "display": "https://pub-05d60b8c7fd242b1a2d873d6fdce99be.r2.dev/display/pxl-20260418-141817546-4fc9e31f1e.webp",
     "alt": "PXL 20260418 141817546",
     "caption": "",
-    "decade": "2020",
+    "decade": "2020s",
     "year": 2026,
     "event": "Greek Olympics 2026",
     "source": ""
@@ -1152,7 +1152,7 @@ window.GALLERY_IMAGES = [
     "display": "https://pub-05d60b8c7fd242b1a2d873d6fdce99be.r2.dev/display/rush-theta-chi-36c33064e3.webp",
     "alt": "Rush Theta Chi",
     "caption": "Not paid promotion",
-    "decade": "2020",
+    "decade": "2020s",
     "year": 2026,
     "event": "Welcome Fest 2026",
     "source": ""
