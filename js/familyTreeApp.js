@@ -11,7 +11,8 @@ let view = 'tree';
 let currentFamily = cfg.defaultFamily || '';
 let rootIds = [];
 let zoom = 1;
-const ZOOM_MIN = 0.35, ZOOM_MAX = 1.5, ZOOM_STEP = 0.1;
+const ZOOM_MOBILE_MIN = 0.12, ZOOM_TABLET_MIN = 0.32, ZOOM_DESKTOP_MIN = 0.55;
+const ZOOM_MOBILE_MAX = 2.25, ZOOM_DESKTOP_MAX = 1.6, ZOOM_STEP = 0.1;
 
 const appRoot = document.querySelector('#familyTreeApp');
 if (!appRoot) return;
@@ -315,7 +316,8 @@ function switchFamily(family, center = true) {
   pageTitle.textContent = `${family} Family Tree`;
   document.title = `${family} Family Tree · Zeta Kappa`;
   render();
-  if (center) requestAnimationFrame(() => desktop.scrollTo({left:0,top:0,behavior:'auto'}));
+  if (isCompactViewport()) requestAnimationFrame(() => fitTree({ mobileAuto: true }));
+  else requestAnimationFrame(() => parkAtCanvasTop());
 }
 
 function roster(m) { return m.roster === 'n/a' || m.roster === 'N/A' ? 'Roster n/a' : `Roster #${m.roster}`; }
@@ -390,25 +392,45 @@ function renderDesktop(set) {
   desktop.innerHTML = `<div style="padding:18px"><strong>${roots.length} disconnected branches found.</strong><p>These records have no linked Big within the selected family. Fixing their Big ID in Excel will reconnect them.</p></div>` + roots.map(r=>`<div style="margin:20px">${renderOneTree(r,set).html}</div>`).join('');
 }
 
-function clampZoom(v){ return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(v*100)/100)); }
+function isCompactViewport(){ return window.matchMedia('(max-width:768px)').matches; }
+function zoomBounds(){
+  const w=window.innerWidth;
+  if(w<=768) return {min:ZOOM_MOBILE_MIN,max:ZOOM_MOBILE_MAX};
+  if(w<1200) return {min:ZOOM_TABLET_MIN,max:1.9};
+  return {min:ZOOM_DESKTOP_MIN,max:ZOOM_DESKTOP_MAX};
+}
+function clampZoom(v){ const b=zoomBounds(); return Math.min(b.max, Math.max(b.min, Math.round(v*1000)/1000)); }
+function parkAtCanvasTop({left=0}={}){ desktop.scrollTo({left,top:0,behavior:'auto'}); }
 function updateZoomUI(){ if(zoomLevel) zoomLevel.textContent=`${Math.round(zoom*100)}%`; }
+function applyZoomToDOM(){
+  desktop.querySelectorAll('.tree-canvas').forEach(canvas=>{
+    const w=parseFloat(canvas.style.width)||canvas.offsetWidth;
+    const h=parseFloat(canvas.style.height)||canvas.offsetHeight;
+    canvas.style.transform=`scale(${zoom})`;
+    const shell=canvas.closest('.tree-scale-shell');
+    if(shell){ shell.style.width=`${Math.ceil(w*zoom)}px`; shell.style.height=`${Math.ceil(h*zoom)}px`; }
+  });
+  updateZoomUI();
+}
 function setZoom(next,{anchorX=null,anchorY=null}={}){
-  if(window.matchMedia('(max-width:760px)').matches) return;
-  const old=zoom, z=clampZoom(next); if(Math.abs(z-old)<0.001) return;
+  const old=zoom, z=clampZoom(next); if(Math.abs(z-old)<0.0005) return;
   const ax=anchorX ?? desktop.clientWidth/2, ay=anchorY ?? desktop.clientHeight/2;
   const contentX=(desktop.scrollLeft+ax)/old, contentY=(desktop.scrollTop+ay)/old;
-  zoom=z; render(); updateZoomUI();
-  requestAnimationFrame(()=>{desktop.scrollLeft=Math.max(0,contentX*zoom-ax);desktop.scrollTop=Math.max(0,contentY*zoom-ay);});
+  zoom=z; applyZoomToDOM();
+  desktop.scrollLeft=Math.max(0,contentX*zoom-ax);
+  desktop.scrollTop=Math.max(0,contentY*zoom-ay);
 }
-function fitTree(){
-  if(window.matchMedia('(max-width:760px)').matches) return;
+function fitTree({mobileAuto=false}={}){
   const canvases=[...desktop.querySelectorAll('.tree-canvas')]; if(!canvases.length) return;
   const maxW=Math.max(...canvases.map(c=>parseFloat(c.style.width)||c.offsetWidth));
-  const totalH=Math.max(...canvases.map(c=>parseFloat(c.style.height)||c.offsetHeight));
-  const availW=Math.max(200,desktop.clientWidth-28), availH=Math.max(200,desktop.clientHeight-28);
-  const target=clampZoom(Math.min(1,availW/maxW,availH/totalH));
-  zoom=target; render(); updateZoomUI();
-  requestAnimationFrame(()=>desktop.scrollTo({left:0,top:0,behavior:'auto'}));
+  const maxH=Math.max(...canvases.map(c=>parseFloat(c.style.height)||c.offsetHeight));
+  const availW=Math.max(180,desktop.clientWidth-(isCompactViewport()?16:28));
+  const availH=Math.max(220,desktop.clientHeight-(isCompactViewport()?16:28));
+  /* On phones, fit the complete tree into the viewport. The lower zoom floor
+     lets very wide families genuinely fit; pinch zoom immediately restores detail. */
+  const target=clampZoom(Math.min(1,availW/maxW,availH/maxH));
+  zoom=target; applyZoomToDOM();
+  requestAnimationFrame(()=>parkAtCanvasTop());
 }
 
 function updateStatus(message='') {
@@ -428,20 +450,183 @@ function render() {
 function selectMember(id,{center=false}={}) { if(!byId[id]) return; selected=id; render(); if(center) requestAnimationFrame(centerSelected); }
 function clearSelection(){selected=null;if(view!=='tree'){view='tree';syncViewButtons();}render();}
 function syncViewButtons(){queryAll('[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view===view));}
-function centerSelected(){if(!selected||window.matchMedia('(max-width:760px)').matches)return;const el=desktop.querySelector(`[data-id="${CSS.escape(selected)}"]`);if(!el)return;desktop.scrollTo({left:Math.max(0,el.offsetLeft-desktop.clientWidth/2),top:Math.max(0,el.offsetTop-desktop.clientHeight/2),behavior:'smooth'});}
+function centerSelected(){
+  if(!selected)return;
+  const el=desktop.querySelector(`[data-id="${CSS.escape(selected)}"]`);if(!el)return;
+  const er=el.getBoundingClientRect(),dr=desktop.getBoundingClientRect();
+  const left=desktop.scrollLeft+(er.left-dr.left)+(er.width/2)-(desktop.clientWidth/2);
+  const top=desktop.scrollTop+(er.top-dr.top)+(er.height/2)-(desktop.clientHeight/2);
+  desktop.scrollTo({left:Math.max(0,left),top:Math.max(0,top),behavior:'smooth'});
+}
 function showMemberDetails(id=selected){if(!id||!byId[id])return;const m=byId[id],big=byId[m.big],kids=children[id]||[],isFounder=String(m.ff).trim().toUpperCase()==='FF',founderMark=isFounder?'<div class="founder-mark">★ Founding Father</div>':'';query('#memberDetails').innerHTML=`<div class="details"><span class="badge">${escapeHtml(m.id)}</span><h2 class="${isFounder?'founder-name':''}">${escapeHtml(m.name)}</h2>${founderMark}<p>${escapeHtml(roster(m))}</p><div class="detail-grid"><div><span>Family</span>${escapeHtml(m.family)}</div><div><span>Big Brother</span>${escapeHtml(big?big.name:'None recorded')}</div><div><span>Littles</span>${kids.length}</div><div><span>Initiated</span>${escapeHtml(m.initiated)}</div><div><span>Graduated</span>${escapeHtml(m.graduation)}</div></div>${m.notes?`<p><strong>Note:</strong> ${escapeHtml(m.notes)}</p>`:''}<div class="actions"><button data-action="lineage" type="button">View lineage</button><button data-action="descendants" type="button">View descendants</button><button data-action="tree" type="button">Show in full tree</button></div></div>`;queryAll('[data-action]').forEach(b=>b.addEventListener('click',()=>{view=b.dataset.action;syncViewButtons();query('#memberDialog').close();render();requestAnimationFrame(centerSelected);}));query('#memberDialog').showModal();}
 
 let pan={active:false,moved:false,startX:0,startY:0,left:0,top:0,pointerId:null};
 let recentCardClick={id:null,time:0};
+const touchPointers=new Map();
+let pinch=null;
+
 desktop.addEventListener('click',e=>{if(pan.moved){e.preventDefault();e.stopPropagation();pan.moved=false;return;}const card=e.target.closest('.member');if(card){const id=card.dataset.id,now=performance.now(),isDouble=recentCardClick.id===id&&now-recentCardClick.time<=400;recentCardClick=isDouble?{id:null,time:0}:{id,time:now};selectMember(id);if(isDouble)showMemberDetails(id);return;}recentCardClick={id:null,time:0};if(e.target.closest('.tree-canvas')||e.target===desktop)clearSelection();});
 mobile.addEventListener('click',e=>{const card=e.target.closest('[data-id]');if(card){selectMember(card.dataset.id);return;}if(e.target===mobile||e.target.closest('.mobile-list'))clearSelection();});
-desktop.addEventListener('pointerdown',e=>{if(e.button!==0||e.target.closest('.member'))return;pan={active:true,moved:false,startX:e.clientX,startY:e.clientY,left:desktop.scrollLeft,top:desktop.scrollTop,pointerId:e.pointerId};desktop.classList.add('dragging');desktop.setPointerCapture(e.pointerId);});
-desktop.addEventListener('pointermove',e=>{if(!pan.active)return;const dx=e.clientX-pan.startX,dy=e.clientY-pan.startY;if(Math.abs(dx)>4||Math.abs(dy)>4)pan.moved=true;if(pan.moved){desktop.scrollLeft=pan.left-dx;desktop.scrollTop=pan.top-dy;e.preventDefault();}});
-function endPan(){if(!pan.active)return;pan.active=false;desktop.classList.remove('dragging');try{desktop.releasePointerCapture(pan.pointerId)}catch(_){}}
-desktop.addEventListener('pointerup',endPan);desktop.addEventListener('pointercancel',endPan);desktop.addEventListener('dragstart',e=>e.preventDefault());desktop.addEventListener('selectstart',e=>e.preventDefault());
+
+function pointerDistance(a,b){ return Math.hypot(b.x-a.x,b.y-a.y); }
+function pointerMidpoint(a,b){ return {x:(a.x+b.x)/2,y:(a.y+b.y)/2}; }
+function beginPinch(){
+  if(touchPointers.size<2)return;
+  const pts=[...touchPointers.values()].slice(0,2), rect=desktop.getBoundingClientRect();
+  const mid=pointerMidpoint(pts[0],pts[1]);
+  pinch={distance:Math.max(1,pointerDistance(pts[0],pts[1])),startZoom:zoom,
+    contentX:(desktop.scrollLeft+(mid.x-rect.left))/zoom,
+    contentY:(desktop.scrollTop+(mid.y-rect.top))/zoom};
+  pan.active=false; pan.moved=true;
+}
+
+desktop.addEventListener('pointerdown',e=>{
+  if(e.pointerType==='touch'){
+    touchPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    try{desktop.setPointerCapture(e.pointerId)}catch(_){}
+    if(touchPointers.size===1){
+      pan={active:true,moved:false,startX:e.clientX,startY:e.clientY,left:desktop.scrollLeft,top:desktop.scrollTop,pointerId:e.pointerId};
+      desktop.classList.add('dragging');
+    }else if(touchPointers.size===2){ beginPinch(); desktop.classList.add('dragging'); }
+    e.preventDefault(); return;
+  }
+  if(e.button!==0)return;
+  pan={active:true,moved:false,startX:e.clientX,startY:e.clientY,left:desktop.scrollLeft,top:desktop.scrollTop,pointerId:e.pointerId};
+  desktop.classList.add('dragging');desktop.setPointerCapture(e.pointerId);
+});
+
+desktop.addEventListener('pointermove',e=>{
+  if(e.pointerType==='touch' && touchPointers.has(e.pointerId)){
+    touchPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    if(touchPointers.size>=2){
+      if(!pinch)beginPinch();
+      const pts=[...touchPointers.values()].slice(0,2), rect=desktop.getBoundingClientRect();
+      const mid=pointerMidpoint(pts[0],pts[1]);
+      const next=clampZoom(pinch.startZoom*(pointerDistance(pts[0],pts[1])/pinch.distance));
+      zoom=next;applyZoomToDOM();
+      desktop.scrollLeft=Math.max(0,pinch.contentX*zoom-(mid.x-rect.left));
+      desktop.scrollTop=Math.max(0,pinch.contentY*zoom-(mid.y-rect.top));
+      pan.moved=true;
+    }else if(pan.active){
+      const dx=e.clientX-pan.startX,dy=e.clientY-pan.startY;
+      if(Math.abs(dx)>4||Math.abs(dy)>4)pan.moved=true;
+      if(pan.moved){desktop.scrollLeft=pan.left-dx;desktop.scrollTop=pan.top-dy;}
+    }
+    e.preventDefault();return;
+  }
+  if(!pan.active)return;const dx=e.clientX-pan.startX,dy=e.clientY-pan.startY;if(Math.abs(dx)>4||Math.abs(dy)>4)pan.moved=true;if(pan.moved){desktop.scrollLeft=pan.left-dx;desktop.scrollTop=pan.top-dy;e.preventDefault();}
+});
+
+function endPointer(e){
+  if(e && e.pointerType==='touch'){
+    touchPointers.delete(e.pointerId);
+    try{desktop.releasePointerCapture(e.pointerId)}catch(_){}
+    pinch=null;
+    if(touchPointers.size===1){
+      const [id,pt]=touchPointers.entries().next().value;
+      pan={active:true,moved:true,startX:pt.x,startY:pt.y,left:desktop.scrollLeft,top:desktop.scrollTop,pointerId:id};
+    }else if(touchPointers.size===0){pan.active=false;desktop.classList.remove('dragging');}
+    return;
+  }
+  if(!pan.active)return;pan.active=false;desktop.classList.remove('dragging');try{desktop.releasePointerCapture(pan.pointerId)}catch(_){}
+}
+desktop.addEventListener('pointerup',endPointer);desktop.addEventListener('pointercancel',endPointer);desktop.addEventListener('dragstart',e=>e.preventDefault());desktop.addEventListener('selectstart',e=>e.preventDefault());
+/* Soft wheel capture -------------------------------------------------------
+   While the pointer is over the graphical tree, the wheel pans the tree first.
+   At a vertical edge, page scrolling is handed back progressively instead of
+   switching from fully blocked to fully released in one wheel event. This keeps
+   a small amount of resistance around the tree while making the exit feel smooth.
+   Ctrl/Cmd + wheel remains zoom. */
+const EDGE_HANDOFF_DISTANCE = 220;
+const EDGE_HANDOFF_EVENT_CAP = 70;
+const EDGE_HANDOFF_RESET_MS = 420;
+const EDGE_HANDOFF_MIN_PAGE_SHARE = 0.10;
+let edgeWheel = { direction: 0, distance: 0, time: 0, released: false };
+
+function resetEdgeWheel(){
+  edgeWheel.direction = 0;
+  edgeWheel.distance = 0;
+  edgeWheel.time = 0;
+  edgeWheel.released = false;
+}
+
+/* Smoothstep makes the transition gentle at the start and end instead of a
+   linear jump. 0 = almost all wheel motion stays "held" by the tree, 1 = the
+   page receives the full wheel delta. */
+function edgeHandoffShare(progress){
+  const t=Math.max(0,Math.min(1,progress));
+  const smooth=t*t*(3-2*t);
+  return EDGE_HANDOFF_MIN_PAGE_SHARE+(1-EDGE_HANDOFF_MIN_PAGE_SHARE)*smooth;
+}
+
+desktop.addEventListener('pointerleave',resetEdgeWheel);
+
 desktop.addEventListener('wheel',e=>{
-  if(e.ctrlKey||e.metaKey){const rect=desktop.getBoundingClientRect();setZoom(zoom+(e.deltaY<0?ZOOM_STEP:-ZOOM_STEP),{anchorX:e.clientX-rect.left,anchorY:e.clientY-rect.top});e.preventDefault();return;}
-  const beforeTop=desktop.scrollTop,maxTop=desktop.scrollHeight-desktop.clientHeight,wantsPastTop=e.deltaY<0&&beforeTop<=0,wantsPastBottom=e.deltaY>0&&beforeTop>=maxTop-1;if(!e.shiftKey&&(wantsPastTop||wantsPastBottom))return;if(e.shiftKey){desktop.scrollLeft+=e.deltaY||e.deltaX;}else{desktop.scrollTop+=e.deltaY;desktop.scrollLeft+=e.deltaX;}e.preventDefault();
+  if(e.ctrlKey||e.metaKey){
+    resetEdgeWheel();
+    const rect=desktop.getBoundingClientRect();
+    setZoom(zoom+(e.deltaY<0?ZOOM_STEP:-ZOOM_STEP),{anchorX:e.clientX-rect.left,anchorY:e.clientY-rect.top});
+    e.preventDefault();
+    return;
+  }
+
+  if(e.shiftKey){
+    resetEdgeWheel();
+    desktop.scrollLeft += e.deltaY || e.deltaX;
+    e.preventDefault();
+    return;
+  }
+
+  const maxTop=Math.max(0,desktop.scrollHeight-desktop.clientHeight);
+  const maxLeft=Math.max(0,desktop.scrollWidth-desktop.clientWidth);
+
+  /* If this family already fits vertically, there is nothing useful for the
+     wheel to pan. Leave normal document scrolling completely untouched. */
+  if(maxTop<=1){
+    resetEdgeWheel();
+    if(Math.abs(e.deltaX)>Math.abs(e.deltaY) && maxLeft>1){
+      desktop.scrollLeft += e.deltaX;
+      e.preventDefault();
+    }
+    return;
+  }
+
+  const beforeTop=desktop.scrollTop;
+  const direction=e.deltaY>0?1:e.deltaY<0?-1:0;
+  const atTop=beforeTop<=1;
+  const atBottom=beforeTop>=maxTop-1;
+  const pushingEdge=(direction<0&&atTop)||(direction>0&&atBottom);
+
+  if(!pushingEdge){
+    resetEdgeWheel();
+    desktop.scrollTop += e.deltaY;
+    desktop.scrollLeft += e.deltaX;
+    e.preventDefault();
+    return;
+  }
+
+  const now=performance.now();
+  if(edgeWheel.direction!==direction || now-edgeWheel.time>EDGE_HANDOFF_RESET_MS){
+    edgeWheel.direction=direction;
+    edgeWheel.distance=0;
+    edgeWheel.released=false;
+  }
+  edgeWheel.time=now;
+
+  /* Once the handoff has completed, leave subsequent wheel events alone until
+     direction changes, the gesture pauses, or the pointer leaves the viewport. */
+  if(edgeWheel.released)return;
+
+  edgeWheel.distance += Math.min(Math.abs(e.deltaY),EDGE_HANDOFF_EVENT_CAP);
+  const progress=Math.min(1,edgeWheel.distance/EDGE_HANDOFF_DISTANCE);
+  const pageShare=edgeHandoffShare(progress);
+
+  /* We prevent the browser's full wheel jump and manually pass only a growing
+     fraction of it to the document. This is what removes the abrupt release. */
+  window.scrollBy({top:e.deltaY*pageShare,left:0,behavior:'auto'});
+  e.preventDefault();
+
+  if(progress>=1)edgeWheel.released=true;
 },{passive:false});
 
 zoomOut.addEventListener('click',()=>setZoom(zoom-ZOOM_STEP));
@@ -450,9 +635,22 @@ zoomLevel.addEventListener('click',()=>setZoom(1));
 zoomFit.addEventListener('click',fitTree);
 updateZoomUI();
 
+let resizeTimer=0;
+window.addEventListener('resize',()=>{
+  clearTimeout(resizeTimer);
+  resizeTimer=setTimeout(()=>{
+    if(!MEMBERS.length)return;
+    if(isCompactViewport()){ fitTree({mobileAuto:true}); return; }
+    /* Desktop keeps the user's pan/zoom state. Only enforce the desktop-specific
+       zoom bounds instead of auto-fitting the whole family after every resize. */
+    const bounded=clampZoom(zoom);
+    if(Math.abs(bounded-zoom)>0.0005){ zoom=bounded; applyZoomToDOM(); }
+  },140);
+});
+
 query('#closeDialog').addEventListener('click',()=>query('#memberDialog').close());
 detailsButton.addEventListener('click',()=>showMemberDetails());
-query('#reset').addEventListener('click',()=>{selected=null;view='tree';syncViewButtons();render();desktop.scrollTo({left:0,top:0,behavior:'smooth'});});
+query('#reset').addEventListener('click',()=>{selected=null;view='tree';syncViewButtons();render();requestAnimationFrame(()=>parkAtCanvasTop());});
 queryAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{const requested=b.dataset.view;if(requested!=='tree'&&!selected){view='tree';syncViewButtons();updateStatus('Select a member first, then choose Lineage or Descendants.');return;}view=requested;syncViewButtons();render();requestAnimationFrame(centerSelected);}));
 familySelect.addEventListener('change',()=>switchFamily(familySelect.value));
 function rankedSearch(query) {

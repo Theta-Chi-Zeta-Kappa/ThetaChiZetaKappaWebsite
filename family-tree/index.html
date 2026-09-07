@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Zeta Kappa Family Tree</title>
+<link href="/assets/img/icon.png" rel="icon" type="image/x-icon"/>
+
+
+<link href="/css/base.css" rel="stylesheet"/><link href="/css/family-tree.css" rel="stylesheet"/></head>
+<body>
+<!-- Shared Zeta Kappa website header -->
+<header class="branding-header">
+<div class="contact-us">Contact Us:</div>
+<a href="https://www.facebook.com/ThetaChiZK/"><img alt="Facebook" class="path-1" src="/assets/icons/path-10.svg"/></a>
+<a href="https://www.instagram.com/onuthetachi/"><img alt="Instagram" class="path-2" src="/assets/icons/path-20.svg"/></a>
+<a href="tel:440-563-1851"><img alt="Phone" class="path-3" src="/assets/icons/path-30.svg"/></a>
+</header>
+<header class="branding-header-large">
+<div class="rectangle-1"></div>
+<div aria-controls="sidebar" aria-expanded="false" aria-label="Open navigation" class="hamburger" onclick="toggleSidebar(this)" role="button" tabindex="0">
+<span></span>
+<span></span>
+<span></span>
+</div>
+<nav aria-label="Main navigation" class="sidebar" id="sidebar">
+<ul>
+<li><a href="/">Home</a></li>
+<li><a href="/newsletter/">Newsletter</a></li>
+<li><a href="/gallery/">Gallery</a></li>
+<li><a href="/blog/">Blog</a></li>
+<!--<li><a href="Rsvp.html">Anniversary RSVP</a></li>/-->
+<li><a aria-current="page" href="/family-tree/">Family Trees</a></li>
+</ul>
+</nav>
+<div class="empty"></div>
+<div class="empty"></div>
+<div class="empty"></div>
+<a href="/">
+<img alt="Theta Chi Logo" class="_248-zeta-kappa-ohio-northern-pdf-1" src="/assets/img/mainlogo.png" />
+</a>
+</header>
+<div class="family-tree-page" id="familyTreeApp">
+<section aria-labelledby="pageTitle" class="family-tree-heading">
+<div class="eyebrow">Theta Chi · Zeta Kappa</div>
+<h1 id="pageTitle">Family Tree</h1>
+<p>Explore the generations of brotherhood within each family line.</p>
+</section>
+<main class="family-tree-main">
+<section aria-label="Tree controls" class="controls">
+<label class="family-control">Family
+          <select disabled="" id="familySelect"><option>Loading…</option></select>
+</label>
+<div class="search-control">
+<label for="search">Find a brother</label>
+<input autocomplete="off" disabled="" id="search" placeholder="Name or roster #" type="search"/>
+<div class="results" hidden="" id="results"></div>
+</div>
+<div aria-label="View mode" class="view-switch" role="group">
+<button class="active" data-view="tree" type="button">Family tree</button>
+<button data-view="lineage" type="button">Lineage</button>
+<button data-view="descendants" type="button">Descendants</button>
+</div>
+<div aria-label="Tree zoom" class="zoom-controls" role="group">
+<button aria-label="Zoom out" id="zoomOut" type="button">−</button>
+<button id="zoomLevel" title="Reset to 100%" type="button">100%</button>
+<button aria-label="Zoom in" id="zoomIn" type="button">+</button>
+<button id="zoomFit" type="button">Fit</button>
+</div>
+<button class="secondary" id="reset" type="button">Reset selection</button>
+</section>
+<div class="data-source">
+<span id="sourceStatus">Connecting to family database…</span>
+<span class="validation" id="validationStatus"></span>
+</div>
+<section aria-live="polite" class="status" id="status">
+<span id="statusText">Waiting for database…</span>
+<button hidden="" id="detailsButton" type="button">View member details</button>
+</section>
+<section aria-label="Family tree" class="desktop-tree" id="desktopTree">
+<p class="load-message">Loading family tree…</p>
+</section>
+<section aria-label="Family tree mobile" class="mobile-tree" id="mobileTree">
+<p class="load-message">Loading family tree…</p>
+</section>
+</main>
+<dialog id="memberDialog">
+<button aria-label="Close" class="dialog-close" id="closeDialog" type="button">×</button>
+<div id="memberDetails"></div>
+</dialog>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="/js/familyTreeConfig.js"></script>
+<script src="/js/familyTreeApp.js"></script>
+<script src="/js/base.js"></script></body>
+</html>

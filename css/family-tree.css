@@ -268,7 +268,7 @@
 }
 
 .family-tree-page .desktop-tree::after {
-  content: "Drag to explore • Ctrl/⌘ + wheel to zoom • Fit shows the whole tree";
+  content: "Drag or scroll to explore • Keep scrolling at an edge to leave • Ctrl/⌘ + wheel zooms";
   position: sticky;
   left: 12px;
   bottom: 8px;
@@ -288,6 +288,10 @@
 .family-tree-page .tree-canvas {
   position: relative;
   transform-origin: top left;
+}
+
+.family-tree-page .tree-scale-shell {
+  margin-block: 0;
 }
 
 .family-tree-page .tree-canvas {
@@ -549,7 +553,7 @@
   }
 
   .family-tree-page .family-tree-heading h1 {
-    font-size: 2.25rem;
+    font-size: clamp(2rem, 9vw, 2.75rem);
   }
 
   .family-tree-page .family-tree-main {
@@ -566,30 +570,176 @@
   }
 
   .family-tree-page .view-switch button {
-    flex: 1;
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 11px 8px;
+    font-size: clamp(0.78rem, 2.7vw, 0.95rem);
+    white-space: normal;
   }
 
   .family-tree-page .zoom-controls {
-    display: none;
+    display: flex;
+    width: 100%;
+  }
+
+  .family-tree-page .zoom-controls button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-inline: 8px;
   }
 
   .family-tree-page .secondary {
     width: 100%;
   }
 
+
+  /* Mobile now uses the real graphical tree instead of the linear fallback list. */
   .family-tree-page .desktop-tree {
-    display: none;
+    display: block;
+    width: 100%;
+    height: min(68dvh, 640px);
+    min-height: 430px;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    touch-action: none;
+  }
+
+  .family-tree-page .desktop-tree::after {
+    content: "Drag to explore • Pinch to zoom • Double-tap a card for details";
+    max-width: calc(100% - 24px);
+    white-space: normal;
+  }
+
+  /* Center compact fitted families on phones. If a tree is wider than the
+     viewport, auto margins collapse and normal horizontal panning is retained. */
+  .family-tree-page .tree-scale-shell {
+    margin-inline: auto;
   }
 
   .family-tree-page .mobile-tree {
-    display: block;
+    display: none !important;
   }
 
   .family-tree-page .status {
     font-size: 0.9rem;
   }
 
+  #memberDialog {
+    width: min(520px, calc(100% - 20px));
+    max-height: calc(100dvh - 20px);
+    padding: 20px;
+  }
+
   #memberDialog .detail-grid {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .family-tree-page .family-tree-heading {
+    padding: 18px 14px;
+  }
+
+  .family-tree-page .family-tree-heading p {
+    font-size: 1rem;
+  }
+
+  .family-tree-page .family-tree-main {
+    padding: 14px 10px 28px;
+  }
+
+  .family-tree-page .controls {
+    gap: 10px;
+    padding: 11px;
+    border-radius: 13px;
+  }
+
+  .family-tree-page .family-control select,
+  .family-tree-page .search-control input {
+    min-height: 44px;
+    padding: 10px 11px;
+  }
+
+  .family-tree-page .view-switch {
+    display: grid;
+    grid-template-columns: 1fr;
+    overflow: visible;
+    border: 0;
+    gap: 6px;
+    background: transparent;
+  }
+
+  .family-tree-page .view-switch button {
+    width: 100%;
+    min-height: 42px;
+    border: 1px solid #bbb;
+    border-radius: 10px;
+    font-size: 0.9rem;
+  }
+
+  .family-tree-page .view-switch button + button {
+    border-left: 1px solid #bbb;
+  }
+
+  .family-tree-page .results {
+    position: fixed;
+    top: auto;
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
+    width: auto;
+    max-height: min(55vh, 420px);
+    overflow-y: auto;
+  }
+
+  .family-tree-page .mobile-row {
+    grid-template-columns: 22px minmax(0, 1fr);
+    gap: 6px;
+  }
+
+  .family-tree-page .branch {
+    margin-left: 10px;
+  }
+
+  .family-tree-page .mobile-member {
+    min-width: 0;
+    padding: 10px;
+  }
+
+  .family-tree-page .desktop-tree {
+    height: 62dvh;
+    min-height: 390px;
+    border-radius: 13px;
+  }
+
+  #memberDialog {
+    width: calc(100% - 16px);
+    max-height: calc(100dvh - 16px);
+    padding: 16px;
+    border-radius: 13px;
+  }
+
+  #memberDialog .details h2 {
+    padding-right: 32px;
+    font-size: 1.65rem;
+  }
+
+  #memberDialog .detail-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    margin: 14px 0;
+  }
+
+  #memberDialog .detail-grid div:last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+
+  #memberDialog .actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  #memberDialog .actions button {
+    width: 100%;
   }
 }

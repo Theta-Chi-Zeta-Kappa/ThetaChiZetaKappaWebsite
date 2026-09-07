@@ -61,3 +61,19 @@ Leave automatic republishing enabled in Google Sheets if website visitors should
 - Responsive mobile family list
 - Hidden Unique IDs outside member details
 - Founding Father visual treatment
+
+
+## Clean URL structure
+
+Primary routes now use directory-based `index.html` files so GitHub Pages serves clean URLs:
+
+- `/`
+- `/gallery/`
+- `/newsletter/`
+- `/blog/`
+- `/family-tree/`
+- `/blog/rock-the-tundra-2025/`
+- `/blog/homecoming-2025/`
+- `/blog/rush-2025/`
+
+Legacy `.html` entry points are retained as redirects for compatibility. Run `server.bat` on Windows to preview locally at `http://localhost:8000/`.
