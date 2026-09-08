@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Post Viewer | Theta Chi Zeta Kappa</title>
+  <link rel="icon" type="image/x-icon" href="/assets/img/icon.png">
+  <link rel="stylesheet" href="/css/base.css">
+  <link rel="stylesheet" href="/css/post-viewer.css">
+</head>
+<body>
+  <header class="branding-header">
+    <div class="contact-us">Contact Us:</div>
+    <a href="https://www.facebook.com/ThetaChiZK/" aria-label="Theta Chi Zeta Kappa on Facebook"><img alt="Facebook" src="/assets/icons/path-10.svg"></a>
+    <a href="https://www.instagram.com/onuthetachi/" aria-label="Theta Chi Zeta Kappa on Instagram"><img alt="Instagram" src="/assets/icons/path-20.svg"></a>
+    <a href="tel:440-563-1851" aria-label="Call Theta Chi Zeta Kappa"><img alt="Phone" src="/assets/icons/path-30.svg"></a>
+  </header>
+
+  <header class="branding-header-large">
+    <div class="hamburger" onclick="toggleSidebar(this)">
+      <span></span><span></span><span></span>
+    </div>
+    <nav class="sidebar" id="sidebar">
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/newsletter/">Newsletter</a></li>
+        <li><a href="/gallery/">Gallery</a></li>
+        <li><a href="/blog/">Blog</a></li>
+        <li><a href="/family-tree/">Family Trees</a></li>
+      </ul>
+    </nav>
+    <a href="/"><img alt="Theta Chi Zeta Kappa" src="/assets/img/mainlogo.png"></a>
+    <div class="gallery-text">Post</div>
+  </header>
+
+  <main class="viewer-shell">
+    <nav id="viewerCategories" class="viewer-categories" aria-label="Post categories" hidden></nav>
+    <div id="viewerStatus" class="viewer-status" role="status">Loading post…</div>
+    <section class="pdf-stage" aria-label="Post document">
+      <div id="pdfPages" class="pdf-pages" hidden></div>
+    </section>
+    <div id="viewerActions" class="viewer-actions" hidden>
+      <a id="downloadPost" class="viewer-action primary" href="#">Download PDF</a>
+      <a id="openPost" class="viewer-action" href="#" target="_blank" rel="noopener">Open Original</a>
+      <a id="backToPosts" class="viewer-action" href="/blog/">Back to Blog</a>
+    </div>
+  </main>
+
+  <footer class="viewer-footer">Theta Chi Fraternity · Zeta Kappa Chapter · Ohio Northern University</footer>
+
+  <script src="/js/base.js"></script>
+  <script src="/js/posts-data.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="/js/post-viewer.js"></script>
+</body>
+</html>
