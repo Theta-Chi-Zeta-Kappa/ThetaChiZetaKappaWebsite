@@ -45,12 +45,17 @@
       </div>
     </section>
 
-    <div id="viewerStatus" class="viewer-status" role="status">Loading sponsorship opportunities…</div>
-    <section class="pdf-stage" aria-label="Sponsorship opportunities document">
-      <div id="pdfPages" class="pdf-pages" hidden></div>
+    <section class="native-pdf-stage" aria-label="Sponsorship opportunities document">
+      <iframe
+        id="sponsorPdf"
+        class="sponsor-pdf-frame"
+        src="/assets/docs/OX-Sponsorship-Opportunities.pdf#view=FitH"
+        title="Theta Chi Zeta Kappa Sponsorship Opportunities">
+      </iframe>
+      <p class="pdf-embed-fallback">If the sponsorship packet does not appear in your browser, use Open Original or Download PDF below.</p>
     </section>
 
-    <div id="viewerActions" class="viewer-actions" hidden>
+    <div id="viewerActions" class="viewer-actions">
       <a id="downloadSponsor" class="viewer-action primary" href="/assets/docs/OX-Sponsorship-Opportunities.pdf" download>Download PDF</a>
       <a id="openSponsor" class="viewer-action" href="/assets/docs/OX-Sponsorship-Opportunities.pdf" target="_blank" rel="noopener">Open Original</a>
     </div>
@@ -59,7 +64,6 @@
   <footer class="viewer-footer">Theta Chi Fraternity · Zeta Kappa Chapter · Ohio Northern University</footer>
 
   <script src="/js/base.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="/js/sponsors.js"></script>
 </body>
 </html>
