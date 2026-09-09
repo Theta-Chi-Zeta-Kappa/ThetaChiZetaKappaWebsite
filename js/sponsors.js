@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  const PDF_URL = 'assets/docs/OX-Sponsorship Opportunities.pdf';
+  const PDF_URL = 'assets/docs/OX-Sponsorship-Opportunities.pdf';
   const pagesRoot = document.getElementById('pdfPages');
   const statusRoot = document.getElementById('viewerStatus');
   const actionsRoot = document.getElementById('viewerActions');
