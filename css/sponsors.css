@@ -1,0 +1,39 @@
+.sponsor-intro {
+  background: #171717;
+  color: #fff;
+  padding: 2rem 1rem;
+  border-bottom: 4px solid #c9935b;
+}
+
+.sponsor-intro-inner {
+  width: min(980px, 100%);
+  margin: 0 auto;
+  text-align: center;
+}
+
+.sponsor-kicker {
+  margin: 0 0 0.45rem;
+  color: #c9935b;
+  font: 700 0.82rem/1.2 Arial, sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.sponsor-intro h1 {
+  margin: 0;
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 1.05;
+}
+
+.sponsor-intro p:not(.sponsor-kicker) {
+  max-width: 760px;
+  margin: 0.85rem auto 0;
+  color: #eee7df;
+  font: 1rem/1.65 Arial, sans-serif;
+}
+
+@media (max-width: 700px) {
+  .sponsor-intro {
+    padding: 1.5rem 1rem;
+  }
+}
