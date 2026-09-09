@@ -28,5 +28,32 @@
         }
       });
     });
+
+    // Desktop browsers often have no handler for tel: links. On desktop,
+    // copy the chapter phone number instead; phones retain normal tap-to-call.
+    document.querySelectorAll('.branding-header a[href^="tel:"]').forEach(function (link) {
+      link.setAttribute('title', '(567) 525-2962');
+      link.setAttribute('aria-label', 'Call Theta Chi Zeta Kappa at (567) 525-2962');
+
+      link.addEventListener('click', function (event) {
+        var desktopPointer = window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+        if (!desktopPointer) return;
+
+        event.preventDefault();
+        var label = document.querySelector('.branding-header .contact-us');
+        var original = label ? label.textContent : '';
+
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText('(567) 525-2962').then(function () {
+            if (label) label.textContent = 'Phone copied!';
+            window.setTimeout(function () {
+              if (label) label.textContent = original;
+            }, 1600);
+          });
+        } else {
+          window.prompt('Chapter phone number:', '(567) 525-2962');
+        }
+      });
+    });
   });
 })();
