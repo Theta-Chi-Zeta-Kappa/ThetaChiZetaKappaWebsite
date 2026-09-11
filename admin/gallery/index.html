@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>TCZK Gallery Manager</title>
+  <link rel="icon" href="/assets/img/icon.png">
+  <link rel="stylesheet" href="/css/admin.css?v=20260910-gallerymanager1">
+</head>
+<body data-admin-protected>
+<div class="admin-shell">
+  <aside class="admin-sidebar" id="adminSidebar">
+    <div class="admin-brand"><img src="/assets/img/mainlogo.png" alt="Theta Chi Zeta Kappa"><small>ADMIN PORTAL</small></div>
+    <nav class="admin-nav">
+      <a href="/admin/dashboard/">▣ Dashboard</a>
+      <span class="section-label">Content</span><a href="/admin/content/">▤ Blog &amp; Newsletter</a><a href="/admin/content/approvals/" data-admin-only>✓ Content Approvals</a>
+      <span class="section-label">Media</span>
+      <a class="active" href="/admin/gallery/">▧ Gallery</a>
+      <a href="/admin/gallery/upload/">⇧ Upload Batch</a>
+      <a href="/admin/gallery/approvals/" data-admin-only>✓ Gallery Approvals</a>
+      <a href="/admin/gallery/changes/" data-admin-only>↺ Change Requests</a>
+      <span class="section-label">System</span><a href="/admin/settings/" data-admin-only>⚙ Site Tools</a>
+    </nav>
+    <div class="admin-logout"><a href="/admin/" data-admin-logout>↪ Log Out</a></div>
+  </aside>
+
+  <main class="admin-main">
+    <header class="admin-topbar">
+      <button class="menu-toggle" data-admin-menu aria-label="Open menu">☰</button>
+      <h1>Gallery Manager</h1>
+      <div class="admin-user"><span class="api-status api-status-checking" id="managerApiStatus"><span class="api-dot"></span> Loading</span> <span data-admin-user>Administrator ●</span></div>
+    </header>
+
+    <div class="admin-content">
+      <div class="page-head gallery-manager-head">
+        <div><h2>Published Gallery</h2><p>Search, correct, hide, restore, and audit photographs already in the live gallery.</p></div>
+        <div class="page-head-actions"><a class="secondary-btn" href="/admin/gallery/approvals/" data-admin-only>Review Approvals</a><a class="primary-btn" href="/admin/gallery/upload/">＋ Upload Batch</a></div>
+      </div>
+
+      <section class="gallery-manager-stats" id="galleryManagerStats">
+        <article class="stat-card"><div class="stat-icon">▧</div><div><strong id="gmTotal">—</strong><b>Total Records</b><span>All D1 gallery records</span></div></article>
+        <article class="stat-card"><div class="stat-icon">◉</div><div><strong id="gmVisible">—</strong><b>Public</b><span>Visible on gallery</span></div></article>
+        <article class="stat-card"><div class="stat-icon">⊘</div><div><strong id="gmHidden">—</strong><b>Hidden</b><span>Retained but not public</span></div></article>
+        <article class="stat-card"><div class="stat-icon">?</div><div><strong id="gmNeedsYear">—</strong><b>Needs Year</b><span>Missing year metadata</span></div></article>
+        <article class="stat-card"><div class="stat-icon">⌁</div><div><strong id="gmLegacy">—</strong><b>Legacy</b><span>Original migrated records</span></div></article>
+      </section>
+
+      <section class="panel gallery-manager-toolbar">
+        <div class="gm-search-wrap"><label for="gmSearch">Search</label><input id="gmSearch" type="search" placeholder="Filename, caption, event, year, image ID…"></div>
+        <div><label for="gmVisibility">Visibility</label><select id="gmVisibility"><option value="all">All</option><option value="visible">Visible</option><option value="hidden">Hidden</option></select></div>
+        <div><label for="gmDecade">Decade</label><select id="gmDecade"><option value="all">All decades</option></select></div>
+        <div><label for="gmBatch">Batch</label><select id="gmBatch"><option value="all">All batches</option></select></div>
+        <div><label for="gmOrigin">Origin</label><select id="gmOrigin"><option value="all">All</option><option value="legacy">Legacy</option><option value="portal">Admin uploads</option></select></div>
+        <div><label for="gmSort">Sort</label><select id="gmSort"><option value="newest">Newest added</option><option value="oldest">Oldest added</option><option value="year-desc">Year newest</option><option value="year-asc">Year oldest</option><option value="name">Filename</option></select></div>
+        <button class="secondary-btn small" type="button" id="gmClearFilters">Clear</button>
+      </section>
+
+      <section class="panel gm-selection-bar" id="gmSelectionBar" hidden>
+        <div><strong id="gmSelectionCount">0 selected</strong><span class="muted" id="gmSelectionHint">Bulk tools are available to Administrators.</span></div>
+        <div class="gm-bulk-actions" data-admin-only>
+          <input id="gmBulkYear" type="number" min="1900" max="2099" placeholder="Year">
+          <button class="secondary-btn small" type="button" id="gmBulkSetYear">Set Year</button>
+          <button class="secondary-btn small" type="button" id="gmBulkShow">Make Visible</button>
+          <button class="danger-btn small" type="button" id="gmBulkHide">Hide</button>
+        </div>
+      </section>
+
+      <section class="panel gm-library-panel">
+        <div class="panel-head gm-library-head">
+          <div><h3>Gallery Library</h3><span class="muted" id="gmResultCount">Loading gallery…</span></div>
+          <label class="select-check"><input type="checkbox" id="gmSelectAll"> Select visible results</label>
+        </div>
+        <div class="gm-grid" id="gmGrid"></div>
+        <div class="empty-filter-state" id="gmEmpty" hidden>No gallery records match these filters.</div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div class="modal-backdrop" id="gmEditorModal" hidden>
+  <div class="confirm-modal gm-editor-modal" role="dialog" aria-modal="true" aria-labelledby="gmEditorTitle">
+    <button class="gm-modal-close" type="button" id="gmCloseEditor" aria-label="Close">×</button>
+    <div class="gm-editor-layout">
+      <section class="gm-editor-image-column">
+        <div class="gm-editor-image-wrap"><img id="gmEditorImage" alt="Gallery image preview"><span class="status-pill" id="gmEditorVisibility">Visible</span></div>
+        <div class="rotation-controls"><button class="secondary-btn" type="button" id="gmRotateLeft">↶ Rotate Left</button><button class="secondary-btn" type="button" id="gmRotateRight">Rotate Right ↷</button></div>
+        <p class="editor-help">Rotation changes metadata only; the original R2 image object is not overwritten.</p>
+      </section>
+      <section class="gm-editor-fields">
+        <span class="eyebrow">PUBLISHED IMAGE</span><h2 id="gmEditorTitle">Edit Gallery Image</h2>
+        <div class="gm-badges" id="gmEditorBadges"></div>
+        <div class="gm-form-grid">
+          <div class="field compact-field"><label for="gmEditorYear">Year</label><input id="gmEditorYear" type="number" min="1900" max="2099"></div>
+          <div class="field compact-field"><label for="gmEditorDecade">Decade</label><input id="gmEditorDecade" type="text" readonly></div>
+          <div class="field gm-span-2"><label for="gmEditorAlt">Alt text</label><input id="gmEditorAlt" type="text" maxlength="300"></div>
+          <div class="field gm-span-2"><label for="gmEditorCaption">Caption</label><textarea id="gmEditorCaption" rows="3" maxlength="1000"></textarea></div>
+          <div class="field"><label for="gmEditorEvent">Event</label><input id="gmEditorEvent" type="text" maxlength="200"></div>
+          <div class="field"><label for="gmEditorSource">Source</label><input id="gmEditorSource" type="text" maxlength="200"></div>
+        </div>
+        <label class="gm-visibility-toggle"><input type="checkbox" id="gmEditorHidden"> Hide from public gallery</label>
+        <div class="gm-system-info" id="gmSystemInfo"></div>
+        <div class="gm-editor-actions"><button class="secondary-btn" type="button" id="gmCancelEdit">Cancel</button><button class="primary-btn" type="button" id="gmSaveEdit">Save Changes</button></div>
+        <div class="notice" id="gmEditorRoleNotice"></div>
+        <div class="gm-history"><div class="panel-head"><h3>Change History</h3><span class="muted" id="gmHistoryStatus">Loading…</span></div><div id="gmHistoryList" class="gm-history-list"></div></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="gmConfirmModal" hidden>
+  <div class="confirm-modal" role="dialog" aria-modal="true"><span class="eyebrow">CONFIRM CHANGE</span><h2 id="gmConfirmTitle">Confirm</h2><p id="gmConfirmCopy"></p><div class="modal-actions"><button class="secondary-btn" type="button" id="gmConfirmCancel">Cancel</button><button class="primary-btn" type="button" id="gmConfirmAccept">Confirm</button></div></div>
+</div>
+
+<script src="/js/admin-config.js?v=20260910-gallerymanager1"></script>
+<script src="/js/admin-auth.js?v=20260910-gallerymanager1"></script>
+<script src="/js/admin.js?v=20260910-gallerymanager1"></script>
+<script src="/js/admin-gallery-manager.js?v=20260910-gallerymanager1"></script>
+</body></html>

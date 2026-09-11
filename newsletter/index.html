@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="The latest newsletter from Theta Chi Zeta Kappa at Ohio Northern University.">
+  <meta name="description" content="Current and past newsletters from Theta Chi Zeta Kappa at Ohio Northern University.">
   <title>Newsletter | Theta Chi Zeta Kappa</title>
   <link rel="icon" type="image/x-icon" href="/assets/img/icon.png">
   <link rel="stylesheet" href="/css/base.css">
@@ -31,12 +31,28 @@
     <div class="gallery-text">Newsletter</div>
   </header>
 
-  <main class="newsletter-loading">
-    <div id="newsletterStatus">Opening the current newsletter…</div>
+  <main class="newsletter-page">
+    <section class="newsletter-intro">
+      <div class="newsletter-eyebrow">Zeta Kappa Publications</div>
+      <h1>Chapter Newsletter</h1>
+      <p>Read the current issue and explore past newsletters from the Zeta Kappa Chapter of Theta Chi.</p>
+    </section>
+
+    <div id="newsletterStatus" class="newsletter-status" role="status">Loading newsletters…</div>
+
+    <section id="currentNewsletter" class="current-newsletter" aria-label="Current newsletter"></section>
+
+    <section class="newsletter-archive-section" aria-labelledby="newsletter-archive-heading">
+      <div class="newsletter-section-heading">
+        <div class="newsletter-eyebrow">Archive</div>
+        <h2 id="newsletter-archive-heading">Past Issues</h2>
+      </div>
+      <div id="newsletterArchive"></div>
+    </section>
   </main>
 
   <script src="/js/base.js"></script>
-  <script src="/js/posts-data.js"></script>
-  <script src="/js/newsletter.js"></script>
+  <script src="/js/posts-data.js?v=20260910-phase4-1"></script>
+  <script src="/js/newsletter.js?v=20260910-phase4-1"></script>
 </body>
 </html>

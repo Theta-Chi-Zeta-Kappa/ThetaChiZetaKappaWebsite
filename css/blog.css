@@ -165,6 +165,13 @@ body {
   padding: 2rem;
 }
 
+/* The fallback placeholder sits next to the real image in the DOM.
+   Author CSS can otherwise override the browser's native [hidden] rule,
+   causing both the cover and placeholder to render and making cards extremely tall. */
+.post-image-placeholder[hidden] {
+  display: none !important;
+}
+
 .featured-content {
   display: flex;
   flex-direction: column;

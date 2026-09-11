@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>TCZK Admin Gallery Upload</title>
+  <link rel="icon" href="/assets/img/icon.png">
+  <link rel="stylesheet" href="/css/admin.css?v=20260910-gallerymanager1">
+</head>
+<body data-admin-protected>
+<div class="admin-shell">
+  <aside class="admin-sidebar" id="adminSidebar">
+    <div class="admin-brand">
+      <img src="/assets/img/mainlogo.png" alt="Theta Chi Zeta Kappa">
+      <small>ADMIN PORTAL</small>
+    </div>
+    <nav class="admin-nav">
+      <a href="/admin/dashboard/">▣ Dashboard</a>
+      <span class="section-label">Content</span>
+      <a href="#">▤ Newsletters</a>
+      <a href="#">✎ Blog Posts</a>
+      <span class="section-label">Media</span>
+      <a href="/admin/gallery/">▧ Gallery</a><a class="active" href="/admin/gallery/upload/">⇧ Upload Batch</a><a href="/admin/gallery/approvals/" data-admin-only>✓ Gallery Approvals</a><a href="/admin/gallery/changes/" data-admin-only>↺ Change Requests</a>
+      <span class="section-label">System</span>
+      <a href="/admin/settings/" data-admin-only>⚙ Site Tools</a>
+    </nav>
+    <div class="admin-logout"><a href="/admin/" data-admin-logout>↪ Log Out</a></div>
+  </aside>
+
+  <main class="admin-main">
+    <header class="admin-topbar">
+      <button class="menu-toggle" data-admin-menu aria-label="Open menu">☰</button>
+      <h1>Gallery Upload</h1>
+      <div class="admin-user"><span class="api-status api-status-checking" id="apiStatus"><span class="api-dot"></span> API checking</span> <span data-admin-user>Administrator ●</span></div>
+    </header>
+
+    <div class="admin-content">
+      <div class="page-head">
+        <div>
+          <h2>Gallery</h2>
+          <p>Process locally, upload one batch, check it against the live gallery catalog, review the images, then submit the batch for administrator approval.</p>
+        </div>
+        <a class="secondary-btn" href="/assets/tools/Gallery-v3-Batch-Processor.zip" download>↓ Download Processor</a>
+      </div>
+
+      <section class="gallery-upload-layout" id="uploadArea">
+        <section class="dropzone" id="galleryDropzone">
+          <div>
+            <div class="dropzone-icon">⇧</div>
+            <h3>Upload Processed Gallery Batch</h3>
+            <p>Drop the <b>gallery-batch.zip</b> created by the Gallery v3 processor here, or choose it from your computer.</p>
+            <input id="galleryBatchInput" type="file" accept=".zip,application/zip" hidden>
+            <button class="primary-btn" type="button" id="chooseBatch">Choose ZIP</button>
+            <div class="file-summary" id="fileSummary" aria-live="polite"></div>
+          </div>
+        </section>
+
+        <section class="panel tool-card">
+          <h3>Batch Requirements</h3>
+          <ul class="checklist">
+            <li><span class="check">✓</span><span><b>display/</b> contains the full-size WebP files.</span></li>
+            <li><span class="check">✓</span><span><b>thumbs/</b> contains matching thumbnail WebPs.</span></li>
+            <li><span class="check">✓</span><span><b>manifest.json</b> identifies the processor version and batch.</span></li>
+            <li><span class="check">✓</span><span>The current legacy gallery remains untouched until Publish is approved.</span></li>
+          </ul>
+          <div class="notice" style="margin-top:1rem">
+            This page opens Gallery v3 ZIPs locally, then checks their image hashes against the live D1 gallery catalog. Approved submissions are staged securely in R2. Editors submit for approval; only Admins can publish staged images into the live display/ and thumbs/ folders.
+          </div>
+        </section>
+      </section>
+
+      <section class="review-workspace" id="reviewWorkspace" hidden>
+        <div class="review-summary-bar panel">
+          <div>
+            <span class="eyebrow">CURRENT BATCH</span>
+            <h3 id="batchTitle">Gallery Batch</h3>
+            <p id="batchSummaryText">0 images ready for review</p>
+          </div>
+          <div class="review-summary-actions">
+            <button class="secondary-btn" type="button" id="replaceBatch">Replace ZIP</button>
+            <button class="danger-btn" type="button" id="discardBatch">Discard Batch</button>
+          </div>
+        </div>
+
+        <div class="review-toolbar panel">
+          <div class="toolbar-group">
+            <label class="select-check"><input type="checkbox" id="selectAllImages"> Select all</label>
+            <span class="selection-count" id="selectionCount">0 selected</span>
+          </div>
+          <div class="toolbar-group toolbar-batch-edit">
+            <label for="bulkYear">Set year</label>
+            <input id="bulkYear" class="year-input compact" type="number" min="1900" max="2099" placeholder="Year">
+            <button class="secondary-btn small" type="button" id="applyBulkYear">Apply to Batch</button>
+          </div>
+          <div class="toolbar-group toolbar-filters">
+            <button class="filter-chip active" type="button" data-review-filter="all">All</button>
+            <button class="filter-chip" type="button" data-review-filter="needs-year">Needs year</button>
+            <button class="filter-chip" type="button" data-review-filter="duplicates">Duplicates</button>
+            <button class="filter-chip" type="button" data-review-filter="removed">Removed</button>
+          </div>
+        </div>
+
+        <div class="review-content-layout">
+          <section class="review-grid-panel panel">
+            <div class="panel-head review-panel-head">
+              <div>
+                <h3>Review Images</h3>
+                <span class="muted">Select images for targeted edits. If none are selected, Apply to Batch updates every active image.</span>
+              </div>
+              <span class="muted" id="visibleImageCount">0 images</span>
+            </div>
+            <div class="review-image-grid" id="reviewImageGrid"></div>
+            <div class="empty-filter-state" id="emptyFilterState" hidden>No images match this filter.</div>
+          </section>
+
+          <aside class="review-editor panel" id="reviewEditor">
+            <div class="panel-head">
+              <h3>Image Details</h3>
+              <span class="status-pill" id="editorStatus">Select an image</span>
+            </div>
+            <div class="editor-empty" id="editorEmpty">
+              <div class="editor-empty-icon">▧</div>
+              <p>Select an image from the review grid to edit its year, rotation, or publication status.</p>
+            </div>
+            <div class="editor-body" id="editorBody" hidden>
+              <div class="editor-preview-wrap">
+                <img id="editorPreview" alt="Selected gallery image preview">
+                <span class="rotation-badge" id="rotationBadge">0°</span>
+              </div>
+              <dl class="image-file-details">
+                <div><dt>Source</dt><dd id="editorOriginalName">—</dd></div>
+                <div><dt>WebP</dt><dd id="editorWebFile">—</dd></div>
+                <div><dt>Size</dt><dd id="editorDimensions">—</dd></div>
+              </dl>
+
+              <div class="field compact-field">
+                <label for="editorYear">Year</label>
+                <input id="editorYear" type="number" min="1900" max="2099" placeholder="Enter year">
+              </div>
+              <div class="derived-field">
+                <span>Decade</span>
+                <strong id="editorDecade">—</strong>
+              </div>
+
+              <div class="editor-section-label">Orientation</div>
+              <div class="rotation-controls">
+                <button class="secondary-btn" type="button" id="rotateLeft">↶ Rotate Left</button>
+                <button class="secondary-btn" type="button" id="rotateRight">Rotate Right ↷</button>
+              </div>
+              <p class="editor-help">Rotation is previewed here now. Rotation is stored with the approved gallery record and rendered consistently on the public gallery.</p>
+
+              <button class="danger-btn full" type="button" id="toggleRemoveImage">Remove From Batch</button>
+            </div>
+          </aside>
+        </div>
+
+        <section class="publish-panel panel">
+          <div>
+            <span class="eyebrow">FINAL CHECK</span>
+            <h3>Submit Gallery Batch</h3>
+            <div class="publish-checks" id="publishChecks"></div>
+          </div>
+          <div class="publish-side">
+            <div class="publish-count"><strong id="publishCount">0</strong><span>images ready</span></div>
+            <button class="primary-btn publish-btn" type="button" id="publishBatch" disabled>Submit for Approval</button>
+          </div>
+        </section>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div class="modal-backdrop" id="publishModal" hidden>
+  <div class="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="publishModalTitle">
+    <span class="eyebrow">SUBMISSION CONFIRMATION</span>
+    <h2 id="publishModalTitle">Submit for approval?</h2>
+    <p id="publishModalCopy">This batch is ready.</p>
+    <div class="confirm-summary" id="publishModalSummary"></div>
+    <div class="modal-actions">
+      <button class="secondary-btn" type="button" id="cancelPublish">Cancel</button>
+      <button class="primary-btn" type="button" id="confirmPublish">Submit for Approval</button>
+    </div>
+    <p class="backend-note">Submitting uploads the reviewed active image pairs to a staging area in Cloudflare R2. They are not public gallery records until an Admin approves and publishes them.</p><div class="upload-progress" id="uploadProgress"></div>
+  </div>
+</div>
+
+<script src="/js/admin-config.js?v=20260910-gallerymanager1"></script>
+<script src="/js/admin-auth.js?v=20260910-gallerymanager1"></script>
+<script src="/js/admin.js?v=20260910-gallerymanager1"></script>
+</body>
+</html>

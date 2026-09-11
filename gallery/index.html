@@ -31,7 +31,7 @@
 <li><a href="/newsletter/">Newsletter</a></li>
 <li><a href="/gallery/">Gallery</a></li>
 <li><a href="/blog/">Blog</a></li>
-<!--<li><a href="Rsvp.html">Anniversary RSVP</a></li>/-->
+
 <li><a href="/family-tree/">Family Trees</a></li>
 </ul>
 </nav>
@@ -63,6 +63,7 @@
 </div>
 
 <script src="/data/gallery-data.js"></script>
+<script src="https://tczk-admin-api.jackkinn13.workers.dev/api/gallery-data.js"></script>
 <script>
     const TARGET = document.getElementById('galleryContainer');
     const modalOverlay = document.getElementById('modalOverlay');
@@ -148,6 +149,7 @@
       img.loading = 'lazy';
       img.decoding = 'async';
       img.referrerPolicy = 'no-referrer';
+      if (image.rotation) img.style.transform = `rotate(${Number(image.rotation)||0}deg)`;
 
       const markLoaded = () => item.classList.add('loaded');
       if (img.complete && img.naturalWidth) markLoaded();
@@ -161,6 +163,7 @@
       item.addEventListener('click', () => {
         modalImage.src = image.display || image.src;
         modalImage.alt = image.alt || '';
+        modalImage.style.transform = `rotate(${Number(image.rotation)||0}deg)`;
         buildModalMetadata(image, date);
         modalOverlay.classList.add('active');
         document.body.style.overflow = 'hidden';

@@ -1,217 +1,39 @@
 (function () {
   'use strict';
 
-  const SHEET_ID = '1PIvHi5eBVqoRF0vohF_jwWJG3e02tyaFg_Q2JDsfM00';
-  const SHEET_NAME = 'Posts';
-  const RANGE = 'A4:L';
+  const API_BASE = 'https://tczk-admin-api.jackkinn13.workers.dev';
+  let cachedLoad = null;
 
-  const COLUMN_MAP = {
-    type: 0,
-    title: 1,
-    publishDate: 2,
-    slug: 3,
-    categories: 4,
-    summary: 5,
-    pdfLink: 6,
-    featuredImage: 7,
-    author: 8,
-    authorImage: 9,
-    published: 10,
-    featured: 11
-  };
-
-  function cellValue(cell) {
-    if (!cell) return '';
-    if (typeof cell.v !== 'undefined' && cell.v !== null) return String(cell.v).trim();
-    return '';
+  function normalizeType(value) { return String(value || '').trim().toLowerCase() === 'newsletter' ? 'Newsletter' : 'Blog'; }
+  function parseDate(value) { if (!value) return null; const d = new Date(value); return Number.isNaN(d.getTime()) ? null : d; }
+  function splitCategories(value) { return Array.isArray(value) ? value.map(v=>String(v||'').trim()).filter(Boolean) : String(value||'').split(',').map(v=>v.trim()).filter(Boolean); }
+  function normalizeApiPost(post) { return {
+    id: post.id || '', type: normalizeType(post.type), title: String(post.title || '').trim(),
+    publishDateRaw: post.publicationDate || post.publishedAt || '', publishDate: parseDate(post.publicationDate || post.publishedAt),
+    slug: String(post.slug || '').trim(), categories: splitCategories(post.categories), summary: String(post.summary || '').trim(),
+    pdfLink: String(post.pdfUrl || '').trim(), featuredImage: String(post.coverUrl || '').trim(), author: String(post.authorName || '').trim(),
+    authorImage: String(post.authorImageUrl || '').trim(), season: String(post.season || '').trim(), year: post.year == null ? null : Number(post.year),
+    published: true, featured: Boolean(post.featured), currentNewsletter: Boolean(post.currentNewsletter), source: 'cms'
+  }; }
+  async function loadFromApi() {
+    const response = await fetch(`${API_BASE}/api/public/posts`, {method:'GET',mode:'cors',cache:'no-store',headers:{Accept:'application/json'}});
+    if (!response.ok) throw new Error(`CMS returned ${response.status}`);
+    const payload = await response.json();
+    if (!payload || payload.ok !== true || !Array.isArray(payload.posts)) throw new Error('CMS response was invalid.');
+    return payload.posts.map(normalizeApiPost).filter(p=>p.title&&p.slug);
   }
-
-  function parseGoogleDate(value) {
-    if (!value) return null;
-    const googleDate = String(value).match(/^Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+),(\d+))?\)$/);
-    if (googleDate) {
-      return new Date(
-        Number(googleDate[1]),
-        Number(googleDate[2]),
-        Number(googleDate[3]),
-        Number(googleDate[4] || 0),
-        Number(googleDate[5] || 0),
-        Number(googleDate[6] || 0)
-      );
-    }
-    const parsed = new Date(value);
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
-  }
-
-  function splitCategories(value) {
-    return String(value || '')
-      .split(',')
-      .map((item) => item.trim())
-      .filter(Boolean);
-  }
-
-  function normalizeType(value) {
-    const normalized = String(value || '').trim().toLowerCase();
-    if (normalized === 'newsletter') return 'Newsletter';
-    if (normalized === 'blog') return 'Blog';
-    return value ? String(value).trim() : 'Blog';
-  }
-
-  function yes(value) {
-    return String(value || '').trim().toLowerCase() === 'yes';
-  }
-
-  function normalizeRow(row) {
-    const cells = row.c || [];
-    const rawDate = cellValue(cells[COLUMN_MAP.publishDate]);
-    const date = parseGoogleDate(rawDate);
-
-    return {
-      type: normalizeType(cellValue(cells[COLUMN_MAP.type])),
-      title: cellValue(cells[COLUMN_MAP.title]),
-      publishDateRaw: rawDate,
-      publishDate: date,
-      slug: cellValue(cells[COLUMN_MAP.slug]),
-      categories: splitCategories(cellValue(cells[COLUMN_MAP.categories])),
-      summary: cellValue(cells[COLUMN_MAP.summary]),
-      pdfLink: cellValue(cells[COLUMN_MAP.pdfLink]),
-      featuredImage: cellValue(cells[COLUMN_MAP.featuredImage]),
-      author: cellValue(cells[COLUMN_MAP.author]),
-      authorImage: cellValue(cells[COLUMN_MAP.authorImage]),
-      published: yes(cellValue(cells[COLUMN_MAP.published])),
-      featured: yes(cellValue(cells[COLUMN_MAP.featured]))
-    };
-  }
-
-  function loadPosts() {
-    return new Promise((resolve, reject) => {
-      const callbackName = '__tczkPostsCallback_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
-      const timeout = window.setTimeout(() => {
-        cleanup();
-        reject(new Error('The Posts sheet took too long to respond.'));
-      }, 15000);
-
-      const script = document.createElement('script');
-      const cleanup = () => {
-        window.clearTimeout(timeout);
-        if (script.parentNode) script.parentNode.removeChild(script);
-        try { delete window[callbackName]; } catch (error) { window[callbackName] = undefined; }
-      };
-
-      window[callbackName] = (response) => {
-        if (!response || response.status === 'error') {
-          cleanup();
-          reject(new Error('Google Sheets returned an error for the Posts tab.'));
-          return;
-        }
-
-        const rows = (((response || {}).table || {}).rows || [])
-          .map(normalizeRow)
-          .filter((post) => post.title && post.slug);
-
-        cleanup();
-        resolve(rows);
-      };
-
-      const query = new URLSearchParams({
-        sheet: SHEET_NAME,
-        range: RANGE,
-        tqx: 'out:json;responseHandler:' + callbackName,
-        headers: '1'
-      });
-      script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?${query.toString()}`;
-      script.async = true;
-      script.onerror = () => {
-        cleanup();
-        reject(new Error('The Posts sheet could not be loaded.'));
-      };
-      document.head.appendChild(script);
-    });
-  }
-
-  function sortNewest(posts) {
-    return [...posts].sort((a, b) => {
-      const aTime = a.publishDate ? a.publishDate.getTime() : 0;
-      const bTime = b.publishDate ? b.publishDate.getTime() : 0;
-      return bTime - aTime;
-    });
-  }
-
-  function getPublished(posts) {
-    return sortNewest(posts.filter((post) => post.published));
-  }
-
-  function getFeatured(posts) {
-    return getPublished(posts).filter((post) => post.featured)[0] || null;
-  }
-
-  function getFeaturedNewsletter(posts) {
-    return getPublished(posts).filter((post) => post.type === 'Newsletter' && post.featured)[0] || null;
-  }
-
-  function getPostBySlug(posts, slug) {
-    const target = String(slug || '').trim().toLowerCase();
-    return posts.find((post) => post.published && post.slug.toLowerCase() === target) || null;
-  }
-
-  function getViewerUrl(post) {
-    if (!post) return '#';
-    const slug = encodeURIComponent(post.slug);
-    return post.type === 'Newsletter'
-      ? `/newsletter/view/?issue=${slug}`
-      : `/blog/view/?post=${slug}`;
-  }
-
-  function extractDriveFileId(url) {
-    const value = String(url || '').trim();
-    if (!value) return '';
-    const pathMatch = value.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-    if (pathMatch) return pathMatch[1];
-    const idMatch = value.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-    if (idMatch) return idMatch[1];
-    return '';
-  }
-
-  function getPdfPreviewUrl(url) {
-    const fileId = extractDriveFileId(url);
-    if (fileId) return `https://drive.google.com/file/d/${fileId}/preview`;
-    return url;
-  }
-
-  function getDownloadUrl(url) {
-    const fileId = extractDriveFileId(url);
-    if (fileId) return `https://drive.google.com/uc?export=download&id=${fileId}`;
-    return url;
-  }
-
-  function getImageUrl(url) {
-    const value = String(url || '').trim();
-    if (!value) return '';
-    const fileId = extractDriveFileId(value);
-    if (fileId) return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1600`;
-    if (value.startsWith('assets/')) return '/' + value;
-    return value;
-  }
-
-  function formatDate(date, options) {
-    if (!date) return '';
-    return new Intl.DateTimeFormat('en-US', options || {
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric'
-    }).format(date);
-  }
-
-  window.TCZKPosts = {
-    load: loadPosts,
-    getPublished,
-    getFeatured,
-    getFeaturedNewsletter,
-    getPostBySlug,
-    getViewerUrl,
-    getPdfPreviewUrl,
-    getDownloadUrl,
-    getImageUrl,
-    formatDate
-  };
+  async function loadPosts(options) { const force=Boolean(options&&options.force); if(!force&&cachedLoad)return cachedLoad; cachedLoad=loadFromApi(); try{return await cachedLoad;}catch(e){cachedLoad=null;throw e;} }
+  async function loadPostBySlug(slug) { const target=String(slug||'').trim(); if(!target)return null; const response=await fetch(`${API_BASE}/api/public/post?slug=${encodeURIComponent(target)}`,{cache:'no-store',headers:{Accept:'application/json'}}); if(response.status===404)return null; if(!response.ok)throw new Error(`CMS returned ${response.status}`); const payload=await response.json(); return payload&&payload.ok&&payload.post?normalizeApiPost(payload.post):null; }
+  function sortNewest(posts){return [...posts].sort((a,b)=>(b.publishDate?b.publishDate.getTime():0)-(a.publishDate?a.publishDate.getTime():0));}
+  function getPublished(posts){return sortNewest(posts.filter(p=>p.published));}
+  function getFeatured(posts){return getPublished(posts).filter(p=>p.featured);}
+  function getCurrentNewsletter(posts){return getPublished(posts).find(p=>p.type==='Newsletter'&&p.currentNewsletter)||null;}
+  function getPostBySlug(posts,slug){const target=String(slug||'').trim().toLowerCase();return posts.find(p=>p.published&&p.slug.toLowerCase()===target)||null;}
+  function getViewerUrl(post){if(!post)return '#';const slug=encodeURIComponent(post.slug);return post.type==='Newsletter'?`/newsletter/view/?issue=${slug}`:`/blog/view/?post=${slug}`;}
+  function extractDriveFileId(url){const value=String(url||'').trim();if(!value)return '';const p=value.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);if(p)return p[1];const i=value.match(/[?&]id=([a-zA-Z0-9_-]+)/);return i?i[1]:'';}
+  function getImageUrl(url){const value=String(url||'').trim();if(!value)return '';const id=extractDriveFileId(value);if(id)return `https://drive.google.com/thumbnail?id=${id}&sz=w1600`;if(value.startsWith('assets/'))return '/'+value;return value;}
+  function getCoverUrl(post){return post&&post.id?`${API_BASE}/api/publication/file?id=${encodeURIComponent(post.id)}&kind=cover`:'';}
+  function getDownloadUrl(url){return String(url||'').trim();}
+  function formatDate(date,options){if(!date)return '';return new Intl.DateTimeFormat('en-US',options||{month:'long',day:'numeric',year:'numeric'}).format(date);}
+  window.TCZKPosts={API_BASE,load:loadPosts,loadPostBySlug,getPublished,getFeatured,getCurrentNewsletter,getPostBySlug,getViewerUrl,getDownloadUrl,getImageUrl,getCoverUrl,formatDate,getSource:()=>'cms'};
 })();

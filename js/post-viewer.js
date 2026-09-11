@@ -113,7 +113,7 @@
 
   async function init() {
     const request = requestInfo();
-    backLink.href = '/blog/';
+    backLink.href = request.type === 'Newsletter' ? '/newsletter/' : '/blog/';
 
     if (!request.slug) {
       showError('No post was selected.');
@@ -121,8 +121,7 @@
     }
 
     try {
-      const rows = await TCZKPosts.load();
-      const post = TCZKPosts.getPostBySlug(rows, request.slug);
+      const post = await TCZKPosts.loadPostBySlug(request.slug);
       if (!post || (request.type && post.type !== request.type)) {
         showError('That post could not be found or is not currently published.');
         return;
@@ -133,6 +132,8 @@
       }
 
       document.title = `${post.title} | Theta Chi Zeta Kappa`;
+      const headerLabel = document.querySelector('.branding-header-large .gallery-text');
+      if (headerLabel) headerLabel.textContent = post.type === 'Newsletter' ? 'Newsletter' : 'Post';
       renderCategories(post.categories);
 
       downloadLink.href = TCZKPosts.getDownloadUrl(post.pdfLink);

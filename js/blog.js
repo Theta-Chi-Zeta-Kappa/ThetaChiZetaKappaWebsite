@@ -7,6 +7,7 @@
   const filterRoot = document.getElementById('categoryFilters');
   const searchInput = document.getElementById('postSearch');
   let allPosts = [];
+  let heroPost = null;
   const requestedCategory = new URLSearchParams(window.location.search).get('category');
   let activeCategory = requestedCategory || 'All';
 
@@ -22,11 +23,12 @@
   }
 
   function imageMarkup(post, className) {
-    const src = TCZKPosts.getImageUrl(post.featuredImage);
+    const src = TCZKPosts.getCoverUrl(post);
+    const label = post.type === 'Newsletter' ? 'Newsletter' : 'Chapter Update';
     if (!src) {
-      return `<div class="${className} post-image-placeholder"><span>${post.type === 'Newsletter' ? 'Newsletter' : 'Chapter Update'}</span></div>`;
+      return `<div class="${className} post-image-placeholder"><span>${label}</span></div>`;
     }
-    return `<img class="${className}" src="${escapeHtml(src)}" alt="${escapeHtml(post.title)}" loading="lazy">`;
+    return `<img class="${className}" src="${escapeHtml(src)}" alt="${escapeHtml(post.title)}" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><div class="${className} post-image-placeholder" hidden><span>${label}</span></div>`;
   }
 
 
@@ -90,7 +92,7 @@
 
   function buildFilters(posts) {
     const categories = [...new Set(posts.flatMap((post) => post.categories))].sort((a, b) => a.localeCompare(b));
-    filterRoot.innerHTML = ['All', ...categories].map((category) => `
+    filterRoot.innerHTML = ['All', 'Featured', ...categories].map((category) => `
       <button class="filter-pill${category === activeCategory ? ' active' : ''}" type="button" data-category="${escapeHtml(category)}">
         ${escapeHtml(category)}
       </button>`).join('');
@@ -106,8 +108,8 @@
 
   function renderGrid() {
     const search = (searchInput.value || '').trim().toLowerCase();
-    const filtered = allPosts.filter((post) => {
-      const categoryMatch = activeCategory === 'All' || post.categories.includes(activeCategory);
+    const filtered = allPosts.filter((post, index, arr) => arr.findIndex(x => x.slug === post.slug) === index).filter((post) => {
+      const categoryMatch = activeCategory === 'All' || (activeCategory === 'Featured' ? post.featured : post.categories.includes(activeCategory));
       const haystack = [post.title, post.summary, post.author, post.type, post.categories.join(' ')].join(' ').toLowerCase();
       return categoryMatch && (!search || haystack.includes(search));
     });
@@ -124,9 +126,13 @@
       statusRoot.textContent = 'Loading chapter posts…';
       const rows = await TCZKPosts.load();
       const published = TCZKPosts.getPublished(rows);
-      const featured = TCZKPosts.getFeaturedNewsletter(published);
-      allPosts = published.filter((post) => !featured || post.slug !== featured.slug);
-      if (activeCategory !== 'All' && !allPosts.some((post) => post.categories.includes(activeCategory))) {
+      const featuredPosts = TCZKPosts.getFeatured(published);
+      const featured = featuredPosts[0] || null;
+      heroPost = featured;
+      // Keep every publication in the archive/grid. Featured content may also appear
+      // in the hero, but the All and Featured filters must still contain it.
+      allPosts = published;
+      if (activeCategory !== 'All' && activeCategory !== 'Featured' && !allPosts.some((post) => post.categories.includes(activeCategory))) {
         activeCategory = 'All';
       }
 

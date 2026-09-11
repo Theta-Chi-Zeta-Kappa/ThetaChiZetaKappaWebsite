@@ -481,6 +481,17 @@ function beginPinch(){
 }
 
 desktop.addEventListener('pointerdown',e=>{
+  /* Member cards are real buttons. Do not capture their pointer on the scroll
+     viewport: pointer capture retargets the later click back to #desktopTree in
+     Chromium-based browsers, which prevents member selection and the second
+     click used to open details. Panning still starts normally from whitespace. */
+  if(e.target.closest('.member')){
+    pan.active=false;
+    pan.moved=false;
+    desktop.classList.remove('dragging');
+    return;
+  }
+
   if(e.pointerType==='touch'){
     touchPointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
     try{desktop.setPointerCapture(e.pointerId)}catch(_){}
