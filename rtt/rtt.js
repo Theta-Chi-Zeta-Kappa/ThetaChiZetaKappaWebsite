@@ -118,6 +118,7 @@
   };
 
   const sizeLabel = {
+    S: 'Small',
     M: 'Medium',
     L: 'Large',
     XL: 'XL',
@@ -132,7 +133,7 @@
       if (!Array.isArray(value)) return [];
       return value.filter(item =>
         ['charcoal', 'light-pink'].includes(item?.color) &&
-        ['M', 'L', 'XL', '2XL'].includes(item?.size) &&
+        ['S', 'M', 'L', 'XL', '2XL'].includes(item?.size) &&
         Number.isInteger(item?.quantity) && item.quantity > 0
       );
     } catch (_) {
