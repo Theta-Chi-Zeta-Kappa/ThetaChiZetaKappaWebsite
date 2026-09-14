@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#080808" />
+  <meta name="description" content="Rock the Tundra 2026 — Theta Chi Zeta Kappa at Ohio Northern University." />
+  <title>Rock the Tundra 2026 | Theta Chi Zeta Kappa</title>
+  <link rel="stylesheet" href="./rtt.css" />
+</head>
+<body>
+  <div class="loading-screen" id="loading-screen" aria-hidden="true">
+    <div class="loading-inner">
+      <img class="loading-knight" src="./assets/knight.gif" alt="" />
+      <img class="loading-bar" src="./assets/loading-bar.gif" alt="" />
+      <span class="loading-label">LOADING...</span>
+    </div>
+  </div>
+
+  <header class="rtt-header">
+    <a class="chapter-brand" href="/" aria-label="Return to the Theta Chi Zeta Kappa website">
+      <img src="./assets/zk-logo.png" alt="Theta Chi Zeta Kappa at Ohio Northern University" />
+    </a>
+    <a class="header-cta" href="#preorder">PREORDER</a>
+  </header>
+
+  <main>
+    <section class="hero" aria-label="Official Rock the Tundra 2026 shirt">
+      <div class="hero-glow hero-glow-one"></div>
+      <div class="hero-glow hero-glow-two"></div>
+      <div class="hero-content">
+        <div class="hero-media-wrap">
+          <img
+            class="hero-media"
+            data-src="./assets/rtt-hero.gif"
+            alt="Animated reveal of the official 2026 Rock the Tundra shirts"
+            decoding="async"
+          />
+        </div>
+
+        <div class="hero-sales">
+          <p class="kicker">OFFICIAL 2026 SHIRT</p>
+          <p class="shirt-options">CHARCOAL <span>•</span> LIGHT PINK</p>
+          <p class="price">$22</p>
+          <a class="primary-button" href="#preorder">PREORDER NOW <span aria-hidden="true">↓</span></a>
+          <p class="deadline">PREORDERS CLOSE SEPTEMBER 27</p>
+        </div>
+      </div>
+      <div class="scroll-cue" aria-hidden="true">SCROLL TO DISCOVER <span>↓</span></div>
+    </section>
+
+    <section class="mission" id="mission">
+      <div class="section-shell mission-shell">
+        <p class="section-label">ROCK FOR A CAUSE</p>
+        <div class="benefactors" aria-label="Rock the Tundra beneficiaries">
+          <span>USO</span>
+          <span class="benefactor-x">×</span>
+          <span>MUSIC WILL</span>
+        </div>
+        <p class="mission-copy">
+          Rock the Tundra is organized in support of the USO and Music Will. With your help we can support our veterans and provide musical education to the next generation. 100% of profits benefit USO & MUSICWILL
+        </p>
+      </div>
+    </section>
+
+    <section class="preorder" id="preorder">
+      <div class="section-shell preorder-shell">
+        <div class="preorder-heading">
+          <p class="section-label">RESERVE YOURS</p>
+          <h1>PREORDER YOUR 2026 SHIRT</h1>
+          <p>$22 • Orders close September 27 • Pickup October 3 at Rock the Tundra</p>
+        </div>
+
+        <div class="preorder-content">
+          <aside class="shirt-gallery" aria-label="Shirt preview gallery">
+            <div class="gallery-stage">
+              <img
+                id="shirt-gallery-main"
+                class="gallery-main-image"
+                src="./assets/shirts/charcoal-front-display.webp"
+                alt="Charcoal Rock the Tundra 2026 shirt, front view"
+              />
+              <div class="gallery-view-label" id="gallery-view-label">CHARCOAL • FRONT</div>
+            </div>
+            <div class="gallery-thumbnails" aria-label="Choose shirt view">
+              <button class="gallery-thumb is-selected" type="button" data-view="front" aria-pressed="true">
+                <img id="shirt-thumb-front" src="./assets/shirts/charcoal-front-thumb.webp" alt="Charcoal shirt front thumbnail" />
+                <span>FRONT</span>
+              </button>
+              <button class="gallery-thumb" type="button" data-view="back" aria-pressed="false">
+                <img id="shirt-thumb-back" src="./assets/shirts/charcoal-back-thumb.webp" alt="Charcoal shirt back thumbnail" />
+                <span>BACK</span>
+              </button>
+            </div>
+          </aside>
+
+          <div class="order-card">
+          <div class="selector-group">
+            <span class="selector-title">COLOR</span>
+            <div class="choice-grid color-grid" role="group" aria-label="Shirt color">
+              <button class="choice-card color-choice is-selected" type="button" data-color="Charcoal" aria-pressed="true">
+                <span class="swatch swatch-charcoal"></span>
+                <span>Charcoal</span>
+              </button>
+              <button class="choice-card color-choice" type="button" data-color="Light Pink" aria-pressed="false">
+                <span class="swatch swatch-pink"></span>
+                <span>Light Pink</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="selector-group">
+            <label class="selector-title" for="size">SIZE</label>
+            <select id="size" name="size">
+              <option value="M" selected>Medium</option>
+              <option value="L">Large</option>
+              <option value="XL">XL</option>
+              <option value="2XL">2XL</option>
+            </select>
+          </div>
+
+          <div class="selector-group quantity-group">
+            <span class="selector-title">QUANTITY</span>
+            <div class="quantity-control">
+              <button type="button" id="qty-minus" aria-label="Decrease quantity">−</button>
+              <output id="quantity" aria-live="polite">1</output>
+              <button type="button" id="qty-plus" aria-label="Increase quantity">+</button>
+            </div>
+          </div>
+
+          <div class="order-summary" aria-live="polite">
+            <div>
+              <span>CURRENT SELECTION</span>
+              <strong id="selection-summary">1 × Charcoal • Medium</strong>
+            </div>
+            <strong id="total-price">$22</strong>
+          </div>
+
+          <button class="add-to-order-button" type="button" id="add-to-order">ADD TO ORDER</button>
+          <p class="add-status" id="add-status" role="status" aria-live="polite"></p>
+
+          <section class="cart-panel" aria-labelledby="cart-title">
+            <div class="cart-heading">
+              <div>
+                <span class="selector-title">YOUR ORDER</span>
+                <h2 id="cart-title">SHIRT CART</h2>
+              </div>
+              <span class="cart-count" id="cart-count">0 ITEMS</span>
+            </div>
+            <p class="cart-empty" id="cart-empty">Add a shirt above. You can mix colors, sizes, and quantities before checkout.</p>
+            <div class="cart-items" id="cart-items"></div>
+            <div class="cart-total" id="cart-total-row" hidden>
+              <span>ORDER TOTAL</span>
+              <strong id="cart-total">$0</strong>
+            </div>
+          </section>
+
+          <button class="checkout-button" type="button" id="square-checkout" disabled>CHECKOUT WITH SQUARE</button>
+          <p class="checkout-status" id="checkout-status" role="status" aria-live="polite"></p>
+          <p class="order-note">
+            Add as many shirt combinations as you need, then check out once. Preordering guarantees your selected color and size. Limited quantities will also be available at Rock the Tundra while supplies last.
+          </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="rtt-footer">
+    <img src="./assets/zk-logo.png" alt="Theta Chi Zeta Kappa" />
+    <p>Presented by Theta Chi Fraternity · Zeta Kappa Chapter · Ohio Northern University</p>
+    <a href="/">Return to TCZK.org</a>
+  </footer>
+
+  <script src="./rtt.js"></script>
+</body>
+</html>
