@@ -43,7 +43,7 @@
       case'gallery_change_approved':return`Approved gallery image change ${item.entityId||''}`.trim();
       case'gallery_change_returned':return`Returned gallery image change ${item.entityId||''}`.trim();
       case'gallery_change_rejected':return`Rejected gallery image change ${item.entityId||''}`.trim();
-      case'invite_created':return`Invited ${d.email||'new user'}${d.role?` as ${d.role}`:''}`;
+      case'invite_created':{const access=Number(d.priority)===1?'Primary Admin':Number(d.priority)===2?'Secondary Admin':Number(d.priority)===3?'Editor':d.role;return`Invited ${d.email||'new user'}${access?` as ${access}`:''}`;}
       case'invite_revoked':return`Revoked invitation for ${d.email||'user'}`;
       case'invite_deleted':return`Deleted ${d.previousStatus||'closed'} invitation for ${d.email||'user'}`;
       case'account_activated':return`Activated account for ${d.email||'user'}`;

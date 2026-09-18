@@ -66,7 +66,8 @@
   }
 
   function applyRoleUI(user){
-    document.querySelectorAll('[data-admin-only]').forEach(el=>{el.hidden=user?.role!=='admin';});
+    document.querySelectorAll('[data-admin-only]').forEach(el=>{el.hidden=user?.role!=='admin'||Number(user?.priority)>2;});
+    document.querySelectorAll('[data-primary-only]').forEach(el=>{el.hidden=Number(user?.priority)!==1;});
   }
 
   async function logout(){
@@ -80,7 +81,7 @@
     document.querySelectorAll('[data-admin-user]').forEach(el=>{
       const label=user.displayName||user.email||'Administrator';
       el.textContent=label+' ●';
-      if(user.email)el.title=user.email+(user.role?` · ${user.role}`:'');
+      if(user.email)el.title=user.email+(user.accessLabel?` · ${user.accessLabel}`:(user.role?` · ${user.role}`:''));
     });
   }
 
