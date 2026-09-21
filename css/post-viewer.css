@@ -64,6 +64,7 @@ body {
 }
 
 .pdf-page-wrap {
+  position: relative;
   width: 100%;
   max-width: 100%;
   margin: 0;
@@ -81,6 +82,26 @@ body {
   padding: 0;
   border: 0;
   background: #fff;
+}
+
+.pdf-annotation-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.pdf-annotation-link {
+  position: absolute;
+  display: block;
+  pointer-events: auto;
+  cursor: pointer;
+  background: transparent;
+}
+
+.pdf-annotation-link:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 1px;
 }
 
 .viewer-status {
