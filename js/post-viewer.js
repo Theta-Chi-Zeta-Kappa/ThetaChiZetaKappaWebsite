@@ -106,6 +106,47 @@
 
       const context = canvas.getContext('2d', { alpha: false });
       await page.render({ canvasContext: context, viewport: renderViewport }).promise;
+
+      // PDF.js paints the document onto a canvas, which does not preserve clickable
+      // PDF annotations by itself. Re-create external link annotations as an HTML
+      // overlay so links embedded in publications (donations, socials, etc.) work.
+      const annotations = await page.getAnnotations({ intent: 'display' });
+      const linkAnnotations = annotations.filter((annotation) =>
+        annotation && annotation.subtype === 'Link' && (annotation.url || annotation.unsafeUrl)
+      );
+
+      if (linkAnnotations.length) {
+        const annotationLayer = document.createElement('div');
+        annotationLayer.className = 'pdf-annotation-layer';
+        annotationLayer.setAttribute('aria-label', `Links on page ${pageNumber}`);
+
+        const cssViewport = page.getViewport({ scale: cssScale });
+        linkAnnotations.forEach((annotation) => {
+          const href = String(annotation.url || annotation.unsafeUrl || '').trim();
+          if (!href || !annotation.rect) return;
+
+          const rect = cssViewport.convertToViewportRectangle(annotation.rect);
+          const left = Math.min(rect[0], rect[2]);
+          const top = Math.min(rect[1], rect[3]);
+          const width = Math.abs(rect[0] - rect[2]);
+          const height = Math.abs(rect[1] - rect[3]);
+          if (!width || !height) return;
+
+          const link = document.createElement('a');
+          link.className = 'pdf-annotation-link';
+          link.href = href;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          link.style.left = `${(left / cssViewport.width) * 100}%`;
+          link.style.top = `${(top / cssViewport.height) * 100}%`;
+          link.style.width = `${(width / cssViewport.width) * 100}%`;
+          link.style.height = `${(height / cssViewport.height) * 100}%`;
+          link.setAttribute('aria-label', annotation.title || annotation.contents || 'Open link from publication');
+          annotationLayer.appendChild(link);
+        });
+
+        if (annotationLayer.childElementCount) wrapper.appendChild(annotationLayer);
+      }
     }
 
     statusRoot.hidden = true;
