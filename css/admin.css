@@ -94,3 +94,14 @@ a{color:inherit}
 
 /* Content approval file-size guidance */
 .page-head-actions{display:flex;gap:.55rem;flex-wrap:wrap;justify-content:flex-end}.file-size-badge{display:inline-flex;align-items:center;margin-top:.25rem;padding:.24rem .48rem;border-radius:99px;font-size:.72rem;font-weight:800}.file-size-badge.good{background:#e4f3e8;color:#28653a}.file-size-badge.warn{background:#fff0d5;color:#795716}.file-size-badge.bad{background:#f8e0df;color:#8a2522}.file-size-badge.neutral{background:#eee;color:#666}.file-size-guide{width:min(760px,calc(100vw - 2rem))}.file-size-guide>p,.file-guide-notes{color:var(--muted);line-height:1.5}.file-guide-table{border:1px solid var(--line);border-radius:9px;overflow:hidden;margin:1rem 0}.file-guide-table>div{display:grid;grid-template-columns:1.25fr repeat(3,1fr);gap:.5rem;padding:.65rem .75rem;border-top:1px solid var(--line);font-size:.82rem}.file-guide-table>div:first-child{border-top:0;background:#f6f2ed}.file-guide-notes{background:#faf8f5;border:1px solid var(--line);border-radius:8px;padding:.75rem .9rem}.file-guide-notes p{margin:.35rem 0}@media(max-width:650px){.page-head-actions{width:100%;justify-content:flex-start}.file-guide-table{overflow-x:auto}.file-guide-table>div{min-width:620px}}
+
+/* Admin portal footer */
+.admin-main{display:flex;flex-direction:column;min-height:100vh}
+.admin-content{width:100%;box-sizing:border-box;flex:1}
+.site-admin-footer{margin-top:auto;background:#171717;color:#d8d8d8;padding:1.15rem 1.25rem;text-align:center;font-family:Arial,Helvetica,sans-serif;font-size:.82rem;line-height:1.5;border-top:1px solid rgba(255,255,255,.08)}
+.site-admin-footer strong{color:#f2f2f2;font-weight:700}
+.site-admin-footer-links{display:flex;justify-content:center;align-items:center;gap:.5rem;margin:.2rem 0}
+.site-admin-footer a{color:#d0ad86;text-decoration:none;border-bottom:1px solid transparent}
+.site-admin-footer a:hover,.site-admin-footer a:focus{color:#fff;border-bottom-color:#d0ad86}
+.site-admin-footer-copy{color:#999;font-size:.74rem}
+@media(max-width:560px){.site-admin-footer{padding:1rem;font-size:.78rem}.site-admin-footer-links{flex-wrap:wrap}}
