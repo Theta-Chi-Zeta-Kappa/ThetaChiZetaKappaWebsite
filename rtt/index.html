@@ -21,7 +21,7 @@
     <a class="chapter-brand" href="/" aria-label="Return to the Theta Chi Zeta Kappa website">
       <img src="./assets/zk-logo.png" alt="Theta Chi Zeta Kappa at Ohio Northern University" />
     </a>
-    <a class="header-cta" href="#preorder">PREORDER</a>
+    <a class="header-cta" href="#preorder">EVENT SHIRTS</a>
   </header>
 
   <main>
@@ -42,8 +42,8 @@
           <p class="kicker">OFFICIAL 2026 SHIRT</p>
           <p class="shirt-options">CHARCOAL <span>•</span> LIGHT PINK</p>
           <p class="price">$22</p>
-          <a class="primary-button" href="#preorder">PREORDER NOW <span aria-hidden="true">↓</span></a>
-          <p class="deadline">PREORDERS CLOSE SEPTEMBER 27</p>
+          <a class="primary-button" href="#preorder">EVENT SHIRTS <span aria-hidden="true">↓</span></a>
+          <p class="deadline">PREORDERS CLOSED • LIMITED EVENT QUANTITIES AVAILABLE OCTOBER 3</p>
         </div>
       </div>
       <div class="scroll-cue" aria-hidden="true">SCROLL TO DISCOVER <span>↓</span></div>
@@ -67,9 +67,9 @@
     <section class="preorder" id="preorder">
       <div class="section-shell preorder-shell">
         <div class="preorder-heading">
-          <p class="section-label">RESERVE YOURS</p>
-          <h1>PREORDER YOUR 2026 SHIRT</h1>
-          <p>$22 • Orders close September 27 • Pickup October 3 at Rock the Tundra</p>
+          <p class="section-label">OFFICIAL 2026 SHIRT</p>
+          <h1>PREORDERS ARE CLOSED</h1>
+          <p>$22 • Limited quantities available October 3 at Rock the Tundra while supplies last</p>
         </div>
 
         <div class="preorder-content">
@@ -95,74 +95,17 @@
             </div>
           </aside>
 
-          <div class="order-card">
-          <div class="selector-group">
-            <span class="selector-title">COLOR</span>
-            <div class="choice-grid color-grid" role="group" aria-label="Shirt color">
-              <button class="choice-card color-choice is-selected" type="button" data-color="Charcoal" aria-pressed="true">
-                <span class="swatch swatch-charcoal"></span>
-                <span>Charcoal</span>
-              </button>
-              <button class="choice-card color-choice" type="button" data-color="Light Pink" aria-pressed="false">
-                <span class="swatch swatch-pink"></span>
-                <span>Light Pink</span>
-              </button>
+          <div class="order-card preorder-closed-card">
+            <span class="selector-title">2026 T-SHIRT PREORDERS</span>
+            <h2>ONLINE PREORDERS ARE NOW CLOSED</h2>
+            <p>Thank you for supporting Rock the Tundra! Online preorders for the 2026 event shirt have now closed.</p>
+            <div class="closed-sale-note">
+              <strong>MISSED THE PREORDER?</strong>
+              <p>A limited number of Charcoal and Light Pink shirts will be available for purchase at Rock the Tundra on October 3 while supplies last.</p>
             </div>
+            <p class="closed-sale-meta">$22 • AVAILABLE AT THE EVENT • WHILE SUPPLIES LAST</p>
           </div>
-
-          <div class="selector-group">
-            <label class="selector-title" for="size">SIZE</label>
-            <select id="size" name="size">
-              <option value="S">Small</option>
-              <option value="M" selected>Medium</option>
-              <option value="L">Large</option>
-              <option value="XL">XL</option>
-              <option value="2XL">2XL</option>
-            </select>
-          </div>
-
-          <div class="selector-group quantity-group">
-            <span class="selector-title">QUANTITY</span>
-            <div class="quantity-control">
-              <button type="button" id="qty-minus" aria-label="Decrease quantity">−</button>
-              <output id="quantity" aria-live="polite">1</output>
-              <button type="button" id="qty-plus" aria-label="Increase quantity">+</button>
-            </div>
-          </div>
-
-          <div class="order-summary" aria-live="polite">
-            <div>
-              <span>CURRENT SELECTION</span>
-              <strong id="selection-summary">1 × Charcoal • Medium</strong>
-            </div>
-            <strong id="total-price">$22</strong>
-          </div>
-
-          <button class="add-to-order-button" type="button" id="add-to-order">ADD TO ORDER</button>
-          <p class="add-status" id="add-status" role="status" aria-live="polite"></p>
-
-          <section class="cart-panel" aria-labelledby="cart-title">
-            <div class="cart-heading">
-              <div>
-                <span class="selector-title">YOUR ORDER</span>
-                <h2 id="cart-title">SHIRT CART</h2>
-              </div>
-              <span class="cart-count" id="cart-count">0 ITEMS</span>
-            </div>
-            <p class="cart-empty" id="cart-empty">Add a shirt above. You can mix colors, sizes, and quantities before checkout.</p>
-            <div class="cart-items" id="cart-items"></div>
-            <div class="cart-total" id="cart-total-row" hidden>
-              <span>ORDER TOTAL</span>
-              <strong id="cart-total">$0</strong>
-            </div>
-          </section>
-
-          <button class="checkout-button" type="button" id="square-checkout" disabled>CHECKOUT WITH SQUARE</button>
-          <p class="checkout-status" id="checkout-status" role="status" aria-live="polite"></p>
-          <p class="order-note">
-            Add as many shirt combinations as you need, then check out once. Preordering guarantees your selected color and size. Limited quantities will also be available at Rock the Tundra while supplies last.
-          </p>
-          </div>
+</div>
         </div>
       </div>
     </section>

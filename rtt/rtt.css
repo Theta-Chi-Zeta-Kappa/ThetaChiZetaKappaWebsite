@@ -160,6 +160,14 @@ button, select { font: inherit; }
 .preorder-heading h1 { margin: 0 0 18px; max-width: 520px; font-size: clamp(2.3rem, 5vw, 5.3rem); line-height: .95; letter-spacing: -.04em; }
 .preorder-heading > p:last-child { color: var(--muted); line-height: 1.6; max-width: 440px; }
 .order-card { padding: clamp(22px, 4vw, 38px); border: 1px solid var(--line); background: linear-gradient(145deg, rgba(255,255,255,.055), rgba(255,255,255,.018)); box-shadow: 0 24px 70px rgba(0,0,0,.35); }
+
+.preorder-closed-card h2 { margin: 0 0 18px; font-size: clamp(1.8rem, 3vw, 3rem); line-height: 1; letter-spacing: -.03em; }
+.preorder-closed-card > p { color: #d5d1cd; line-height: 1.65; }
+.closed-sale-note { margin-top: 28px; padding: 22px; border: 1px solid var(--line); background: #111; }
+.closed-sale-note strong { color: var(--red-bright); font-size: .82rem; letter-spacing: .16em; }
+.closed-sale-note p { margin: 10px 0 0; color: #d5d1cd; line-height: 1.6; }
+.closed-sale-meta { margin: 22px 0 0 !important; color: var(--gold) !important; font-size: .78rem; font-weight: 900; letter-spacing: .12em; }
+
 .selector-group + .selector-group { margin-top: 28px; }
 .selector-title { display: block; margin-bottom: 12px; color: #c8c3c0; font-size: .72rem; font-weight: 900; letter-spacing: .2em; }
 .choice-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
