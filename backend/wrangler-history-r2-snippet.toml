@@ -1,0 +1,6 @@
+# Add this binding to the existing admin API Worker's wrangler.toml.
+# Replace the bucket_name only if you choose a different R2 bucket name.
+
+[[r2_buckets]]
+binding = "HISTORY_UPLOADS"
+bucket_name = "tczk-history-submissions"
