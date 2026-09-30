@@ -1,0 +1,136 @@
+
+	
+    
+
+    body {
+      font-family: "Times New Roman", serif;
+      background-color: #fff;
+    }
+
+    
+
+
+
+
+
+
+
+    
+
+
+
+/* Animation when "open" class is applied */
+
+
+
+
+
+
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    .main-content {
+      padding: 2rem;
+      max-width: 1200px;
+      margin: auto;
+    }
+
+    .section {
+      margin-bottom: 3rem;
+    }
+
+    .red-section {
+      background-color: #b21615; /* Light red background */
+    border-radius: 12px; /* Rounded edges */
+    padding: 2rem; /* Internal spacing */
+    box-shadow: 0 2px 8px rgb(0, 0, 0); /* Subtle shadow for depth */
+    margin: 1rem 0; /* External spacing */
+    color: white
+
+    }
+
+    .flex-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+
+    .flex-row img {
+      max-width: 48%;
+      height: auto;
+    }
+
+    .text-block {
+      flex: 1;
+      min-width: 250px;
+      font-size: 1.25rem;
+      line-height: 1.6;
+    }
+
+    h1 {
+      font-family: "ParangoOTW01Bold-Regular", sans-serif;
+      font-size: 48px;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    h2 {
+      font-family: "ParangoOTW01Bold-Regular", sans-serif;
+      font-size: 36px;
+      margin-bottom: 1rem;
+    }
+    h3 {
+      font-family: "ParangoOTW01Bold-Regular", sans-serif;
+      font-size: 24px;
+      margin-bottom: 1rem;
+    }
+
+    .author-block {
+      position: relative;
+  background: #c9935b;
+  display: flex;
+  align-items: right;
+  justify-content: flex-start;
+  padding: 0.5rem 0.5rem;
+  padding-right: 10rem;
+  gap: 1rem;
+  height: 100%;
+  z-index: 4;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.16); 
+      font-size: 18px;
+    }
+
+    @media (max-width: 768px) {
+      .flex-row {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .flex-row img,
+      .text-block {
+        max-width: 100%;
+      }
+	  .gallery-text {
+		display: none !important;
+	  }
+
+    }
+	.gallery-text {
+    font-family: "ParangoOTW01Bold-Regular", sans-serif;
+  color: #ffffff;
+  font-size: clamp(2rem, 5vw, 4.5rem);
+  margin-top: 0.5rem;
+   display: block;
+  margin-left: auto;
+  z-index: 100;
+}
+  

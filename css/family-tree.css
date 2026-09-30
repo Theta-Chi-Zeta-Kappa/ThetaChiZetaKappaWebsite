@@ -743,3 +743,60 @@
     width: 100%;
   }
 }
+
+.family-tree-page .view-switch[hidden]{display:none!important}
+#memberDialog .historical-copy{margin:16px 0;line-height:1.55;color:#555}
+#memberDialog .information-button{background:#8d1111;color:#fff;border-color:#8d1111}
+#informationDialog{position:fixed;inset:0;width:min(620px,calc(100% - 28px));max-height:min(820px,calc(100vh - 28px));margin:auto;padding:24px;overflow:auto;color:#171717;background:#fff;border:0;border-top:7px solid #b21615;border-radius:16px;box-shadow:0 20px 70px rgba(0,0,0,.35);font-family:Arial,Helvetica,sans-serif}
+#informationDialog::backdrop{background:rgba(0,0,0,.58)}
+#informationDialog .dialog-close{float:right;padding:0;background:none;border:0;color:#171717;font-size:1.9rem;cursor:pointer}
+.information-sheet h2{margin:4px 0 8px;color:#7f0f0f;font-family:"ParangoOtw01Bold-Regular",Georgia,serif;font-size:2rem}
+.information-sheet>p{color:#555;line-height:1.55}.information-record{margin:16px 0 20px;padding:12px 14px;background:#f5e5e5;border-radius:10px;color:#7f0f0f;font-weight:700}
+.information-sheet form{display:grid;gap:14px}.information-sheet label{display:grid;gap:6px;font-weight:700;color:#333}.information-sheet input,.information-sheet textarea{width:100%;box-sizing:border-box;padding:10px 12px;border:1px solid #bbb;border-radius:8px;font:inherit;font-weight:400}.information-sheet textarea{resize:vertical}
+.information-privacy{margin:0;color:#666;font-size:.86rem;line-height:1.45}.information-actions{display:flex;justify-content:flex-end;gap:10px}.information-actions button{padding:10px 15px;border:1px solid #8d1111;border-radius:8px;background:#8d1111;color:#fff;font-weight:700;cursor:pointer}.information-actions .secondary{background:#fff;color:#7f0f0f}.information-status.pending{padding:10px 12px;background:#fff4cf;border:1px solid #e3c766;border-radius:8px;color:#614d00;line-height:1.45}
+
+.record-collection-links{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.record-collection-links button{appearance:none;border:1px solid rgba(255,255,255,.34);background:rgba(255,255,255,.08);color:#fff;border-radius:999px;padding:6px 10px;font:inherit;font-size:.78rem;font-weight:700;cursor:pointer}
+.record-collection-links button:hover,.record-collection-links button.active{background:#fff;color:#7f0f0f;border-color:#fff}
+
+.record-mode-switch{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 10px}
+.record-mode-switch button{appearance:none;border:1px solid rgba(255,255,255,.34);background:rgba(255,255,255,.08);color:#fff;border-radius:9px;padding:9px 10px;font:inherit;font-size:.78rem;font-weight:800;line-height:1.15;cursor:pointer}
+.record-mode-switch button:hover,.record-mode-switch button.active{background:#fff;color:#7f0f0f;border-color:#fff}
+.family-select-wrap{display:block}
+.family-select-wrap.historical-mode{display:none}
+@media(max-width:620px){.record-mode-switch{grid-template-columns:1fr}.record-mode-switch button{padding:8px 10px}}
+
+
+/* Record collection switch: visible on the light control panel. */
+.family-tree-page .record-mode-switch button{
+  border:1px solid #c9b8b8;
+  background:#fff;
+  color:#7f0f0f;
+  box-shadow:0 1px 3px rgba(0,0,0,.08);
+}
+.family-tree-page .record-mode-switch button:hover{
+  background:#f8eeee;
+  border-color:#9d5555;
+}
+.family-tree-page .record-mode-switch button.active{
+  background:#8d1111;
+  color:#fff;
+  border-color:#8d1111;
+}
+.family-tree-page .collection-canvas{background:#fff}
+.family-tree-page .collection-member{
+  width:188px;
+  min-height:92px;
+  padding:10px 12px;
+}
+.family-tree-page .collection-member .collection-label{
+  display:block;
+  margin-bottom:4px;
+  color:#8d1111;
+  font-size:.62rem;
+  font-weight:800;
+  letter-spacing:.045em;
+  line-height:1.1;
+  text-transform:uppercase;
+}
+.family-tree-page .collection-member small{line-height:1.25}

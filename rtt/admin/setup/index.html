@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Set Up TCZK Admin Account</title><link rel="icon" href="/assets/img/icon.png"><link rel="stylesheet" href="/css/admin.css?v=20260910-accounts1"></head>
+<body class="admin-login-page"><main class="login-card setup-card">
+<div class="login-brand"><img src="/assets/img/mainlogo.png" alt="Theta Chi Zeta Kappa"></div>
+<h1>Set Up Your Account</h1><p class="login-subtitle" id="setupIntro">Validating your one-time setup link…</p>
+<div id="setupLoading" class="setup-state">Please wait.</div>
+<div id="setupInvalid" class="setup-state setup-error" hidden><strong>Setup link unavailable</strong><p id="setupInvalidMessage">This link is invalid or expired.</p><a class="secondary-btn full" href="/admin/">Return to Admin Login</a></div>
+<form id="setupForm" hidden autocomplete="off">
+<div class="invite-summary"><div><span>Email</span><strong id="setupEmail">—</strong></div><div><span>Role</span><strong id="setupRole">—</strong></div></div>
+<div class="field"><label for="newPassword">Create Password</label><input id="newPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" required><small>At least 12 characters.</small></div>
+<div class="field"><label for="confirmPassword">Confirm Password</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></div>
+<button class="primary-btn full" type="submit">Activate Account</button><p class="login-note" id="setupMessage">This one-time link will be consumed after successful setup.</p>
+</form>
+<div id="setupComplete" class="setup-state setup-success" hidden><strong>Account activated</strong><p>Your password has been set. You can now sign in to the TCZK Admin Portal.</p><a class="primary-btn full" href="/admin/">Go to Admin Login</a></div>
+</main><script src="/js/admin-config.js?v=20260910-accounts1"></script><script src="/js/admin-setup.js?v=20260910-accounts1"></script></body></html>

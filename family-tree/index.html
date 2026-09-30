@@ -33,6 +33,7 @@
 <li><a href="/blog/">Blog</a></li>
 
 <li><a aria-current="page" href="/family-tree/">Family Trees</a></li>
+<li><a href="/support/">Support Us</a></li>
 </ul>
 </nav>
 <div class="empty"></div>
@@ -50,9 +51,16 @@
 </section>
 <main class="family-tree-main">
 <section aria-label="Tree controls" class="controls">
-<label class="family-control">Family
-          <select disabled="" id="familySelect"><option>Loading…</option></select>
-</label>
+<div class="family-control">
+  <div class="record-mode-switch" role="group" aria-label="Choose record collection">
+    <button type="button" class="active" data-view-mode="families">Family Trees</button>
+    <button type="button" data-view-mode="lost_to_time">Brothers Lost to Time</button>
+    <button type="button" data-view-mode="honorary">Honorary Members</button>
+  </div>
+  <label class="family-select-wrap">Family
+    <select disabled="" id="familySelect"><option>Loading…</option></select>
+  </label>
+</div>
 <div class="search-control">
 <label for="search">Find a brother</label>
 <input autocomplete="off" disabled="" id="search" placeholder="Name or roster #" type="search"/>
@@ -92,7 +100,22 @@
 </dialog>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<dialog id="informationDialog" class="information-dialog">
+<button aria-label="Close" class="dialog-close" id="closeInformationDialog" type="button">×</button>
+<div class="information-sheet"><div class="eyebrow">Help Preserve Our History</div><h2>I Have Information</h2>
+<p>If you know something about this brother or his place in the chapter's history, you can prepare it here for review by the Zeta Kappa website team.</p>
+<div class="information-record" id="infoMemberDisplay"></div>
+<form id="informationForm"><input id="infoMemberId" type="hidden"><input name="website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-10000px;width:1px;height:1px;overflow:hidden">
+<label>Your Name<input id="infoSubmitterName" name="submitterName" required maxlength="120"></label>
+<label>Your Email<input id="infoSubmitterEmail" name="submitterEmail" type="email" required maxlength="254"></label>
+<label>Relationship / Context<input id="infoRelationship" name="relationship" maxlength="180" placeholder="Brother, alumnus, family member, chapter records, etc."></label>
+<label>Information You Can Provide<textarea id="infoInformation" name="information" rows="6" required maxlength="5000"></textarea></label>
+<label>Source or Evidence<textarea id="infoSource" name="source" rows="3" maxlength="2000" placeholder="Composite, yearbook, personal recollection, chapter document, etc."></textarea></label>
+<p class="information-privacy">Submissions will be reviewed before any historical record is changed. This form does not directly edit the Family Tree.</p>
+<div class="information-status" id="informationStatus" aria-live="polite"></div>
+<div class="information-actions"><button class="secondary" id="cancelInformation" type="button">Cancel</button><button type="submit">Send Information</button></div></form></div></dialog>
+
+
 <script src="/js/familyTreeConfig.js"></script>
 <script src="/js/familyTreeApp.js"></script>
 <script src="/js/base.js"></script></body>

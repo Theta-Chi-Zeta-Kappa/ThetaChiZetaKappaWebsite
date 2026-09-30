@@ -42,6 +42,39 @@ function normalizeHeader(h) { return String(h || '').trim().toLowerCase().replac
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
 }
+
+function mapApiMember(m,familyNames){
+  const type=String(m.memberType??m.member_type??'lineage');
+  const familyCode=String(m.familyCode??m.family_code??'');
+  const family=type==='lost_to_time'?'Lost to Time':type==='honorary'?'Honorary Members':(familyNames[familyCode]||familyCode||'Unclassified');
+  return{
+    id:clean(m.uniqueId??m.unique_id).toUpperCase(),
+    name:clean(m.name),
+    roster:clean(m.rosterNumber??m.roster_number),
+    family,familyCode,memberType:type,
+    big:clean(m.bigUniqueId??m.big_unique_id).toUpperCase(),
+    ff:(m.foundingFather??m.founding_father)?'FF':'',
+    initiated:clean(m.initiatedYear??m.initiated_year),
+    graduation:clean(m.graduationYear??m.graduation_year),
+    notes:''
+  };
+}
+async function loadFromApi(){
+  const base=String(cfg.apiBase||'').replace(/\/$/,''),endpoint=String(cfg.publicEndpoint||'/api/public/family-tree');
+  if(!base)throw new Error('The family database API is not configured.');
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),12000);
+  let response;
+  try{response=await fetch(base+endpoint,{cache:'no-store',signal:controller.signal});}
+  catch(err){if(err?.name==='AbortError')throw new Error('The family database did not respond within 12 seconds.');throw err;}
+  finally{clearTimeout(timeout);}
+  let data={};try{data=await response.json();}catch(_){throw new Error('The family database returned an unreadable response.');}
+  if(!response.ok||data.ok===false)throw new Error(data.error||`Family database returned ${response.status}.`);
+  const familyNames=Object.fromEntries((data.families||[]).map(f=>[String(f.code||''),String(f.name||f.code||'')]));
+  const members=(data.members||[]).map(m=>mapApiMember(m,familyNames)).filter(m=>m.id!=='N/A');
+  if(!members.length)throw new Error('The family database returned no member records.');
+  return{members,families:data.families||[]};
+}
 function mapRows(rows) {
   if (!rows.length) return [];
   const headers = Object.keys(rows[0]);
@@ -280,24 +313,35 @@ function validateRecords(records) {
   return { errors:[...new Set(errors)], warnings:[...new Set(warnings)] };
 }
 
-function setData(records, label) {
-  const validation = validateRecords(records);
-  if (validation.errors.length) throw new Error(`Database validation failed: ${validation.errors.slice(0,3).join('; ')}${validation.errors.length>3?' …':''}`);
-  ALL_MEMBERS = records;
-  // Preserve the family order supplied by the Database sheet. The workbook's
-  // Database rows follow the same intended order as its family worksheet tabs,
-  // so this also keeps the live Google Sheets and Excel fallback views aligned.
-  const families = [...new Set(records.map(m => m.family))];
-  familySelect.innerHTML = families.map(f => `<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`).join('');
-  if (!families.includes(currentFamily)) currentFamily = families[0];
-  familySelect.value = currentFamily;
-  familySelect.disabled = false;
-  search.disabled = false;
-  sourceStatus.textContent = `${records.length} records loaded from ${label} at ${new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}.`;
-  validationStatus.textContent = validation.warnings.length ? `${validation.warnings.length} data warning${validation.warnings.length===1?'':'s'} detected.` : 'Database validation passed.';
-  validationStatus.className = validation.warnings.length ? 'validation warn' : 'validation ok';
-  sourceStatus.className = 'ok';
-  switchFamily(currentFamily, false);
+function setData(records,label,familyOrder=[]){
+  const lineageRecords=records.filter(m=>m.memberType==='lineage'),validation=validateRecords(lineageRecords);
+  if(validation.errors.length)throw new Error(`Database validation failed: ${validation.errors.slice(0,3).join('; ')}${validation.errors.length>3?' …':''}`);
+  ALL_MEMBERS=records;
+  const present=new Set(records.map(m=>m.family));
+  const ordered=familyOrder.map(f=>f.name||f.code).filter(f=>present.has(f));
+  const remaining=[...new Set(lineageRecords.map(m=>m.family))].filter(f=>!ordered.includes(f));
+  const families=[...ordered,...remaining];
+  familySelect.innerHTML=families.map(f=>`<option value="${escapeHtml(f)}">${escapeHtml(f)}</option>`).join('');
+  if(!families.includes(currentFamily))currentFamily=families[0];
+  familySelect.value=currentFamily;familySelect.disabled=false;search.disabled=false;
+  sourceStatus.textContent=`${records.length} chapter records loaded from ${label} at ${new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})}.`;
+  validationStatus.textContent=validation.warnings.length?`${validation.warnings.length} lineage warning${validation.warnings.length===1?'':'s'} detected.`:'Database validation passed.';
+  validationStatus.className=validation.warnings.length?'validation warn':'validation ok';sourceStatus.className='ok';switchFamily(currentFamily,false);
+}
+
+function switchRecordCollection(type, center = true) {
+  const label=type==='lost_to_time'?'Brothers Lost to Time':'Honorary Members';
+  currentFamily=label; familySelect.value='';
+  MEMBERS=ALL_MEMBERS.filter(m=>m.memberType===type);
+  byId=Object.fromEntries(MEMBERS.map(m=>[m.id,m]));
+  children={}; MEMBERS.forEach(m=>children[m.id]=[]);
+  MEMBERS.forEach(m=>{if(m.big&&byId[m.big])children[m.big].push(m.id);});
+  selected=null; view='tree'; syncViewButtons();
+  pageTitle.textContent=label; document.title=`${label} · Zeta Kappa`;
+  query('.view-switch').hidden=true;
+  queryAll('[data-view-mode]').forEach(b=>b.classList.toggle('active',b.dataset.viewMode===type));
+  query('#familySelect')?.closest('.family-select-wrap')?.classList.add('historical-mode');
+  render(); if(center)requestAnimationFrame(fitTree);
 }
 
 function switchFamily(family, center = true) {
@@ -313,8 +357,11 @@ function switchFamily(family, center = true) {
   selected = null;
   view = 'tree';
   syncViewButtons();
-  pageTitle.textContent = `${family} Family Tree`;
-  document.title = `${family} Family Tree · Zeta Kappa`;
+  pageTitle.textContent=`${family} Family Tree`;
+  document.title=`${family} Family Tree · Zeta Kappa`;
+  query('.view-switch').hidden=false;
+  queryAll('[data-view-mode]').forEach(b=>b.classList.toggle('active',b.dataset.viewMode==='families'));
+  query('#familySelect')?.closest('.family-select-wrap')?.classList.remove('historical-mode');
   render();
   if (isCompactViewport()) requestAnimationFrame(() => fitTree({ mobileAuto: true }));
   else requestAnimationFrame(() => parkAtCanvasTop());
@@ -382,7 +429,41 @@ function renderOneTree(root,set) {
   return { html:`<div class="tree-scale-shell" style="width:${sw}px;height:${sh}px"><div class="tree-canvas" style="width:${L.width}px;height:${L.height}px;transform:scale(${zoom})"><svg class="tree-lines" viewBox="0 0 ${L.width} ${L.height}" aria-hidden="true">${paths}</svg>${nodes}</div></div>`, width:L.width, height:L.height };
 }
 
+function layoutCollectionGrid() {
+  const count=MEMBERS.length, NODE_W=188, NODE_H=92, GAP_X=24, GAP_Y=24, PAD_X=54, PAD_Y=54;
+  if(!count) return {positions:[],width:620,height:360};
+  // Aim for a balanced board. Wider viewports naturally get more columns,
+  // while Fit can scale the whole board into the canvas at any screen size.
+  const viewportW=Math.max(420,desktop.clientWidth||1100);
+  const widthCols=Math.max(1,Math.floor((viewportW-PAD_X*2+GAP_X)/(NODE_W+GAP_X)));
+  const balancedCols=Math.max(1,Math.ceil(Math.sqrt(count*1.65)));
+  const cols=Math.min(count,Math.max(widthCols,balancedCols));
+  const rows=Math.ceil(count/cols);
+  const boardW=PAD_X*2+cols*NODE_W+(cols-1)*GAP_X;
+  const boardH=PAD_Y*2+rows*NODE_H+(rows-1)*GAP_Y;
+  const sorted=[...MEMBERS].sort((a,b)=>{
+    const ar=parseInt(a.roster,10),br=parseInt(b.roster,10);
+    if(Number.isFinite(ar)&&Number.isFinite(br)) return ar-br;
+    if(Number.isFinite(ar)) return -1;
+    if(Number.isFinite(br)) return 1;
+    return a.id.localeCompare(b.id,undefined,{numeric:true});
+  });
+  return {width:Math.max(620,boardW),height:Math.max(360,boardH),positions:sorted.map((m,i)=>({
+    m,x:PAD_X+NODE_W/2+(i%cols)*(NODE_W+GAP_X),y:PAD_Y+NODE_H/2+Math.floor(i/cols)*(NODE_H+GAP_Y)
+  }))};
+}
+
+function renderCollectionGrid(){
+  const L=layoutCollectionGrid();
+  const type=MEMBERS[0]?.memberType;
+  const typeLabel=type==='lost_to_time'?'Brother Lost to Time':'Honorary Member';
+  const nodes=L.positions.map(({m,x,y})=>`<button class="member collection-member ${selected===m.id?'selected':''}" style="left:${x}px;top:${y}px" data-id="${escapeHtml(m.id)}" type="button"><span class="collection-label">${typeLabel}</span><strong>${escapeHtml(m.name==='n/a'?'Name currently unknown':m.name)}</strong><small>${escapeHtml(roster(m))} · ${escapeHtml(m.id)}</small></button>`).join('');
+  const sw=Math.ceil(L.width*zoom),sh=Math.ceil(L.height*zoom);
+  desktop.innerHTML=`<div class="tree-scale-shell" style="width:${sw}px;height:${sh}px"><div class="tree-canvas collection-canvas" style="width:${L.width}px;height:${L.height}px;transform:scale(${zoom})">${nodes}</div></div>`;
+}
+
 function renderDesktop(set) {
+  if(MEMBERS.length && MEMBERS.every(m=>m.memberType==='lost_to_time'||m.memberType==='honorary')) { renderCollectionGrid(); return; }
   let roots = rootIds.map(id=>byId[id]).filter(Boolean);
   if (view==='descendants' && selected) roots=[byId[selected]];
   else if (set) roots=roots.filter(r=>set.has(r.id));
@@ -435,11 +516,19 @@ function fitTree({mobileAuto=false}={}){
 
 function updateStatus(message='') {
   if(message){statusText.textContent=message;detailsButton.hidden=!selected;return;}
+  const historical=MEMBERS.length&&MEMBERS.every(m=>m.memberType==='lost_to_time'||m.memberType==='honorary');
+  if(historical){
+    if(selected){const m=byId[selected];statusText.textContent=`${m.name==='n/a'?'Name currently unknown':m.name} selected · Double-click or use View member details to open the record.`;detailsButton.hidden=false;}
+    else{statusText.textContent=`${MEMBERS.length} ${MEMBERS[0]?.memberType==='lost_to_time'?'brothers lost to time':'honorary members'} · Click a card to select; double-click to open details.`;detailsButton.hidden=true;}
+    return;
+  }
   if(selected){const m=byId[selected];const rootName=rootIds.length===1&&byId[rootIds[0]]?byId[rootIds[0]].name:'family root';statusText.textContent=`${m.name} selected · ${view==='tree'?'full family view':view==='lineage'?`direct lineage to ${rootName}`:'descendant branch'}.`;detailsButton.hidden=false;}
   else{statusText.textContent=`${MEMBERS.length} members in ${currentFamily} · Click a member to select them; double-click to open details.`;detailsButton.hidden=true;}
 }
 function render() {
-  if (!MEMBERS.length) { desktop.innerHTML='<p class="load-message">No members found for this family.</p>'; mobile.innerHTML=''; updateStatus(); return; }
+  if (!MEMBERS.length) { desktop.innerHTML='<p class="load-message">No members found for this collection.</p>'; mobile.innerHTML=''; updateStatus(); return; }
+  const historical=MEMBERS.every(m=>m.memberType==='lost_to_time'||m.memberType==='honorary');
+  if(historical){renderDesktop(null);mobile.innerHTML='';updateStatus();return;}
   const set=allowed(); renderDesktop(set);
   let roots=rootIds.map(id=>byId[id]).filter(Boolean);
   if(view==='descendants'&&selected) roots=[byId[selected]];
@@ -458,7 +547,33 @@ function centerSelected(){
   const top=desktop.scrollTop+(er.top-dr.top)+(er.height/2)-(desktop.clientHeight/2);
   desktop.scrollTo({left:Math.max(0,left),top:Math.max(0,top),behavior:'smooth'});
 }
-function showMemberDetails(id=selected){if(!id||!byId[id])return;const m=byId[id],big=byId[m.big],kids=children[id]||[],isFounder=String(m.ff).trim().toUpperCase()==='FF',founderMark=isFounder?'<div class="founder-mark">★ Founding Father</div>':'';query('#memberDetails').innerHTML=`<div class="details"><span class="badge">${escapeHtml(m.id)}</span><h2 class="${isFounder?'founder-name':''}">${escapeHtml(m.name)}</h2>${founderMark}<p>${escapeHtml(roster(m))}</p><div class="detail-grid"><div><span>Family</span>${escapeHtml(m.family)}</div><div><span>Big Brother</span>${escapeHtml(big?big.name:'None recorded')}</div><div><span>Littles</span>${kids.length}</div><div><span>Initiated</span>${escapeHtml(m.initiated)}</div><div><span>Graduated</span>${escapeHtml(m.graduation)}</div></div>${m.notes?`<p><strong>Note:</strong> ${escapeHtml(m.notes)}</p>`:''}<div class="actions"><button data-action="lineage" type="button">View lineage</button><button data-action="descendants" type="button">View descendants</button><button data-action="tree" type="button">Show in full tree</button></div></div>`;queryAll('[data-action]').forEach(b=>b.addEventListener('click',()=>{view=b.dataset.action;syncViewButtons();query('#memberDialog').close();render();requestAnimationFrame(centerSelected);}));query('#memberDialog').showModal();}
+function showMemberDetails(id=selected){
+  if(!id||!byId[id])return;const m=byId[id],allById=Object.fromEntries(ALL_MEMBERS.map(x=>[x.id,x])),big=allById[m.big],kids=children[id]||[],safeName=m.name==='n/a'?'Name currently unknown':m.name;
+  const isFounder=String(m.ff).trim().toUpperCase()==='FF',founderMark=isFounder?'<div class="founder-mark">★ Founding Father</div>':'';
+  if(m.memberType==='lost_to_time'){
+    query('#memberDetails').innerHTML=`<div class="details historical-details"><span class="badge">Historical Record · ${escapeHtml(m.id)}</span><h2>${escapeHtml(safeName)}</h2><p>${escapeHtml(roster(m))}</p><p class="historical-copy">This record is part of Zeta Kappa history, but some lineage information is incomplete or still being researched.</p><div class="detail-grid"><div><span>Known Family</span>${escapeHtml(m.familyCode||'Not confirmed')}</div><div><span>Known Big Brother</span>${escapeHtml(big?big.name:'Not confirmed')}</div><div><span>Initiated</span>${escapeHtml(m.initiated)}</div><div><span>Graduated</span>${escapeHtml(m.graduation)}</div></div><div class="actions"><button class="information-button" data-have-info="${escapeHtml(m.id)}" type="button">I Have Information</button></div></div>`;
+    query('[data-have-info]')?.addEventListener('click',()=>openInformationSheet(m));
+  }else if(m.memberType==='honorary'){
+    query('#memberDetails').innerHTML=`<div class="details honorary-details"><span class="badge">Honorary Member · ${escapeHtml(m.id)}</span><h2>${escapeHtml(safeName)}</h2><p>${escapeHtml(roster(m))}</p><div class="detail-grid"><div><span>Initiated</span>${escapeHtml(m.initiated)}</div><div><span>Graduated</span>${escapeHtml(m.graduation)}</div></div><p class="historical-copy">Honorary membership is displayed independently and is not assigned an artificial Big Brother or family lineage.</p></div>`;
+  }else{
+    query('#memberDetails').innerHTML=`<div class="details"><span class="badge">${escapeHtml(m.id)}</span><h2 class="${isFounder?'founder-name':''}">${escapeHtml(safeName)}</h2>${founderMark}<p>${escapeHtml(roster(m))}</p><div class="detail-grid"><div><span>Family</span>${escapeHtml(m.family)}</div><div><span>Big Brother</span>${escapeHtml(big?big.name:'None recorded')}</div><div><span>Littles</span>${kids.length}</div><div><span>Initiated</span>${escapeHtml(m.initiated)}</div><div><span>Graduated</span>${escapeHtml(m.graduation)}</div></div><div class="actions"><button data-action="lineage" type="button">View lineage</button><button data-action="descendants" type="button">View descendants</button><button data-action="tree" type="button">Show in full tree</button></div></div>`;
+    queryAll('[data-action]').forEach(b=>b.addEventListener('click',()=>{view=b.dataset.action;syncViewButtons();query('#memberDialog').close();render();requestAnimationFrame(centerSelected);}));
+  }query('#memberDialog').showModal();
+}
+function openInformationSheet(m){
+  query('#memberDialog').close();
+  const form=document.querySelector('#informationForm');
+  const dialog=document.querySelector('#informationDialog');
+  const memberId=document.querySelector('#infoMemberId');
+  const memberDisplay=document.querySelector('#infoMemberDisplay');
+  const status=document.querySelector('#informationStatus');
+  form?.reset();
+  if(memberId)memberId.value=m.id;
+  if(memberDisplay){const displayName=!m.name||String(m.name).trim().toLowerCase()==='n/a'?'Name currently unknown':m.name;memberDisplay.textContent=`${displayName} · ${m.id}${m.roster!=='n/a'&&m.roster!=='N/A'?` · Roster #${m.roster}`:''}`;}
+  if(status){status.textContent='';status.className='information-status';}
+  dialog?.showModal();
+}
+
 
 let pan={active:false,moved:false,startX:0,startY:0,left:0,top:0,pointerId:null};
 let recentCardClick={id:null,time:0};
@@ -660,10 +775,40 @@ window.addEventListener('resize',()=>{
 });
 
 query('#closeDialog').addEventListener('click',()=>query('#memberDialog').close());
+const informationDialog=document.querySelector('#informationDialog');
+const informationForm=document.querySelector('#informationForm');
+document.querySelector('#closeInformationDialog')?.addEventListener('click',()=>informationDialog?.close());
+document.querySelector('#cancelInformation')?.addEventListener('click',()=>informationDialog?.close());
+informationForm?.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const status=document.querySelector('#informationStatus'),button=informationForm.querySelector('button[type="submit"]'),fd=new FormData(informationForm);
+  if(status){status.textContent='Sending your information…';status.className='information-status pending';}
+  if(button){button.disabled=true;button.textContent='Sending…';}
+  const payload={memberId:document.querySelector('#infoMemberId')?.value||'',submitterName:String(fd.get('submitterName')||''),submitterEmail:String(fd.get('submitterEmail')||''),relationship:String(fd.get('relationship')||''),information:String(fd.get('information')||''),source:String(fd.get('source')||''),website:String(fd.get('website')||'')};
+  try{
+    const base=String(window.TREE_CONFIG?.apiBase||'').replace(/\/+$/,'');
+    const response=await fetch(base+'/api/public/family-tree/information',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    let result={};try{result=await response.json();}catch(_){}
+    if(!response.ok||!result.ok)throw new Error(result.error||'Your information could not be sent.');
+    if(status){status.textContent=result.confirmationSent?'Thank you! Your information has been sent to the Zeta Kappa website administrators. A confirmation email has been sent to you.':'Thank you! Your information has been sent to the Zeta Kappa website administrators. We could not send the confirmation email, but your submission was received.';status.className='information-status success';}
+    if(button){button.disabled=true;button.textContent='Information Sent';}
+  }catch(err){
+    if(status){status.textContent=err?.message||'Your information could not be sent. Please try again.';status.className='information-status error';}
+    if(button){button.disabled=false;button.textContent='Send Information';}
+  }
+});
+
 detailsButton.addEventListener('click',()=>showMemberDetails());
 query('#reset').addEventListener('click',()=>{selected=null;view='tree';syncViewButtons();render();requestAnimationFrame(()=>parkAtCanvasTop());});
 queryAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{const requested=b.dataset.view;if(requested!=='tree'&&!selected){view='tree';syncViewButtons();updateStatus('Select a member first, then choose Lineage or Descendants.');return;}view=requested;syncViewButtons();render();requestAnimationFrame(centerSelected);}));
 familySelect.addEventListener('change',()=>switchFamily(familySelect.value));
+queryAll('[data-view-mode]').forEach(b=>b.addEventListener('click',()=>{
+  const mode=b.dataset.viewMode;
+  if(mode==='families'){
+    const family=familySelect.value || familySelect.options[0]?.value;
+    if(family){familySelect.value=family;switchFamily(family);}
+  }else switchRecordCollection(mode);
+}));
 function rankedSearch(query) {
   const q=String(query||'').trim().toLowerCase().replace(/\s+/g,' ');
   if(!q)return [];
@@ -687,7 +832,7 @@ function rankedSearch(query) {
   }).filter(x=>x.score>0).sort((a,b)=>b.score-a.score||a.m.name.localeCompare(b.m.name)).slice(0,10).map(x=>x.m);
 }
 search.addEventListener('input',()=>{const q=search.value.trim();if(!q){results.hidden=true;return;}const hits=rankedSearch(q);results.innerHTML=hits.map(m=>`<button data-result="${escapeHtml(m.id)}" data-family="${escapeHtml(m.family)}" type="button"><strong>${escapeHtml(m.name)}</strong><br><small>${escapeHtml(m.family)} · ${escapeHtml(roster(m))}</small></button>`).join('')||'<button disabled>No matches</button>';results.hidden=false;});
-results.addEventListener('click',e=>{const result=e.target.closest('[data-result]');if(!result)return;search.value='';results.hidden=true;if(result.dataset.family!==currentFamily){familySelect.value=result.dataset.family;switchFamily(result.dataset.family,false);}selectMember(result.dataset.result,{center:true});});
+results.addEventListener('click',e=>{const result=e.target.closest('[data-result]');if(!result)return;search.value='';results.hidden=true;const m=ALL_MEMBERS.find(x=>x.id===result.dataset.result);if(m?.memberType==='lost_to_time')switchRecordCollection('lost_to_time',false);else if(m?.memberType==='honorary')switchRecordCollection('honorary',false);else if(result.dataset.family!==currentFamily){familySelect.value=result.dataset.family;switchFamily(result.dataset.family,false);}selectMember(result.dataset.result,{center:true});});
 
 function showLoadError(err){
   console.error(err);
@@ -715,13 +860,6 @@ async function loadConfiguredData(url = configuredLiveUrl(), {allowFallback=fals
   }
 }
 
-(async function boot(){
-  const live = configuredLiveUrl();
-  if (live) await loadConfiguredData(live,{allowFallback:true});
-  else {
-    try { sourceStatus.textContent='No live Google Sheet configured; loading bundled Excel demo…'; setData(await loadFromWorkbookUrl(), 'bundled Excel demo'); }
-    catch(err) { showLoadError(err); }
-  }
-})();
+(async function boot(){try{sourceStatus.textContent='Loading chapter family database…';sourceStatus.className='';const data=await loadFromApi();setData(data.members,'TCZK historical database',data.families);const requested=new URLSearchParams(location.search).get('view');if(requested==='lost_to_time'||requested==='honorary')switchRecordCollection(requested);}catch(err){showLoadError(err);}})();
 
 })();
