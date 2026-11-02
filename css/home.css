@@ -21,7 +21,7 @@ body {
   position: relative;
   width: 100%;
   min-height: clamp(360px, 54vh, 500px);
-  background: url("../assets/img/fall_2025_splash.png") no-repeat center center/cover;
+  background: linear-gradient(rgba(20, 10, 10, 0.28), rgba(20, 10, 10, 0.28)), url("../assets/img/60th-spring-hero.webp") no-repeat center center/cover;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -113,7 +113,7 @@ body {
 
 /* Call to Action Section */
 .call-to-action {
-  background: url("../assets/img/shawty-trifling0.png") no-repeat center center/cover;
+  background: url("../assets/img/shawty-trifling0-6caf8203d7.webp") no-repeat center center/cover;
   width: 100%;
   min-height: clamp(500px, 72vh, 800px);
   padding: clamp(1.25rem, 4vw, 2.5rem);
@@ -242,3 +242,6 @@ body {
     width: min(100%, 320px);
   }
 }
+
+/* Evergreen homepage hero subtitle after retirement of the Formal interest-survey CTA. */
+.hero-subtitle{display:inline-block;margin-top:.7rem;font-size:clamp(1rem,2vw,1.35rem);font-weight:600;letter-spacing:.03em}
