@@ -1,3 +1,40 @@
-<svg width="53" height="52" viewBox="0 0 53 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M52.9776 26.1593C52.9776 11.7115 41.3375 0 26.9808 0C12.6176 0.00325091 0.977539 11.7115 0.977539 26.1625C0.977539 39.2161 10.4859 50.0373 22.9123 52V33.7211H16.3156V26.1625H22.9188V20.3945C22.9188 13.84 26.8021 10.22 32.7391 10.22C35.5857 10.22 38.5591 10.7302 38.5591 10.7302V17.1644H35.2803C32.0534 17.1644 31.0461 19.1824 31.0461 21.2524V26.1593H38.2537L37.1033 33.7178H31.0428V51.9968C43.4693 50.034 52.9776 39.2129 52.9776 26.1593Z" fill="white"/>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="53"
+   height="52"
+   viewBox="0 0 53 52"
+   fill="none"
+   version="1.1"
+   id="svg1"
+   sodipodi:docname="path-10.svg"
+   inkscape:version="1.4.2 (f4327f4, 2025-05-13)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="23.326923"
+     inkscape:cx="26.514427"
+     inkscape:cy="26"
+     inkscape:window-width="2560"
+     inkscape:window-height="1494"
+     inkscape:window-x="-11"
+     inkscape:window-y="-11"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1" />
+  <path
+     d="M52.9776 26.1593C52.9776 11.7115 41.3375 0 26.9808 0C12.6176 0.00325091 0.977539 11.7115 0.977539 26.1625C0.977539 39.2161 10.4859 50.0373 22.9123 52V33.7211H16.3156V26.1625H22.9188V20.3945C22.9188 13.84 26.8021 10.22 32.7391 10.22C35.5857 10.22 38.5591 10.7302 38.5591 10.7302V17.1644H35.2803C32.0534 17.1644 31.0461 19.1824 31.0461 21.2524V26.1593H38.2537L37.1033 33.7178H31.0428V51.9968C43.4693 50.034 52.9776 39.2129 52.9776 26.1593Z"
+     fill="white"
+     id="path1"
+     style="fill:#171717;fill-opacity:1" />
 </svg>
