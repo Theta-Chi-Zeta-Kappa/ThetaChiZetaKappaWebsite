@@ -10,6 +10,55 @@
   const apiStatus=document.getElementById('apiStatus');
   initApiStatus();
 
+  // Shared admin navigation: render one canonical sidebar on every protected page.
+  // Keep the primary navigation independently scrollable while Site Tools and Log Out stay pinned.
+  const adminNav=document.querySelector('.admin-nav');
+  const logoutBox=document.querySelector('.admin-logout');
+  if(adminNav){
+    const currentPath=location.pathname.replace(/\/+$/,'/') || '/';
+    const items=[
+      {type:'link',href:'/admin/dashboard/',icon:'▣',label:'Dashboard'},
+      {type:'section',label:'Content'},
+      {type:'link',href:'/admin/content/',icon:'▤',label:'Blog & Newsletter'},
+      {type:'link',href:'/admin/content/approvals/',icon:'✓',label:'Content Approvals',adminOnly:true},
+      {type:'section',label:'Media'},
+      {type:'link',href:'/admin/gallery/',icon:'▧',label:'Gallery'},
+      {type:'link',href:'/admin/gallery/upload/',icon:'⇧',label:'Upload Batch'},
+      {type:'link',href:'/admin/gallery/approvals/',icon:'✓',label:'Gallery Approvals',adminOnly:true},
+      {type:'link',href:'/admin/gallery/changes/',icon:'↺',label:'Change Requests',adminOnly:true},
+      {type:'section',label:'Chapter Records'},
+      {type:'link',href:'/admin/family-tree/',icon:'♧',label:'Family Tree'},
+      {type:'link',href:'/admin/history/',icon:'▦',label:'Historical Submissions',adminOnly:true},
+      {type:'link',href:'/admin/forms/',icon:'◫',label:'Forms & Surveys'},
+      {type:'link',href:'/admin/forms/responses/?type=survey',icon:'↳',label:'Survey Responses',adminOnly:true},
+      {type:'section',label:'Events'},
+      {type:'link',href:'/admin/forms/responses/?type=registration',icon:'◆',label:'Registration Responses',adminOnly:true}
+    ];
+    adminNav.innerHTML='';
+    items.forEach(item=>{
+      if(item.type==='section'){
+        const el=document.createElement('span');
+        el.className='section-label';
+        el.textContent=item.label;
+        adminNav.appendChild(el);
+        return;
+      }
+      const a=document.createElement('a');
+      a.href=item.href;
+      a.innerHTML=`<span class="admin-nav-icon" aria-hidden="true">${item.icon}</span><span>${item.label}</span>`;
+      if(item.adminOnly)a.setAttribute('data-admin-only','');
+      const itemUrl=new URL(item.href,location.origin),itemPath=itemUrl.pathname.replace(/\/+$/,'/')||'/';if(currentPath===itemPath&&(!itemUrl.search||itemUrl.search===location.search))a.classList.add('active');
+      adminNav.appendChild(a);
+    });
+  }
+  if(logoutBox){
+    logoutBox.classList.add('admin-sidebar-footer');
+    logoutBox.innerHTML=`<a class="admin-settings-link" href="/admin/settings/" data-admin-only><span class="admin-nav-icon" aria-hidden="true">⚙</span><span>Site Tools</span></a><a href="/admin/" data-admin-logout><span class="admin-nav-icon" aria-hidden="true">↪</span><span>Log Out</span></a>`;
+    if(location.pathname.replace(/\/+$/,'/')==='/admin/settings/'){
+      logoutBox.querySelector('.admin-settings-link')?.classList.add('active');
+    }
+  }
+
   const input=document.getElementById('galleryBatchInput');
   if(!input) return;
 
