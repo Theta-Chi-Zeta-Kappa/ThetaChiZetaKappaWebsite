@@ -52,7 +52,6 @@ body {
   width: auto;
   max-width: 100%;
   cursor: pointer;
-  box-shadow: 0 3px 3px rgba(0, 0, 0, 0.16);
 }
 
 /* Shared primary branding/navigation header */
