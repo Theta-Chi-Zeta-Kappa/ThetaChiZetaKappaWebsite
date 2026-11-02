@@ -245,3 +245,10 @@ body {
 
 /* Evergreen homepage hero subtitle after retirement of the Formal interest-survey CTA. */
 .hero-subtitle{display:inline-block;margin-top:.7rem;font-size:clamp(1rem,2vw,1.35rem);font-weight:600;letter-spacing:.03em}
+
+/* Public site footer (formerly loaded from admin.css) */
+.site-admin-footer{margin-top:auto;background:#171717;color:#bdbdbd;padding:.7rem 1.25rem;text-align:center;font-family:Arial,Helvetica,sans-serif;font-size:.78rem;line-height:1.35;border-top:1px solid rgba(255,255,255,.08);display:flex;justify-content:center;align-items:center;gap:.5rem;flex-wrap:wrap}
+.site-admin-footer a{color:#d0ad86;text-decoration:none;border-bottom:1px solid transparent}
+.site-admin-footer a:hover,.site-admin-footer a:focus{color:#fff;border-bottom-color:#d0ad86}
+.footer-separator{color:#777}
+@media(max-width:560px){.site-admin-footer{padding:.65rem 1rem;font-size:.75rem;gap:.4rem}
