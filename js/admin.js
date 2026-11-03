@@ -107,12 +107,12 @@
   let apiOnline=false;
 
   if(choose){choose.addEventListener('click',()=>input.click());}
-  input.addEventListener('change',()=>handleBatchFile(input.files[0]));
+  input.addEventListener('change',()=>handleSelectedFiles(input.files));
 
   if(zone){
     ['dragenter','dragover'].forEach(evt=>zone.addEventListener(evt,e=>{e.preventDefault();zone.classList.add('drag');}));
     ['dragleave','drop'].forEach(evt=>zone.addEventListener(evt,e=>{e.preventDefault();zone.classList.remove('drag');}));
-    zone.addEventListener('drop',e=>handleBatchFile(e.dataTransfer.files[0]));
+    zone.addEventListener('drop',e=>handleSelectedFiles(e.dataTransfer.files));
   }
 
   if(replaceBatch) replaceBatch.addEventListener('click',()=>input.click());
@@ -198,6 +198,53 @@
       if(cancelPublish)cancelPublish.disabled=false;
     }
   });
+
+  async function handleSelectedFiles(fileList){
+    const files=Array.from(fileList||[]);
+    if(!files.length)return;
+    if(files.length===1&&/\.zip$/i.test(files[0].name))return handleBatchFile(files[0]);
+    if(files.some(f=>/\.zip$/i.test(f.name))){showSummary('Choose either a legacy ZIP or original photos, not both.','error');return;}
+    return processOriginalPhotos(files);
+  }
+
+  async function processOriginalPhotos(files){
+    if(files.length>500){showSummary('A batch can contain at most 500 photographs.','error');return;}
+    if(files.some(f=>!/^image\/(jpeg|png|webp|heic|heif)$/i.test(f.type)&&!/\.(jpe?g|png|webp|heic|heif)$/i.test(f.name))){showSummary('Choose JPEG, PNG, HEIC, HEIF, or WebP images.','error');return;}
+    if(files.some(f=>!f.size||f.size>20*1024*1024)){showSummary('Each image must be no larger than 20 MB.','error');return;}
+    if(!window.TCZKAdminAuth){showSummary('Admin authentication is unavailable.','error');return;}
+    clearObjectUrls();batch=null;workspace.hidden=true;
+    showSummary(`Processing ${files.length} original photograph${files.length===1?'':'s'} securely…`,'loading');
+    try{
+      const started=await TCZKAdminAuth.api('/api/gallery/processor/start',{method:'POST',body:JSON.stringify({})});
+      const batchId=started.sourceBatchId;
+      const images=[];
+      const failures=[];
+      for(let index=0;index<files.length;index++){
+        const file=files[index];
+        showSummary(`Processing photograph ${index+1} of ${files.length}: ${escapeHtml(file.name)}…`,'loading');
+        const form=new FormData();form.set('sourceBatchId',batchId);form.set('image',file,file.name);form.set('fallbackDecade','2020s');
+        try{
+          // FormData must set its own multipart boundary; the auth helper otherwise defaults to JSON.
+          const response=await fetch(`${API_BASE}/api/gallery/processor/process`,{method:'POST',headers:{Authorization:`Bearer ${TCZKAdminAuth.token()}`,Accept:'application/json'},body:form});
+          const result=await response.json().catch(()=>({}));
+          if(!response.ok||result.ok===false)throw new Error(result.error||`Processing failed (HTTP ${response.status})`);
+          const record=result.record;
+          if(!record||!record.webFile||!record.digest)throw new Error('Processor returned incomplete image metadata.');
+          const thumbUrl=URL.createObjectURL(file);objectUrls.push(thumbUrl);
+          const year=parseYear(record.year);
+          images.push({id:String(record.id),digest:String(record.digest),originalName:String(record.originalName||file.name),webFile:String(record.webFile),width:Number(record.width)||0,height:Number(record.height)||0,year,decade:year?yearToDecade(year):String(record.decade||''),rotation:0,removed:false,selected:false,duplicate:false,duplicateRecord:null,thumbUrl,displayEntry:null,thumbEntry:null});
+        }catch(err){failures.push(`${file.name}: ${err.message||'processing failed'}`);}
+      }
+      if(!images.length)throw new Error(`No photographs were processed. ${failures.slice(0,3).join('; ')}`);
+      batch={batchId,generatedAt:new Date().toISOString(),processor:'Gallery v4 Phase 1e',images,fileName:`${files.length} original photos`,fileSize:files.reduce((n,f)=>n+f.size,0),buffer:null,processorBacked:true};
+      selectedId=images[0].id;workspace.hidden=false;
+      batchTitle.textContent=`Batch ${batch.batchId}`;
+      renderGrid();renderEditor();updateSelectionUI();updatePublishState();
+      await checkBatchDuplicates();
+      if(failures.length)showSummary(`${images.length} processed; ${failures.length} failed. ${escapeHtml(failures.slice(0,3).join('; '))}`,'error');
+      workspace.scrollIntoView({behavior:'smooth',block:'start'});
+    }catch(err){showSummary(escapeHtml(err.message||'Could not process photographs.'),'error');}
+  }
 
   async function handleBatchFile(file){
     if(!file)return;
@@ -369,7 +416,7 @@
     const paired=active.length;
     const removed=batch.images.length-active.length;
     const checks=[
-      {ok:paired>0,text:`${paired} image pair${paired===1?'':'s'} present in display/ and thumbs/`},
+      {ok:paired>0,text:batch.processorBacked?`${paired} image${paired===1?'':'s'} processed into staged WebP variants`:`${paired} image pair${paired===1?'':'s'} present in display/ and thumbs/`},
       {ok:duplicates===0,text:duplicates?`${duplicates} duplicate image${duplicates===1?' is':'s are'} still active`:'No active images duplicate the existing gallery'},
       {ok:missingYear===0,text:missingYear?`${missingYear} image${missingYear===1?' still needs':'s still need'} a year`:'Every publishable image has a year'},
       {ok:true,text:`${removed} image${removed===1?'':'s'} removed from this batch`},
@@ -400,7 +447,7 @@
     const workflowId=created.batch.id;
     let complete=0,total=active.length*2;
     try{
-      for(const img of active){
+      if(!batch.processorBacked)for(const img of active){
         for(const [variant,entry] of [['display',img.displayEntry],['thumb',img.thumbEntry]]){
           const bytes=await entryBytes(batch.buffer,entry);
           if(uploadProgress)uploadProgress.textContent=`Uploading ${++complete} of ${total}: ${img.webFile} (${variant})…`;

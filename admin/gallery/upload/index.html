@@ -48,9 +48,9 @@
           <div>
             <div class="dropzone-icon">⇧</div>
             <h3>Upload Processed Gallery Batch</h3>
-            <p>Drop the <b>gallery-batch.zip</b> created by the Gallery v3 processor here, or choose it from your computer.</p>
-            <input id="galleryBatchInput" type="file" accept=".zip,application/zip" hidden>
-            <button class="primary-btn" type="button" id="chooseBatch">Choose ZIP</button>
+            <p>Drop original JPEG, PNG, HEIC, HEIF, or WebP photos here, or select a legacy Gallery v3 ZIP.</p>
+            <input id="galleryBatchInput" type="file" accept=".zip,application/zip,image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" multiple hidden>
+            <button class="primary-btn" type="button" id="chooseBatch">Choose Photos or ZIP</button>
             <div class="file-summary" id="fileSummary" aria-live="polite"></div>
           </div>
         </section>
@@ -64,7 +64,7 @@
             <li><span class="check">✓</span><span>The current legacy gallery remains untouched until Publish is approved.</span></li>
           </ul>
           <div class="notice" style="margin-top:1rem">
-            This page opens Gallery v3 ZIPs locally, then checks their image hashes against the live D1 gallery catalog. Approved submissions are staged securely in R2. Editors submit for approval; only Admins can publish staged images into the live display/ and thumbs/ folders.
+            Original photos are processed securely by the gallery processor into staged WebP display and thumbnail images. Legacy Gallery v3 ZIPs remain supported. Editors submit for approval; only Admins can publish images into the live gallery.
           </div>
         </section>
       </section>
@@ -77,7 +77,7 @@
             <p id="batchSummaryText">0 images ready for review</p>
           </div>
           <div class="review-summary-actions">
-            <button class="secondary-btn" type="button" id="replaceBatch">Replace ZIP</button>
+            <button class="secondary-btn" type="button" id="replaceBatch">Replace Batch</button>
             <button class="danger-btn" type="button" id="discardBatch">Discard Batch</button>
           </div>
         </div>
@@ -186,6 +186,6 @@
 
 <script src="/js/admin-config.js?v=20260910-gallerymanager1"></script>
 <script src="/js/admin-auth.js?v=20260910-gallerymanager1"></script>
-<script src="/js/admin.js?v=20261006-forms25"></script>
+<script src="/js/admin.js?v=20261103-gallery-phase2"></script>
 </body>
 </html>
