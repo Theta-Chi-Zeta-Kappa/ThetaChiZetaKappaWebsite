@@ -59,6 +59,10 @@
     }
   }
 
+  // Returned-batch list is available only on the upload page.
+  const returnedList=document.getElementById('returnedBatchList');
+  const refreshReturned=document.getElementById('refreshReturnedBatches');
+  if(refreshReturned)refreshReturned.addEventListener('click',loadReturnedBatches);
   const input=document.getElementById('galleryBatchInput');
   if(!input) return;
 
@@ -100,6 +104,47 @@
   const confirmPublish=document.getElementById('confirmPublish');
   const uploadProgress=document.getElementById('uploadProgress');
 
+  let returnedApprovalId=null;
+  async function loadReturnedBatches(){
+    if(!returnedList||!window.TCZKAdminAuth)return;
+    returnedList.textContent='Loading returned batches…';
+    try{
+      const data=await TCZKAdminAuth.api('/api/gallery/workflow/returned');
+      returnedList.replaceChildren();
+      if(!data.batches?.length){returnedList.textContent='No batches currently require revisions.';return;}
+      for(const item of data.batches){
+        const row=document.createElement('div');row.style.cssText='padding:12px 0;border-top:1px solid #ddd;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap';
+        const info=document.createElement('div');const name=document.createElement('strong');name.textContent=item.sourceFileName||'Gallery batch';
+        const note=document.createElement('p');note.style.cssText='margin:5px 0;white-space:pre-wrap';note.textContent='Reviewer: '+(item.reviewNote||'No note supplied');
+        info.append(name,note);const button=document.createElement('button');button.className='secondary-btn';button.type='button';button.textContent='Reopen for editing';button.addEventListener('click',()=>openReturnedBatch(item.id));
+        row.append(info,button);returnedList.append(row);
+      }
+    }catch(err){returnedList.textContent='Unable to load returned batches: '+(err.message||'Unknown error');}
+  }
+  async function openReturnedBatch(id){
+    if(batch&&!confirm('Replace the batch currently open in the editor?'))return;
+    try{
+      const data=await TCZKAdminAuth.api('/api/gallery/workflow/returned/detail?id='+encodeURIComponent(id));
+      const info=data.batch;
+      clearObjectUrls();
+      const images=[];
+      for(const record of info.images){
+        const url=`${API_BASE}/api/gallery/workflow/returned/image?batchId=${encodeURIComponent(id)}&imageId=${encodeURIComponent(record.sourceId)}&variant=thumb`;
+        const response=await fetch(url,{headers:{Authorization:`Bearer ${TCZKAdminAuth.token()}`}});
+        if(!response.ok)throw new Error('Could not retrieve '+record.originalName+' (HTTP '+response.status+'). The temporary file may have expired.');
+        const blob=await response.blob(),thumbUrl=URL.createObjectURL(blob);objectUrls.push(thumbUrl);
+        images.push({id:record.sourceId,digest:record.digest,originalName:record.originalName,webFile:record.webFile,width:record.width,height:record.height,year:record.year,decade:record.decade,rotation:record.rotation,removed:record.removed,selected:false,duplicate:false,duplicateRecord:null,thumbUrl,displayEntry:null,thumbEntry:null});
+      }
+      returnedApprovalId=id;
+      batch={batchId:info.sourceBatchId,processor:info.processorVersion,images,fileName:info.sourceFileName||'Returned gallery batch',processorBacked:info.processorBacked,returned:true};
+      selectedId=images[0]?.id||null;currentFilter='all';workspace.hidden=false;
+      batchTitle.textContent='Returned batch — '+id;
+      renderGrid();renderEditor();updateSelectionUI();updatePublishState();
+      showSummary('Returned for revisions: '+escapeHtml(info.reviewNote||'Please review this batch.')+'<br>Update years, rotation, or removed images, then select Resubmit for Approval.','success');
+      workspace.scrollIntoView({behavior:'smooth',block:'start'});
+    }catch(err){showSummary(escapeHtml(err.message||'Could not open returned batch.'),'error');}
+  }
+  loadReturnedBatches();
   let batch=null;
   let selectedId=null;
   let currentFilter='all';
@@ -212,6 +257,7 @@
     if(files.some(f=>!/^image\/(jpeg|png|webp|heic|heif)$/i.test(f.type)&&!/\.(jpe?g|png|webp|heic|heif)$/i.test(f.name))){showSummary('Choose JPEG, PNG, HEIC, HEIF, or WebP images.','error');return;}
     if(files.some(f=>!f.size||f.size>20*1024*1024)){showSummary('Each image must be no larger than 20 MB.','error');return;}
     if(!window.TCZKAdminAuth){showSummary('Admin authentication is unavailable.','error');return;}
+    returnedApprovalId=null;
     clearObjectUrls();batch=null;workspace.hidden=true;
     showSummary(`Processing ${files.length} original photograph${files.length===1?'':'s'} securely…`,'loading');
     try{
@@ -443,6 +489,12 @@
       }))
     };
     if(uploadProgress)uploadProgress.textContent='Creating approval record…';
+    if(returnedApprovalId){
+      if(uploadProgress)uploadProgress.textContent='Resubmitting corrected metadata…';
+      const result=await TCZKAdminAuth.api('/api/gallery/workflow/returned/resubmit',{method:'POST',body:JSON.stringify({batchId:returnedApprovalId,images:payload.images})});
+      returnedApprovalId=null;await loadReturnedBatches();
+      return result;
+    }
     const created=await TCZKAdminAuth.api('/api/gallery/workflow/create',{method:'POST',body:JSON.stringify(payload)});
     const workflowId=created.batch.id;
     let complete=0,total=active.length*2;
@@ -547,6 +599,7 @@
   }
 
   function resetBatch(){
+    returnedApprovalId=null;loadReturnedBatches();
     clearObjectUrls();batch=null;selectedId=null;currentFilter='all';workspace.hidden=true;grid.innerHTML='';input.value='';summary.style.display='none';summary.className='file-summary';
     document.querySelectorAll('[data-review-filter]').forEach(x=>x.classList.toggle('active',x.dataset.reviewFilter==='all'));
   }

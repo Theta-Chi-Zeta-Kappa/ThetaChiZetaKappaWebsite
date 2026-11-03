@@ -43,6 +43,15 @@
         <a class="secondary-btn" href="/assets/tools/Gallery-v3-Batch-Processor.zip" download>↓ Download Processor</a>
       </div>
 
+      <section class="panel" id="returnedBatchesPanel" style="margin-bottom:1.25rem;padding:1.25rem">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+          <h3 style="margin:0">Returned for Revisions</h3>
+          <button class="secondary-btn" type="button" id="refreshReturnedBatches">Refresh</button>
+        </div>
+        <p>Reopen a returned submission to correct image years, rotation, or removal status and resubmit the same batch. Adding or replacing original photographs is not supported in this revision editor.</p>
+        <div id="returnedBatchList" aria-live="polite">Loading returned batches…</div>
+      </section>
+
       <section class="gallery-upload-layout" id="uploadArea">
         <section class="dropzone" id="galleryDropzone">
           <div>
@@ -186,6 +195,6 @@
 
 <script src="/js/admin-config.js?v=20260910-gallerymanager1"></script>
 <script src="/js/admin-auth.js?v=20260910-gallerymanager1"></script>
-<script src="/js/admin.js?v=20261103-gallery-phase2"></script>
+<script src="/js/admin.js?v=20261103-gallery-revisions1"></script>
 </body>
 </html>
