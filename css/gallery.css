@@ -6,28 +6,7 @@ body {
   background-color: #fff;
 }
 
-nav {
-  background-color: #ab0000;
-  color: white;
-  padding: 1rem 2rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  box-shadow: 0 3px 3px rgba(0, 0, 0, 0.16);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-nav .logo {
-  font-size: 1.5rem;
-  font-weight: bold;
-}
-
-nav .nav-links {
-  display: flex;
-  gap: 1rem;
-}
+/* Removed obsolete global nav rules: they styled footer navigation on gallery pages. */
 
 .modal-caption {
   display: none;
