@@ -56,8 +56,8 @@
         <section class="dropzone" id="galleryDropzone">
           <div>
             <div class="dropzone-icon">⇧</div>
-            <h3>Upload Processed Gallery Batch</h3>
-            <p>Drop original JPEG, PNG, HEIC, HEIF, or WebP photos here, or select a legacy Gallery v3 ZIP.</p>
+            <h3>Upload Gallery Photographs</h3>
+            <p>Drop original JPEG, PNG, HEIC, HEIF, or WebP photos here, a ZIP of original photos (up to 500), or a legacy Gallery v3 ZIP.</p>
             <input id="galleryBatchInput" type="file" accept=".zip,application/zip,image/jpeg,image/png,image/webp,image/heic,image/heif,.heic,.heif" multiple hidden>
             <button class="primary-btn" type="button" id="chooseBatch">Choose Photos or ZIP</button>
             <div class="file-summary" id="fileSummary" aria-live="polite"></div>
@@ -73,7 +73,7 @@
             <li><span class="check">✓</span><span>The current legacy gallery remains untouched until Publish is approved.</span></li>
           </ul>
           <div class="notice" style="margin-top:1rem">
-            Original photos are processed securely by the gallery processor into staged WebP display and thumbnail images. Legacy Gallery v3 ZIPs remain supported. Editors submit for approval; only Admins can publish images into the live gallery.
+            Original photos, including those extracted locally from a ZIP, are processed securely into staged WebP display and thumbnail images. ZIP archives must be 512 MB or smaller; each image must be 20 MB or smaller. Legacy Gallery v3 ZIPs remain supported. Editors submit for approval; only Admins can publish images into the live gallery.
           </div>
         </section>
       </section>
@@ -195,6 +195,6 @@
 
 <script src="/js/admin-config.js?v=20260910-gallerymanager1"></script>
 <script src="/js/admin-auth.js?v=20260910-gallerymanager1"></script>
-<script src="/js/admin.js?v=20261103-gallery-revisions1"></script>
+<script src="/js/admin.js?v=20261103-gallery-photozip1"></script>
 </body>
 </html>

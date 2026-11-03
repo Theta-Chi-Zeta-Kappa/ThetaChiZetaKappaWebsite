@@ -247,9 +247,73 @@
   async function handleSelectedFiles(fileList){
     const files=Array.from(fileList||[]);
     if(!files.length)return;
-    if(files.length===1&&/\.zip$/i.test(files[0].name))return handleBatchFile(files[0]);
-    if(files.some(f=>/\.zip$/i.test(f.name))){showSummary('Choose either a legacy ZIP or original photos, not both.','error');return;}
+    if(files.length===1&&/\.zip$/i.test(files[0].name))return handlePhotoOrLegacyZip(files[0]);
+    if(files.some(f=>/\.zip$/i.test(f.name))){showSummary('Choose one ZIP archive or select original photos, not both.','error');return;}
     return processOriginalPhotos(files);
+  }
+
+  // ZIP archives are unpacked only in the uploader. Original files still pass through
+  // the existing authenticated processor endpoint; legacy Gallery v3 ZIPs retain their route.
+  const PHOTO_ZIP_MAX_BYTES=512*1024*1024;
+  const PHOTO_ZIP_MAX_EXTRACTED=500*20*1024*1024;
+  const PHOTO_ZIP_EXT=/\.(jpe?g|png|webp|heic|heif)$/i;
+  const PHOTO_ZIP_MIME={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',heic:'image/heic',heif:'image/heif'};
+
+  async function handlePhotoOrLegacyZip(file){
+    if(file.size>PHOTO_ZIP_MAX_BYTES){showSummary('ZIP archives must be 512 MB or smaller. Split larger archives into separate uploads.','error');return;}
+    showSummary(`Inspecting ${escapeHtml(file.name)}…`,'loading');
+    try{
+      const buffer=await file.arrayBuffer();
+      const entries=parseCentralDirectory(buffer);
+      // A root manifest identifies an already-processed Gallery v3 ZIP.
+      if(entries.some(e=>e.name==='manifest.json'))return handleBatchFile(file);
+      const candidates=entries.filter(e=>!e.name.endsWith('/')&&!e.name.startsWith('__MACOSX/')&&!e.name.split('/').some(part=>part.startsWith('.'))&&PHOTO_ZIP_EXT.test(e.name));
+      if(!candidates.length)throw new Error('This ZIP contains no supported JPEG, PNG, HEIC, HEIF, or WebP photographs.');
+      if(candidates.length>500)throw new Error('This ZIP contains more than 500 photographs. Split it into smaller ZIPs.');
+      let total=0;
+      for(const e of candidates){
+        if(!e.uncompressedSize||e.uncompressedSize>20*1024*1024)throw new Error(`Photograph exceeds the 20 MB limit: ${e.name}`);
+        total+=e.uncompressedSize;
+        if(total>PHOTO_ZIP_MAX_EXTRACTED)throw new Error('ZIP contains too much extracted image data.');
+      }
+      const photos=[];
+      for(let i=0;i<candidates.length;i++){
+        const entry=candidates[i];
+        showSummary(`Extracting photograph ${i+1} of ${candidates.length}: ${escapeHtml(entry.name)}…`,'loading');
+        const bytes=await boundedZipEntryBytes(buffer,entry,20*1024*1024);
+        const name=entry.name.split('/').pop();
+        const extension=name.split('.').pop().toLowerCase();
+        photos.push(new File([bytes],name,{type:PHOTO_ZIP_MIME[extension]}));
+      }
+      return processOriginalPhotos(photos);
+    }catch(err){showSummary(escapeHtml(err.message||'Could not open the photo ZIP.'),'error');}
+  }
+
+  async function boundedZipEntryBytes(buffer,entry,maxBytes){
+    const dv=new DataView(buffer);const bytes=new Uint8Array(buffer);const p=entry.localOffset;
+    if(p<0||p+30>buffer.byteLength||dv.getUint32(p,true)!==0x04034b50)throw new Error('Invalid ZIP entry header.');
+    const nameLen=dv.getUint16(p+26,true),extraLen=dv.getUint16(p+28,true);
+    const start=p+30+nameLen+extraLen,end=start+entry.compressedSize;
+    if(end>buffer.byteLength)throw new Error('Truncated ZIP image entry.');
+    if(entry.uncompressedSize>maxBytes)throw new Error('Image exceeds the extraction limit.');
+    const compressed=bytes.slice(start,end);
+    if(entry.method===0){if(compressed.byteLength>maxBytes)throw new Error('Image exceeds the extraction limit.');return compressed;}
+    if(entry.method!==8)throw new Error('Unsupported ZIP compression. Use a standard ZIP archive.');
+    if(typeof DecompressionStream==='undefined')throw new Error('Your browser cannot extract compressed ZIPs. Use an up-to-date browser.');
+    let stream;
+    try{stream=new Blob([compressed]).stream().pipeThrough(new DecompressionStream('deflate-raw'));}
+    catch{throw new Error('Your browser does not support ZIP deflate extraction. Extract the ZIP first, then select the photographs.');}
+    const reader=stream.getReader(),chunks=[];let total=0;
+    try{
+      while(true){const {value,done}=await reader.read();if(done)break;total+=value.byteLength;
+        if(total>maxBytes)throw new Error('Decompressed photograph exceeds 20 MB.');
+        chunks.push(value);
+      }
+    }catch(err){await reader.cancel().catch(()=>{});throw err;}
+    if(total!==entry.uncompressedSize)throw new Error('ZIP image size mismatch.');
+    const output=new Uint8Array(total);let offset=0;
+    for(const chunk of chunks){output.set(chunk,offset);offset+=chunk.byteLength;}
+    return output;
   }
 
   async function processOriginalPhotos(files){
@@ -369,6 +433,7 @@
     for(let n=0;n<total;n++){
       if(dv.getUint32(pos,true)!==0x02014b50) throw new Error('The ZIP directory is malformed.');
       const method=dv.getUint16(pos+10,true);const compressedSize=dv.getUint32(pos+20,true);const uncompressedSize=dv.getUint32(pos+24,true);const nameLen=dv.getUint16(pos+28,true);const extraLen=dv.getUint16(pos+30,true);const commentLen=dv.getUint16(pos+32,true);const localOffset=dv.getUint32(pos+42,true);
+      if(pos+46+nameLen+extraLen+commentLen>buffer.byteLength)throw new Error('Truncated ZIP central directory.');
       const name=new TextDecoder().decode(bytes.slice(pos+46,pos+46+nameLen));
       out.push({name,method,compressedSize,uncompressedSize,localOffset});
       pos+=46+nameLen+extraLen+commentLen;
