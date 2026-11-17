@@ -53,28 +53,28 @@ body {
   width: 100%;
   min-height: calc(100vh - 120px);
   overflow: hidden;
-  padding: 24px 16px 40px;
-  box-sizing: border-box;
   background: #f4eee5;
 }
 
 .pdf-pages {
-  width: 100%;
+  /* Center PDF documents at readable width on desktop; PDF.js renders
+     from the container width, preserving annotation alignment. */
+  width: min(820px, calc(100% - 48px));
   max-width: 820px;
   margin: 0 auto;
-  padding: 0;
+  padding: 28px 0 36px;
   background: #f4eee5;
-  box-shadow: 0 8px 28px rgba(25, 25, 25, 0.12);
 }
 
 .pdf-page-wrap {
   position: relative;
   width: 100%;
   max-width: 100%;
-  margin: 0;
+  margin: 0 0 18px;
   padding: 0;
   line-height: 0;
   background: #fff;
+  box-shadow: 0 6px 22px rgba(37, 27, 22, 0.12);
 }
 
 .pdf-page {
@@ -203,7 +203,18 @@ body {
 
   .pdf-stage {
     min-height: calc(100vh - 100px);
-    padding: 12px 8px 24px;
+  }
+
+  /* Phones retain full-width pages. */
+  .pdf-pages {
+    width: 100%;
+    max-width: 100%;
+    padding: 0;
+  }
+
+  .pdf-page-wrap {
+    margin: 0;
+    box-shadow: none;
   }
 
   .viewer-actions {
