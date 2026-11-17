@@ -1,69 +1,125 @@
 (function(){
   'use strict';
-
-  const API_BASE=String(window.TCZK_ADMIN_API||'').replace(/\/$/,'');
-
-  const menuBtn=document.querySelector('[data-admin-menu]');
-  const sidebar=document.getElementById('adminSidebar');
-  if(menuBtn&&sidebar){menuBtn.addEventListener('click',()=>sidebar.classList.toggle('open'));}
-
-  const apiStatus=document.getElementById('apiStatus');
-  function initApiStatus(){
-    if(!apiStatus)return;
-    const base=String(window.TCZK_ADMIN_API||'').replace(/\/$/,'');
-    if(!base){apiStatus.textContent='API not configured';return;}
-    fetch(base+'/api/health',{cache:'no-store'}).then(r=>{apiStatus.textContent=r.ok?'Admin API online':'Admin API unavailable';}).catch(()=>{apiStatus.textContent='Admin API unavailable';});
+  const apiBase = String(window.TCZK_ADMIN_API || '').replace(/\/$/, '');
+  const apiStatus = document.getElementById('apiStatus');
+  if (apiStatus && apiBase) {
+    fetch(apiBase + '/api/health', {cache:'no-store'})
+      .then(r => {apiStatus.textContent = r.ok ? 'Admin API online' : 'Admin API unavailable';})
+      .catch(() => {apiStatus.textContent = 'Admin API unavailable';});
   }
-  initApiStatus();
-
-  // Shared admin navigation: render one canonical sidebar on every protected page.
-  // Keep the primary navigation independently scrollable while Site Tools and Log Out stay pinned.
-  const adminNav=document.querySelector('.admin-nav');
-  const logoutBox=document.querySelector('.admin-logout');
-  if(adminNav){
-    const currentPath=location.pathname.replace(/\/+$/,'/') || '/';
-    const items=[
-      {type:'link',href:'/admin/dashboard/',icon:'▣',label:'Dashboard'},
-      {type:'section',label:'Content'},
-      {type:'link',href:'/admin/content/',icon:'▤',label:'Blog & Newsletter'},
-      {type:'link',href:'/admin/content/approvals/',icon:'✓',label:'Content Approvals',adminOnly:true},
-      {type:'section',label:'Gallery'},
-      {type:'link',href:'/admin/gallery/',icon:'▧',label:'Gallery Manager'},
-      {type:'link',href:'/admin/gallery/staging-upload/',icon:'⇧',label:'Upload Photos'},
-      {type:'link',href:'/admin/gallery/staging-approvals/',icon:'✓',label:'Photo Approvals',adminOnly:true},
-      {type:'link',href:'/admin/gallery/events/',icon:'▦',label:'Guest Events',adminOnly:true},
-      {type:'link',href:'/admin/gallery/changes/',icon:'↺',label:'Change Requests',adminOnly:true},
-      {type:'section',label:'Chapter Records'},
-      {type:'link',href:'/admin/family-tree/',icon:'♧',label:'Family Tree'},
-      {type:'link',href:'/admin/history/',icon:'▦',label:'Historical Submissions',adminOnly:true},
-      {type:'link',href:'/admin/forms/',icon:'◫',label:'Forms & Surveys'},
-      {type:'link',href:'/admin/forms/responses/?type=survey',icon:'↳',label:'Survey Responses',adminOnly:true},
-      {type:'section',label:'Events'},
-      {type:'link',href:'/admin/forms/responses/?type=registration',icon:'◆',label:'Registration Responses',adminOnly:true}
-    ];
-    adminNav.innerHTML='';
-    items.forEach(item=>{
-      if(item.type==='section'){
-        const el=document.createElement('span');
-        el.className='section-label';
-        el.textContent=item.label;
-        adminNav.appendChild(el);
-        return;
-      }
-      const a=document.createElement('a');
-      a.href=item.href;
-      a.innerHTML=`<span class="admin-nav-icon" aria-hidden="true">${item.icon}</span><span>${item.label}</span>`;
-      if(item.adminOnly)a.setAttribute('data-admin-only','');
-      const itemUrl=new URL(item.href,location.origin),itemPath=itemUrl.pathname.replace(/\/+$/,'/')||'/';if(currentPath===itemPath&&(!itemUrl.search||itemUrl.search===location.search))a.classList.add('active');
-      adminNav.appendChild(a);
+  const sidebar = document.getElementById('adminSidebar');
+  const menuBtn = document.querySelector('[data-admin-menu]');
+  const closeMenu = () => {
+    sidebar?.classList.remove('open');
+    menuBtn?.setAttribute('aria-expanded','false');
+    document.body.classList.remove('admin-mobile-nav-open');
+  };
+  if (sidebar && menuBtn) {
+    menuBtn.setAttribute('aria-expanded','false');
+    menuBtn.setAttribute('aria-controls','adminSidebar');
+    menuBtn.addEventListener('click', () => {
+      const opened = sidebar.classList.toggle('open');
+      menuBtn.setAttribute('aria-expanded',String(opened));
+      document.body.classList.toggle('admin-mobile-nav-open',opened);
+    });
+    document.addEventListener('keydown', e => {if(e.key==='Escape') closeMenu();});
+    document.addEventListener('click', e => {
+      if(sidebar.classList.contains('open') && !sidebar.contains(e.target) && !menuBtn.contains(e.target)) closeMenu();
     });
   }
-  if(logoutBox){
-    logoutBox.classList.add('admin-sidebar-footer');
-    logoutBox.innerHTML=`<a class="admin-settings-link" href="/admin/settings/" data-admin-only><span class="admin-nav-icon" aria-hidden="true">⚙</span><span>Site Tools</span></a><a href="/admin/" data-admin-logout><span class="admin-nav-icon" aria-hidden="true">↪</span><span>Log Out</span></a>`;
-    if(location.pathname.replace(/\/+$/,'/')==='/admin/settings/'){
-      logoutBox.querySelector('.admin-settings-link')?.classList.add('active');
-    }
-  }
 
+  const nav = document.querySelector('.admin-nav');
+  const footer = document.querySelector('.admin-logout');
+  const icon = name => '/assets/admin-icons/' + name + '.png';
+  const path = location.pathname.replace(/\/+$/,'/') || '/';
+  const entries = [
+    {id:'gallery', label:'Gallery', icon:'gallery', children:[
+      {href:'/admin/gallery/',label:'Gallery Manager'},
+      {href:'/admin/gallery/staging-upload/',label:'Gallery Operations'},
+      {href:'/admin/gallery/staging-approvals/',label:'Pending Approvals',adminOnly:true},
+      {href:'/admin/gallery/changes/',label:'Change Requests',adminOnly:true}
+    ]},
+    {id:'content',label:'Content',icon:'content',children:[
+      {href:'/admin/content/',label:'Blog & Newsletter'},
+      {href:'/admin/content/approvals/',label:'Content Approvals',adminOnly:true}
+    ]},
+    {id:'records',label:'Chapter Records',icon:'records',children:[
+      {href:'/admin/family-tree/',label:'Family Tree'},
+      {href:'/admin/history/',label:'Historical Submissions',adminOnly:true}
+    ]},
+    {id:'event',label:'Events',icon:'event',children:[
+      {href:'/admin/forms/',label:'Forms & Surveys'},
+      {href:'/admin/forms/responses/?type=registration',label:'Registration Responses',adminOnly:true},
+      {href:'/admin/forms/responses/?type=survey',label:'Survey Responses',adminOnly:true}
+    ]}
+  ];
+  function linkMatches(href){
+    const u=new URL(href,location.origin);
+    if(u.pathname.replace(/\/+$/,'/') !== path) return false;
+    if(u.search && u.search !== location.search) return false;
+    return true;
+  }
+  if (nav) {
+    const makeImg = (name,cls) => {
+      const image=document.createElement('img'); image.src=icon(name);image.alt='';
+      image.setAttribute('aria-hidden','true');image.className=cls;
+      image.width=25;image.height=25;return image;
+    };
+    const el=(tag,cls)=>{const out=document.createElement(tag);out.className=cls;return out;};
+    nav.replaceChildren();
+    const dashboard=el('a','admin-nav-primary');dashboard.href='/admin/dashboard/';
+    dashboard.append(makeImg('dashboard','admin-custom-icon'),document.createTextNode('Dashboard'));
+    if(linkMatches(dashboard.href)) dashboard.classList.add('active');
+    nav.append(dashboard);
+    let activeGroup=entries.find(group=>group.children.some(c=>linkMatches(c.href)))?.id || null;
+    const storedKey='tczk-admin-open-group';
+    let expanded=activeGroup;
+    if(!expanded){try{expanded=sessionStorage.getItem(storedKey)||null;}catch{}}
+    const groups=new Map();
+    function openGroup(id){
+      expanded=id;
+      for(const [key,pair] of groups){
+        const open=id===key;
+        pair.button.setAttribute('aria-expanded',String(open));
+        pair.submenu.hidden=!open;
+        pair.container.classList.toggle('is-open',open);
+      }
+      try{if(id)sessionStorage.setItem(storedKey,id);else sessionStorage.removeItem(storedKey);}catch{}
+    }
+    for(const group of entries){
+      const container=el('section','admin-nav-group');
+      const toggle=el('button','admin-nav-toggle');toggle.type='button';
+      toggle.setAttribute('aria-controls','admin-nav-submenu-'+group.id);
+      toggle.setAttribute('aria-expanded','false');
+      toggle.append(makeImg(group.icon,'admin-custom-icon'));
+      const text=el('span','admin-nav-group-label');text.textContent=group.label;toggle.append(text);
+      const arrow=el('span','admin-nav-chevron');arrow.setAttribute('aria-hidden','true');arrow.textContent='⌄';toggle.append(arrow);
+      const submenu=el('div','admin-nav-submenu');submenu.id='admin-nav-submenu-'+group.id;submenu.hidden=true;
+      for(const item of group.children){
+        const anchor=el('a','admin-sub-link');anchor.href=item.href;anchor.textContent=item.label;
+        if(item.adminOnly){anchor.dataset.adminOnly='';anchor.hidden=true;}
+        if(linkMatches(item.href)){anchor.classList.add('active');anchor.setAttribute('aria-current','page');}
+        anchor.addEventListener('click',closeMenu);
+        submenu.append(anchor);
+      }
+      toggle.addEventListener('click',()=>openGroup(expanded===group.id?null:group.id));
+      container.append(toggle,submenu);nav.append(container);
+      groups.set(group.id,{container,button:toggle,submenu});
+    }
+    openGroup(expanded);
+  }
+  if (footer) {
+    footer.classList.add('admin-sidebar-footer');
+    footer.replaceChildren();
+    const footerLink=(href,label,imgName)=>{
+      const a=document.createElement('a');a.href=href;
+      const img=document.createElement('img');img.src=icon(imgName);img.alt='';img.className='admin-custom-icon';img.width=25;img.height=25;
+      a.append(img,document.createTextNode(label));return a;
+    };
+    const settings=footerLink('/admin/settings/','Site Settings','settings');
+    settings.dataset.adminOnly='';settings.hidden=true;
+    if(path==='/admin/settings/')settings.classList.add('active');
+    const logout=footerLink('/admin/','Log Out','logout');logout.dataset.adminLogout='';
+    footer.append(settings,logout);
+  }
 })();
