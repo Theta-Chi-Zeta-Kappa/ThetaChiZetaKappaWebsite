@@ -1,0 +1,13 @@
+(function(){'use strict';
+const api=window.TCZKAdminAuth?.api;
+const $=id=>document.getElementById(id);
+const msg=t=>{$('eventMessage').textContent=t};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function load(){try{const data=await api('/api/gallery-v19/events');const events=data.events||[];
+$('eventList').innerHTML=events.length?events.map(e=>`<article class="panel" style="margin:12px 0"><strong>${esc(e.name)}</strong> <small>${esc(e.status)}</small><p>Submissions: ${Number(e.submissions)||0} · Limit: ${Number(e.max_per_submission)||25}</p><button data-action="link" data-id="${esc(e.id)}" ${e.status!=='active'?'disabled':''}>Generate 72-hour token</button> <button data-action="close" data-id="${esc(e.id)}" ${e.status==='closed'?'disabled':''}>Close event</button></article>`).join(''):'No guest events found.';msg('Guest events loaded from staging.');}catch(e){msg('Could not load events: '+e.message);$('eventList').textContent='Unable to load events.'}}
+$('eventCreate').addEventListener('submit',async e=>{e.preventDefault();const f=e.currentTarget;try{await api('/api/gallery-v19/events',{method:'POST',body:JSON.stringify({name:f.elements.name.value.trim(),maxPerSubmission:Number(f.elements.limit.value)})});f.reset();msg('Event created.');await load()}catch(x){msg(x.message)}});
+$('refreshEvents').addEventListener('click',load);
+$('eventList').addEventListener('click',async e=>{const b=e.target.closest('button[data-action]');if(!b)return;const id=b.dataset.id;try{if(b.dataset.action==='close'){if(!confirm('Close this event and invalidate its guest access?'))return;await api('/api/gallery-v19/events/'+id,{method:'PATCH',body:JSON.stringify({status:'closed'})});msg('Event closed.');await load()}else{const d=await api('/api/gallery-v19/events/'+id+'/links',{method:'POST',body:JSON.stringify({hours:72})});$('guestToken').value=d.token;$('linkMeta').textContent='Link ID: '+d.linkId+' · Expires: '+d.expiresAt;$('newLinkPanel').hidden=false;msg('Guest token generated. It is not yet a usable website link.')}}catch(x){msg(x.message)}});
+$('copyToken').addEventListener('click',async()=>{try{await navigator.clipboard.writeText($('guestToken').value);msg('Token copied.')}catch{msg('Copy manually from the token field.')}});
+if(typeof api!=='function'){msg('Admin auth helper unavailable.');return;}load();
+})();
