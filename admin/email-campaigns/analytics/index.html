@@ -34,6 +34,15 @@
           </div>
           <p id="reportStatus"></p>
           <dl id="reportMetrics" class="campaign-metrics"></dl>
+          <div id="campaignDeliveryActions" class="campaign-report-toolbar" hidden>
+            <button id="pauseCampaign" type="button" class="secondary-btn">Pause pending sends</button>
+            <button id="resumeCampaign" type="button" class="primary-btn">Resume pending sends</button>
+          </div>
+          <section id="uncertainCampaignJobs" hidden>
+            <h3>Submissions to review</h3>
+            <p>SES acceptance is unknown for these recipients. The queue will not resend them automatically.</p>
+            <ul id="uncertainCampaignList"></ul>
+          </section>
         </section>
       </div>
       <footer class="site-admin-footer"><span>© 2026 Zeta Kappa Chapter of Theta Chi Fraternity Admin Portal</span><a href="/">Return to Main Website</a></footer>
@@ -42,6 +51,6 @@
   <script src="/js/admin-config.js?v=20260910-public7-1"></script>
   <script src="/js/admin-auth.js?v=20261117-cutover"></script>
   <script src="/js/admin.js?v=20261123-email-campaigns"></script>
-  <script src="/js/admin-email-campaigns.js?v=2"></script>
+  <script src="/js/admin-email-campaigns.js?v=3"></script>
 </body>
 </html>

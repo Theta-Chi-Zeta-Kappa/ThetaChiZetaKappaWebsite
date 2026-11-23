@@ -133,6 +133,10 @@
     if (result.errors.includes('SUBJECT_MISSING')) return 'The draft needs a subject.';
     if (!result.ok) return 'The draft could not be validated.';
     if (result.frozen_audience_size > 0) {
+      if (result.paused) {
+        audienceNotice.textContent = 'This campaign is paused. Resume pending sends in Campaign Analytics.';
+        return 'Paused campaign checked.';
+      }
       reviewed = {revision_id:result.revision_id,eligible_subscribers:result.frozen_audience_size};
       audienceNotice.textContent = `Frozen audience: ${result.frozen_audience_size.toLocaleString()}. Resume queueing pending jobs if dispatch was interrupted.`;
       confirmation.querySelector('button').textContent = 'Resume queueing';
@@ -192,6 +196,11 @@
     const refresh = document.getElementById('refreshReport');
     const reportStatus = document.getElementById('reportStatus');
     const metrics = document.getElementById('reportMetrics');
+    const deliveryActions = document.getElementById('campaignDeliveryActions');
+    const pause = document.getElementById('pauseCampaign');
+    const resume = document.getElementById('resumeCampaign');
+    const uncertain = document.getElementById('uncertainCampaignJobs');
+    const uncertainList = document.getElementById('uncertainCampaignList');
     const labels = [
       ['queued','Queued'],['submitted','Awaiting delivery feedback'],['delivered','Delivered'],
       ['bounced','Hard bounces'],['complained','Complaints'],['failed','Failed'],
@@ -202,13 +211,25 @@
       refresh.disabled = true;
       selectReport.disabled = true;
       metrics.replaceChildren();
+      deliveryActions.hidden = true;
+      uncertain.hidden = true;
+      uncertainList.replaceChildren();
       reportStatus.textContent = id ? 'Loading delivery results…' : 'Select a campaign.';
       try {
         if (!id) return;
-        const {campaign,counts} = await api(campaignsPath + '/' + encodeURIComponent(id) + '/report');
+        const {campaign,counts,uncertain_jobs,delivery_controls_available} = await api(campaignsPath + '/' + encodeURIComponent(id) + '/report');
         reportStatus.textContent = Object.keys(counts).length
-          ? `${campaign.title} · ${campaign.status.replaceAll('_',' ')}`
+          ? `${campaign.title} · ${campaign.paused_at?'paused':campaign.status.replaceAll('_',' ')}`
           : `${campaign.title} has no delivery jobs yet.`;
+        deliveryActions.hidden = !delivery_controls_available;
+        pause.hidden = Boolean(campaign.paused_at);
+        resume.hidden = !campaign.paused_at;
+        for (const job of uncertain_jobs ?? []) {
+          const item = document.createElement('li');
+          item.textContent = `${job.email} · ${job.attempt_count} attempt${job.attempt_count===1?'':'s'}`;
+          uncertainList.append(item);
+        }
+        uncertain.hidden = !uncertainList.childElementCount;
         for (const [key,label] of labels) {
           const card = document.createElement('div');
           const name = document.createElement('dt');
@@ -236,6 +257,26 @@
       for (const campaign of result.campaigns) selectReport.add(new Option(campaign.title,campaign.id));
       refresh.addEventListener('click',loadReport);
       selectReport.addEventListener('change',loadReport);
+      for (const [button,action] of [[pause,'pause'],[resume,'resume']]) {
+        button.addEventListener('click',async () => {
+          const id=selectReport.value;
+          if(!id || !window.confirm(`${action==='pause'?'Pause':'Resume'} pending sends for the selected campaign?`)) return;
+          deliveryActions.hidden=true;
+          selectReport.disabled=true;
+          refresh.disabled=true;
+          try {
+            await api(campaignsPath+'/'+encodeURIComponent(id)+'/'+action,{
+              method:'POST',contentType:'application/json',body:JSON.stringify({confirmation:action.toUpperCase()})
+            });
+            await loadReport();
+          } catch(error) {
+            reportStatus.textContent=error.message;
+            selectReport.disabled=false;
+            refresh.disabled=false;
+            deliveryActions.hidden=false;
+          }
+        });
+      }
       document.getElementById('campaignReport').hidden = false;
       notice.hidden = true;
     } catch (error) {
