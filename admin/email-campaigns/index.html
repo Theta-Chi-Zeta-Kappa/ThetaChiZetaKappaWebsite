@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>TCZK Email Campaigns</title>
+  <link rel="icon" href="/assets/img/icon-ad58375fc5.webp">
+  <link rel="stylesheet" href="/css/admin.css?v=20261117-initial-remodel">
+</head>
+<body data-admin-protected data-admin-role="admin">
+  <div class="admin-shell">
+    <aside class="admin-sidebar" id="adminSidebar">
+      <div class="admin-brand">
+        <img src="/assets/img/mainlogo-f0ec40d73e.webp" alt="Theta Chi Zeta Kappa">
+        <small>ADMIN PORTAL</small>
+      </div>
+      <nav class="admin-nav" aria-label="Admin navigation"></nav>
+      <div class="admin-logout"></div>
+    </aside>
+    <main class="admin-main">
+      <header class="admin-topbar">
+        <button class="menu-toggle" data-admin-menu aria-label="Open menu">☰</button>
+        <h1>Email Campaigns</h1>
+        <div class="admin-user" data-admin-user>Administrator</div>
+      </header>
+      <div class="admin-content">
+        <p id="campaignNotice" class="account-notice" role="status" aria-live="polite">Checking access…</p>
+        <div id="campaignControls" hidden>
+          <section class="panel" aria-labelledby="newCampaignHeading">
+            <div class="panel-head"><h2 id="newCampaignHeading">New campaign draft</h2></div>
+            <form id="newCampaign" class="gm-form-grid">
+              <label>Title<input name="title" maxlength="150" required></label>
+              <label>Subject<input name="subject" maxlength="250" required></label>
+              <fieldset class="gm-span-2">
+                <legend>Audience categories</legend>
+                <label class="content-check"><input type="checkbox" name="category" value="alumni"> Alumni</label>
+                <label class="content-check"><input type="checkbox" name="category" value="parent"> Parent</label>
+                <label class="content-check"><input type="checkbox" name="category" value="active_member"> Active Member</label>
+                <label class="content-check"><input type="checkbox" name="category" value="supporter"> Supporter</label>
+              </fieldset>
+              <div><button class="primary-btn" type="submit">Create draft</button></div>
+            </form>
+          </section>
+          <section class="panel" aria-labelledby="draftHeading">
+            <div class="panel-head"><h2 id="draftHeading">Import and test</h2></div>
+            <div class="gm-form-grid">
+              <label class="gm-span-2">Campaign<select id="campaignSelect"><option value="">Select a campaign</option></select></label>
+              <form id="campaignUpload" class="gm-span-2">
+                <label>Campaign HTML<input id="campaignHtml" type="file" accept=".html,.htm,text/html" required></label>
+                <button class="secondary-btn" type="submit" disabled>Import HTML</button>
+              </form>
+              <div class="gm-span-2">
+                <button id="validateCampaign" class="secondary-btn" type="button" disabled>Check draft</button>
+                <button id="sendCampaignTest" class="primary-btn" type="button" disabled>Send test to myself</button>
+                <p id="campaignTestRecipient"></p>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+      <footer class="site-admin-footer"><span>© 2026 Zeta Kappa Chapter of Theta Chi Fraternity Admin Portal</span><a href="/">Return to Main Website</a></footer>
+    </main>
+  </div>
+  <script src="/js/admin-config.js?v=20260910-public7-1"></script>
+  <script src="/js/admin-auth.js?v=20261117-cutover"></script>
+  <script src="/js/admin.js?v=20261123-email-campaigns"></script>
+  <script src="/js/admin-email-campaigns.js?v=20261123-email-campaigns"></script>
+</body>
+</html>

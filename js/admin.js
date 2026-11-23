@@ -41,6 +41,7 @@
     ]},
     {id:'content',label:'Content',icon:'content',children:[
       {href:'/admin/content/',label:'Blog & Newsletter'},
+      {href:'/admin/email-campaigns/',label:'Email Campaigns',adminOnly:true},
       {href:'/admin/content/approvals/',label:'Content Approvals',adminOnly:true}
     ]},
     {id:'records',label:'Chapter Records',icon:'records',children:[
