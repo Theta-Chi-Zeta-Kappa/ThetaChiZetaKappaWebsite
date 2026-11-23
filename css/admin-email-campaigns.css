@@ -1,0 +1,17 @@
+.campaign-workspace .page-head a { text-decoration: none; }
+.campaign-layout { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 1rem; align-items: start; }
+.campaign-layout > .panel, .campaign-report { padding: 1.25rem; }
+.campaign-layout .panel-head { padding: 0 0 1rem; }
+.campaign-layout h2 { font-size: 1.15rem; margin: 0; }
+.campaign-layout fieldset, .campaign-send-review { border: 1px solid var(--line, #e2ddd5); border-radius: 8px; padding: .85rem; min-width: 0; }
+.campaign-layout fieldset label { margin: .25rem 0; }
+.campaign-send-review h3, .campaign-layout form p { margin: 0 0 .5rem; }
+.campaign-send-review form { display: flex; gap: .6rem; flex-wrap: wrap; align-items: end; }
+.campaign-report-toolbar { display: flex; gap: .75rem; flex-wrap: wrap; align-items: end; }
+.campaign-report-toolbar label { display: grid; gap: .35rem; min-width: min(22rem, 100%); }
+.campaign-report-toolbar select { min-height: 42px; border: 1px solid var(--line, #e2ddd5); border-radius: 8px; padding: .4rem; }
+.campaign-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: .75rem; margin: 1rem 0 0; }
+.campaign-metrics div { border: 1px solid var(--line, #e2ddd5); padding: .85rem; border-radius: 8px; }
+.campaign-metrics dt { color: var(--muted, #555); font-size: .85rem; }
+.campaign-metrics dd { font-size: 1.55rem; font-weight: 700; margin: .25rem 0 0; }
+@media (max-width: 800px) { .campaign-layout { grid-template-columns: minmax(0, 1fr); } }

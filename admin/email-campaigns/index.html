@@ -6,6 +6,7 @@
   <title>TCZK Email Campaigns</title>
   <link rel="icon" href="/assets/img/icon-ad58375fc5.webp">
   <link rel="stylesheet" href="/css/admin.css?v=20261117-initial-remodel">
+  <link rel="stylesheet" href="/css/admin-email-campaigns.css?v=2">
 </head>
 <body data-admin-protected data-admin-role="admin">
   <div class="admin-shell">
@@ -23,9 +24,13 @@
         <h1>Email Campaigns</h1>
         <div class="admin-user" data-admin-user>Administrator</div>
       </header>
-      <div class="admin-content">
+      <div class="admin-content campaign-workspace">
+        <div class="page-head">
+          <div><h2>Campaign workspace</h2><p>Create a draft, review your audience, and send yourself a test.</p></div>
+          <a class="secondary-btn" href="/admin/email-campaigns/analytics/">Campaign analytics</a>
+        </div>
         <p id="campaignNotice" class="account-notice" role="status" aria-live="polite">Checking access…</p>
-        <div id="campaignControls" hidden>
+        <div id="campaignControls" class="campaign-layout" hidden>
           <section class="panel" aria-labelledby="newCampaignHeading">
             <div class="panel-head"><h2 id="newCampaignHeading">New campaign draft</h2></div>
             <form id="newCampaign" class="gm-form-grid">
@@ -42,11 +47,12 @@
             </form>
           </section>
           <section class="panel" aria-labelledby="draftHeading">
-            <div class="panel-head"><h2 id="draftHeading">Import and test</h2></div>
+            <div class="panel-head"><h2 id="draftHeading">Review and test</h2></div>
             <div class="gm-form-grid">
               <label class="gm-span-2">Campaign<select id="campaignSelect"><option value="">Select a campaign</option></select></label>
               <form id="campaignUpload" class="gm-span-2">
                 <label>Campaign HTML<input id="campaignHtml" type="file" accept=".html,.htm,text/html" required></label>
+                <p>The chapter footer is added automatically.</p>
                 <button class="secondary-btn" type="submit" disabled>Import HTML</button>
               </form>
               <div class="gm-span-2">
@@ -54,6 +60,14 @@
                 <button id="sendCampaignTest" class="primary-btn" type="button" disabled>Send test to myself</button>
                 <p id="campaignTestRecipient"></p>
               </div>
+              <section class="gm-span-2 campaign-send-review" aria-labelledby="sendReviewHeading">
+                <h3 id="sendReviewHeading">Confirm campaign</h3>
+                <p id="campaignAudience">Check the draft to review the eligible audience.</p>
+                <form id="confirmCampaign" hidden>
+                  <label>Type SEND to confirm<input name="confirmation" required pattern="SEND" autocomplete="off"></label>
+                  <button class="primary-btn" type="submit">Queue campaign</button>
+                </form>
+              </section>
             </div>
           </section>
         </div>
@@ -64,6 +78,6 @@
   <script src="/js/admin-config.js?v=20260910-public7-1"></script>
   <script src="/js/admin-auth.js?v=20261117-cutover"></script>
   <script src="/js/admin.js?v=20261123-email-campaigns"></script>
-  <script src="/js/admin-email-campaigns.js?v=20261123-email-campaigns"></script>
+  <script src="/js/admin-email-campaigns.js?v=2"></script>
 </body>
 </html>

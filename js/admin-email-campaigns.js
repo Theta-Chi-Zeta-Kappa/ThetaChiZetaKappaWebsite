@@ -5,6 +5,10 @@
   const campaignsPath = '/api/v1/admin/campaigns';
   const auth = window.TCZKAdminAuth;
   const notice = document.getElementById('campaignNotice');
+  if (document.body.hasAttribute('data-campaign-report')) {
+    document.addEventListener('DOMContentLoaded',initReport);
+    return;
+  }
   const controls = document.getElementById('campaignControls');
   const createForm = document.getElementById('newCampaign');
   const uploadForm = document.getElementById('campaignUpload');
@@ -12,10 +16,13 @@
   const select = document.getElementById('campaignSelect');
   const validate = document.getElementById('validateCampaign');
   const send = document.getElementById('sendCampaignTest');
+  const confirmation = document.getElementById('confirmCampaign');
+  const audienceNotice = document.getElementById('campaignAudience');
   const create = createForm.querySelector('button');
   const upload = uploadForm.querySelector('button');
   let campaigns = [];
   let busy = false;
+  let reviewed = null;
 
   function selectedCampaignPath() {
     return campaignsPath + '/' + encodeURIComponent(select.value);
@@ -39,6 +46,7 @@
     upload.disabled = busy || campaign?.status !== 'draft';
     validate.disabled = busy || !campaign;
     send.disabled = busy || !campaign;
+    confirmation.querySelector('button').disabled = busy;
   }
 
   async function run(message, action) {
@@ -67,8 +75,16 @@
 
   select.addEventListener('change', () => {
     uploadForm.reset();
+    resetReview();
     updateControls();
   });
+
+  function resetReview() {
+    reviewed = null;
+    confirmation.reset();
+    confirmation.hidden = true;
+    audienceNotice.textContent = 'Check the draft to review the eligible audience.';
+  }
 
   createForm.addEventListener('submit', event => {
     event.preventDefault();
@@ -88,6 +104,7 @@
       campaigns.unshift({id: result.id, title, status: result.status});
       createForm.reset();
       uploadForm.reset();
+      resetReview();
       showCampaigns(result.id);
       return 'Draft created. Import the campaign HTML to test it.';
     });
@@ -104,22 +121,57 @@
     run('Importing HTML…', async () => {
       await api(selectedCampaignPath() + '/html', {method: 'POST', contentType: 'text/html', body: await file.text()});
       uploadForm.reset();
+      resetReview();
       return 'HTML imported.';
     });
   });
 
   validate.addEventListener('click', () => run('Checking draft…', async () => {
+    resetReview();
     const result = await api(selectedCampaignPath() + '/validate', {method: 'POST'});
     if (result.errors.includes('HTML_MISSING')) return 'Import the campaign HTML before testing.';
     if (result.errors.includes('SUBJECT_MISSING')) return 'The draft needs a subject.';
     if (!result.ok) return 'The draft could not be validated.';
-    return 'The draft has a subject and HTML. You can request a sandbox test.';
+    if (result.frozen_audience_size > 0) {
+      reviewed = {revision_id:result.revision_id,eligible_subscribers:result.frozen_audience_size};
+      audienceNotice.textContent = `Frozen audience: ${result.frozen_audience_size.toLocaleString()}. Resume queueing pending jobs if dispatch was interrupted.`;
+      confirmation.querySelector('button').textContent = 'Resume queueing';
+      confirmation.hidden = false;
+      return 'Frozen campaign checked.';
+    }
+    const audience = await api(selectedCampaignPath() + '/audience');
+    const count = audience.eligible_subscribers;
+    audienceNotice.textContent = `${count.toLocaleString()} eligible recipient${count === 1 ? '' : 's'}.`;
+    if (result.warnings.includes('BULK_SENDING_DISABLED')) {
+      audienceNotice.textContent += ' Campaign sending is disabled.';
+    } else if (result.warnings.includes('OFFICER_TEST_REQUIRED')) {
+      audienceNotice.textContent += ' Send an officer test of this draft first.';
+    }
+    if (result.ready_to_send && count > 0) {
+      reviewed = {revision_id:result.revision_id,eligible_subscribers:count};
+      confirmation.querySelector('button').textContent = 'Queue campaign';
+      confirmation.hidden = false;
+    }
+    return 'Draft check complete.';
   }));
 
   send.addEventListener('click', () => run('Submitting one test to SES…', async () => {
     const result = await api(selectedCampaignPath() + '/test', {method: 'POST'});
     return `SES accepted the test. Check your inbox. Test ID ${result.test_id}.`;
   }));
+
+  confirmation.addEventListener('submit',event => {
+    event.preventDefault();
+    const typed = new FormData(confirmation).get('confirmation');
+    if (!reviewed || typed !== 'SEND') return;
+    run('Queueing the reviewed campaign…',async () => {
+      const result = await api(selectedCampaignPath() + '/send',{
+        method:'POST',contentType:'application/json',body:JSON.stringify({...reviewed,confirmation:typed})
+      });
+      resetReview();
+      return `${result.queued_jobs.toLocaleString()} delivery jobs queued. See Campaign Analytics for outcomes.`;
+    });
+  });
 
   document.addEventListener('DOMContentLoaded', () => run('Checking access…', async () => {
     const session = await auth.requireAuth();
@@ -134,4 +186,60 @@
     controls.hidden = false;
     return campaigns.length ? 'Select a campaign or create a draft.' : 'Create a draft to get started.';
   }));
+
+  async function initReport() {
+    const selectReport = document.getElementById('reportCampaign');
+    const refresh = document.getElementById('refreshReport');
+    const reportStatus = document.getElementById('reportStatus');
+    const metrics = document.getElementById('reportMetrics');
+    const labels = [
+      ['queued','Queued'],['submitted','Awaiting delivery feedback'],['delivered','Delivered'],
+      ['bounced','Hard bounces'],['complained','Complaints'],['failed','Failed'],
+      ['uncertain','Uncertain'],['skipped','Skipped']
+    ];
+    async function loadReport() {
+      const id = selectReport.value;
+      refresh.disabled = true;
+      selectReport.disabled = true;
+      metrics.replaceChildren();
+      reportStatus.textContent = id ? 'Loading delivery results…' : 'Select a campaign.';
+      try {
+        if (!id) return;
+        const {campaign,counts} = await api(campaignsPath + '/' + encodeURIComponent(id) + '/report');
+        reportStatus.textContent = Object.keys(counts).length
+          ? `${campaign.title} · ${campaign.status.replaceAll('_',' ')}`
+          : `${campaign.title} has no delivery jobs yet.`;
+        for (const [key,label] of labels) {
+          const card = document.createElement('div');
+          const name = document.createElement('dt');
+          name.textContent = label;
+          const amount = document.createElement('dd');
+          const count = (counts[key] ?? 0) + (key === 'queued' ? counts.submitting ?? 0 : 0);
+          amount.textContent = count.toLocaleString();
+          card.append(name,amount);
+          metrics.append(card);
+        }
+      } catch (error) {
+        reportStatus.textContent = error.message;
+      } finally {
+        selectReport.disabled = false;
+        refresh.disabled = !id;
+      }
+    }
+    try {
+      const session = await auth.requireAuth();
+      if (!session || session.user?.role !== 'admin' || ![1,2].includes(Number(session.user.priority))) {
+        notice.textContent = 'Campaign analytics requires P1 or P2 access.';
+        return;
+      }
+      const result = await api(campaignsPath);
+      for (const campaign of result.campaigns) selectReport.add(new Option(campaign.title,campaign.id));
+      refresh.addEventListener('click',loadReport);
+      selectReport.addEventListener('change',loadReport);
+      document.getElementById('campaignReport').hidden = false;
+      notice.hidden = true;
+    } catch (error) {
+      notice.textContent = error.message;
+    }
+  }
 })();
