@@ -6,6 +6,9 @@ body { background: #f4eee5; color: #1b1b1b; }
 .newsletter-intro h1, .newsletter-section-heading h2, .newsletter-featured-copy h1, .newsletter-card h3 { margin: 0; line-height: 1.05; }
 .newsletter-intro h1 { font-size: clamp(2.5rem, 6vw, 5rem); }
 .newsletter-intro p { max-width: 680px; margin: .9rem 0 0; color: #554c44; font: 1.05rem/1.7 Georgia,serif; }
+.newsletter-subscribe-link { display: inline-flex; margin-top: 1rem; padding: .7rem 1.05rem; border-radius: 7px; background: #b21615; color: white; font: 700 .95rem/1.5 Arial, sans-serif; text-decoration: none; }
+.newsletter-subscribe-link:hover { background: #7f0f0e; }
+.newsletter-subscribe-link:focus-visible { outline: 3px solid #a2642f; outline-offset: 3px; }
 .newsletter-status { margin: 1rem 0 2rem; color: #65594f; font: .95rem/1.6 Arial,sans-serif; }
 .current-newsletter { margin-bottom: 4.5rem; }
 .newsletter-featured-card { display: grid; grid-template-columns: minmax(300px,.78fr) minmax(0,1.22fr); min-height: 440px; border-radius: 28px; overflow: hidden; background: #171717; color: #fff; text-decoration: none; box-shadow: 0 24px 70px rgba(43,28,16,.16); }

@@ -1,0 +1,35 @@
+:root {
+  color-scheme: light;
+  --newsletter-ink: #1b1b1b;
+  --newsletter-red: #b21615;
+  --newsletter-red-dark: #7f0f0e;
+  --newsletter-gold: #c9935b;
+  --newsletter-paper: #fff;
+  --newsletter-canvas: #f5f2ee;
+  --newsletter-border: #ded8d1;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; color: var(--newsletter-ink); background: var(--newsletter-canvas); font: 1rem/1.55 Arial, Helvetica, sans-serif; }
+[hidden] { display: none !important; }
+a { color: var(--newsletter-red-dark); }
+.newsletter-brand { background: var(--newsletter-red-dark); border-bottom: 4px solid var(--newsletter-gold); }
+.newsletter-brand a { max-width: 70rem; margin: auto; padding: .75rem clamp(1rem, 5vw, 2.5rem); display: flex; gap: 1rem; align-items: center; color: white; text-decoration: none; font-weight: 700; }
+.newsletter-brand img { display: block; width: clamp(6rem, 19vw, 9rem); height: auto; }
+.newsletter-action { width: min(36rem, calc(100% - 2rem)); margin: clamp(1.5rem, 6vw, 4rem) auto; padding: clamp(1.25rem, 5vw, 2.25rem); background: var(--newsletter-paper); border: 1px solid var(--newsletter-border); border-radius: 14px; box-shadow: 0 12px 35px #23181012; }
+.newsletter-action h1 { margin: 0 0 .75rem; font: 700 clamp(1.75rem, 4.8vw, 2.5rem)/1.15 Georgia, serif; }
+.newsletter-action [role=status] { min-height: 1.5em; }
+.newsletter-action form { display: grid; gap: 1rem; }
+.newsletter-action .email { display: grid; gap: .35rem; font-weight: 700; }
+.newsletter-action input[type=email], .newsletter-action fieldset { min-width: 0; width: 100%; padding: .65rem .75rem; border: 1px solid var(--newsletter-border); border-radius: 7px; font: inherit; }
+.newsletter-action fieldset { margin: 0; }
+.newsletter-action legend { font-weight: 700; }
+.newsletter-action fieldset label { display: inline-block; margin: .2rem .75rem .2rem 0; }
+.newsletter-action input[type=checkbox] { accent-color: var(--newsletter-red-dark); }
+.newsletter-action button { justify-self: start; min-height: 44px; padding: .65rem 1rem; border: 0; border-radius: 7px; color: white; background: var(--newsletter-red); font: inherit; font-weight: 700; cursor: pointer; }
+.newsletter-action button:hover { background: var(--newsletter-red-dark); }
+.newsletter-action button:disabled { opacity: .55; cursor: default; }
+.newsletter-action :focus-visible, .newsletter-brand :focus-visible { outline: 3px solid var(--newsletter-gold); outline-offset: 3px; }
+.newsletter-back { margin: 1.5rem 0 0; }
+#signupPilot { padding: .55rem .75rem; border-radius: 7px; background: #f3e7d8; }
+#turnstile { min-height: 4.1rem; }
