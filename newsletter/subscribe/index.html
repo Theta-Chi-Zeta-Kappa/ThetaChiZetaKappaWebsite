@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Subscribe | Theta Chi Zeta Kappa Newsletter</title>
+  <meta name="referrer" content="no-referrer">
+  <style>
+    :root { color-scheme: light; font: 1rem/1.5 system-ui, sans-serif; color: #302723; background: #f6f2ec; }
+    body { margin: 0; padding: 1rem; }
+    main { max-width: 34rem; margin: clamp(1rem, 6vw, 4rem) auto; padding: clamp(1rem, 4vw, 2rem); background: #fff; border-top: .35rem solid #8c2025; border-radius: .65rem; }
+    h1 { margin: .35rem 0 .75rem; line-height: 1.15; }
+    a { color: #861b22; }
+    form { display: grid; gap: 1rem; }
+    form[hidden], p[hidden] { display: none; }
+    .email { display: grid; gap: .3rem; }
+    input[type=email], fieldset { box-sizing: border-box; width: 100%; padding: .65rem; border: 1px solid #c5b9ae; border-radius: .35rem; font: inherit; }
+    fieldset label { display: inline-block; margin-right: .75rem; }
+    button { justify-self: start; padding: .65rem 1rem; border: 0; border-radius: .35rem; font: inherit; font-weight: 650; color: white; background: #861b22; }
+    button:disabled { opacity: .55; }
+    #turnstile { min-height: 4.1rem; }
+    :focus-visible { outline: 3px solid #995a22; outline-offset: 2px; }
+  </style>
+  <script src="/js/newsletter-subscribe.js" defer></script>
+</head>
+<body>
+  <main>
+    <a href="https://www.tczk.org/newsletter/">Theta Chi Zeta Kappa Newsletter</a>
+    <h1>Subscribe by email</h1>
+    <p id="signupPilot" hidden>This signup is open for a limited pilot.</p>
+    <p id="signupStatus" role="status">Checking signup availability…</p>
+    <form id="newsletterSignup" hidden>
+      <label class="email">Email address<input name="email" type="email" maxlength="254" autocomplete="email" required></label>
+      <fieldset>
+        <legend>Choose at least one category</legend>
+        <label><input type="checkbox" name="category" value="alumni"> Alumni</label>
+        <label><input type="checkbox" name="category" value="parent"> Parent</label>
+        <label><input type="checkbox" name="category" value="active_member"> Active Member</label>
+        <label><input type="checkbox" name="category" value="supporter"> Supporter</label>
+      </fieldset>
+      <label><input type="checkbox" name="consent" required> <span id="signupDisclosure"></span></label>
+      <div id="turnstile"></div>
+      <button type="submit" disabled>Send confirmation email</button>
+    </form>
+  </main>
+</body>
+</html>
