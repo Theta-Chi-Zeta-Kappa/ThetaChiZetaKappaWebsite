@@ -449,7 +449,7 @@
         const label=metric.selectedOptions[0].textContent;
         const total=points.reduce((sum,point)=>sum+point.count,0);
         status.textContent=`${label}: ${total.toLocaleString()} over ${points.length} UTC days, including today so far.`;
-        if(['opens','clicks'].includes(metric.value)) {
+        if(metric.value==='opens') {
           status.textContent+=' Counts cover emails sent with engagement tracking enabled.';
         }
         canvas.setAttribute('aria-label',`Daily trend for ${label.toLowerCase()}`);
@@ -639,15 +639,13 @@
           metrics.append(card);
         }
         if(result.engagement) {
-          for(const [key,label] of [['opens','Unique recorded opens'],['clicks','Unique recorded clicks']]) {
-            const card=document.createElement('div');
-            const name=document.createElement('dt');
-            const amount=document.createElement('dd');
-            name.textContent=label;
-            amount.textContent=result.engagement[key].toLocaleString();
-            card.append(name,amount);
-            metrics.append(card);
-          }
+          const card=document.createElement('div');
+          const name=document.createElement('dt');
+          const amount=document.createElement('dd');
+          name.textContent='Unique recorded opens';
+          amount.textContent=result.engagement.opens.toLocaleString();
+          card.append(name,amount);
+          metrics.append(card);
         }
         draw();
       } catch (error) {
