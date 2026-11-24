@@ -254,3 +254,34 @@ body {
 .site-admin-footer a:hover,.site-admin-footer a:focus{color:#fff;border-bottom-color:#d0ad86}
 .footer-separator{color:#777}
 @media(max-width:560px){.site-admin-footer{padding:.65rem 1rem;font-size:.75rem;gap:.4rem}
+.home-page .branding-header .newsletter-signup-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  background: #751817;
+  color: #fff;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.home-page .branding-header .newsletter-signup-link:hover {
+  text-decoration: underline;
+}
+
+.home-page .branding-header .newsletter-signup-link:focus-visible {
+  outline: 2px solid #171717;
+  outline-offset: 3px;
+}
+
+@media (max-width: 380px) {
+  .home-page .branding-header .contact-us {
+    font-size: 0.8rem;
+  }
+
+  .home-page .branding-header .newsletter-signup-link {
+    padding-inline: 0.55rem;
+  }
+}
