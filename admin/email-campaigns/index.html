@@ -77,7 +77,7 @@
                 <button id="previewMobile" class="secondary-btn campaign-icon-label" type="button" aria-pressed="false"><img src="/assets/admin-icons/email-campaigns/mobile.png" alt="" width="16" height="16">Mobile</button>
                 <button id="expandPreview" class="secondary-btn campaign-icon-label" type="button" disabled><img src="/assets/admin-icons/email-campaigns/expand.png" alt="" width="16" height="16">Expand</button>
               </div>
-              <p id="previewStatus" role="status">Choose an HTML file to preview it. Saved drafts can be previewed by selecting their original HTML file again.</p>
+              <p id="previewStatus" role="status">Choose an HTML file or select a campaign to preview it.</p>
               <div id="previewViewport" class="campaign-preview-viewport" hidden>
                 <iframe id="campaignPreviewFrame" title="Sandboxed email preview" sandbox referrerpolicy="no-referrer"></iframe>
               </div>
@@ -89,12 +89,12 @@
           <div class="page-head">
             <div><h2 id="analyticsHeading" class="campaign-icon-label"><img src="/assets/admin-icons/email-campaigns/analytics.png" alt="" width="24" height="24">Campaign analytics</h2><p>Review delivery outcomes reported by Amazon SES and the campaign queue.</p></div>
           </div>
-          <section id="campaignReport" class="panel campaign-report" aria-label="Selected campaign results">
+          <section id="campaignReport" class="panel campaign-report" aria-label="Campaign delivery results">
             <div class="campaign-report-toolbar">
-              <label>Campaign <select id="reportCampaign"><option value="">Select a campaign</option></select></label>
+              <label>Campaign <select id="reportCampaign"><option value="">All campaigns</option></select></label>
               <button id="refreshReport" type="button" class="secondary-btn" disabled>Refresh results</button>
             </div>
-            <p id="reportStatus" role="status">Select a campaign to view its results.</p>
+            <p id="reportStatus" role="status">Loading campaign results…</p>
             <dl id="reportMetrics" class="campaign-metrics"></dl>
           </section>
           <div class="campaign-chart-grid">
@@ -117,7 +117,7 @@
             </section>
             <section class="panel campaign-report" aria-labelledby="outcomesHeading">
               <div class="panel-head"><h3 id="outcomesHeading">Delivery breakdown</h3></div>
-              <p class="campaign-chart-caption" id="campaignOutcomeCaption">Totals for the selected campaign.</p>
+              <p class="campaign-chart-caption" id="campaignOutcomeCaption">Delivery totals across all campaigns.</p>
               <label>Outcome <select id="campaignMetric"><option value="">All outcomes</option></select></label>
               <div id="campaignOutcomeChart" class="campaign-chart" role="group" aria-labelledby="outcomesHeading" aria-describedby="campaignOutcomeCaption"><p>Select a campaign to view outcomes.</p></div>
             </section>
@@ -157,6 +157,6 @@
   <script src="/js/admin-config.js?v=20260910-public7-1"></script>
   <script src="/js/admin-auth.js?v=20261117-cutover"></script>
   <script src="/js/admin.js?v=20261123-email-campaigns"></script>
-  <script src="/js/admin-email-campaigns.js?v=6"></script>
+  <script src="/js/admin-email-campaigns.js?v=9"></script>
 </body>
 </html>

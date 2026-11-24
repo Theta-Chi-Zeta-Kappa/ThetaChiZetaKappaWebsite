@@ -34,7 +34,11 @@
     if (contentType) headers['Content-Type'] = contentType;
     const response = await fetch(worker + path, {method, body, headers, redirect: 'error'});
     const data = await response.json().catch(() => null);
-    if (!response.ok || !data) throw new Error(data?.error || `Request failed (HTTP ${response.status}).`);
+    if (!response.ok || !data) {
+      const error=new Error(data?.error || `Request failed (HTTP ${response.status}).`);
+      error.status=response.status;
+      throw error;
+    }
     return data;
   }
 
@@ -87,6 +91,13 @@
     audienceNotice.textContent = 'Check the draft to review the eligible audience.';
   }
 
+  function localHtmlError(html) {
+    if (/^PK[\x03\x05\x07]/.test(html)) return 'This file is a ZIP archive. Extract it and import the HTML file.';
+    if (/[\x00-\x08\x0b\x0c\x0e-\x1f\ufffd]/.test(html) || !/<[a-z][a-z0-9:-]*(?=[\s/>])/i.test(html))
+      return 'Choose a valid UTF-8 HTML email file.';
+    return null;
+  }
+
   createForm.addEventListener('submit', event => {
     event.preventDefault();
     const fields = new FormData(createForm);
@@ -124,11 +135,15 @@
     }
     run('Importing HTML…', async () => {
       const html=await file.text();
-      await api(selectedCampaignPath() + '/html', {method: 'POST', contentType: 'text/html', body: html});
+      const error=localHtmlError(html);
+      if(error) throw new Error(error);
+      const result=await api(selectedCampaignPath() + '/html', {method: 'POST', contentType: 'text/html', body: html});
       preview.remember(select.value,html);
       uploadForm.reset();
       resetReview();
-      return 'HTML imported.';
+      return result.removed_cloudflare_scripts>0
+        ? 'HTML imported. Cloudflare browser code was removed.'
+        : 'HTML imported.';
     });
   });
 
@@ -136,6 +151,7 @@
     resetReview();
     const result = await api(selectedCampaignPath() + '/validate', {method: 'POST'});
     if (result.errors.includes('HTML_MISSING')) return 'Import the campaign HTML before testing.';
+    if (result.errors.includes('HTML_INVALID')) return 'The saved file is invalid. Re-import the extracted HTML before testing.';
     if (result.errors.includes('SUBJECT_MISSING')) return 'The draft needs a subject.';
     if (!result.ok) return 'The draft could not be validated.';
     if (result.frozen_audience_size > 0) {
@@ -248,11 +264,19 @@
       frame.srcdoc=`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">${template.innerHTML}`;
       resize();
     }
-    function choose(id) {
-      request++;
+    async function choose(id) {
+      const current=++request;
       const html=cache.get(id);
       render(html,html?'Imported HTML preview. External images are blocked and the managed footer is added at send time.':
-        'Choose an HTML file to preview it. For a saved draft, select its original HTML file again.');
+        id?'Loading the saved draft preview…':'Choose an HTML file to preview it.');
+      if(!id) return;
+      try {
+        const result=await api(campaignsPath+'/'+encodeURIComponent(id)+'/preview');
+        if(current===request) render(result.html,'Saved email preview with the managed footer. External images are blocked.');
+      } catch(error) {
+        if(current!==request || html) return;
+        render(null,error.status===409?error.message:'Choose an HTML file to preview it. If this draft already has HTML, select the original file again.');
+      }
     }
     htmlInput.addEventListener('change',async()=>{
       const file=htmlInput.files[0];
@@ -264,7 +288,9 @@
       }
       try {
         const html=await file.text();
-        if(current===request) render(html,'Local file preview. External images are blocked and the managed footer is added at send time.');
+        if(current!==request) return;
+        const error=localHtmlError(html);
+        render(error?null:html,error || 'Local file preview. Import the HTML to preview it with the managed footer.');
       } catch {
         if(current===request) render(null,'This file could not be read.');
       }
@@ -309,6 +335,7 @@
     const showHistory=document.getElementById('showCampaignHistory');
     const metric=document.getElementById('campaignMetric');
     const chart=document.getElementById('campaignOutcomeChart');
+    const caption=document.getElementById('campaignOutcomeCaption');
     let listing=[];
     let counts=null;
     let reportRequest=0;
@@ -322,7 +349,7 @@
       chart.replaceChildren();
       if(!counts || !Object.keys(counts).length) {
         const text=document.createElement('p');
-        text.textContent=counts?'No delivery jobs to chart.':'Select a campaign to view outcomes.';
+        text.textContent=counts?'No delivery jobs to chart.':reportStatus.textContent;
         chart.append(text);
         return;
       }
@@ -361,7 +388,7 @@
         row.insertCell().textContent=campaign.paused_at?'Paused':campaign.status.replaceAll('_',' ');
       }
     }
-    async function loadReport() {
+    async function loadReport({reloadCampaigns=false}={}) {
       const id = selectReport.value;
       const request=++reportRequest;
       refresh.disabled = true;
@@ -370,24 +397,54 @@
       deliveryActions.hidden = true;
       uncertain.hidden = true;
       uncertainList.replaceChildren();
-      reportStatus.textContent = id ? 'Loading delivery results…' : 'Select a campaign.';
-      issues.textContent=id?'Checking sending outcomes…':'Select a campaign to review sending issues.';
+      reportStatus.textContent = id ? 'Loading delivery results…' : 'Loading all campaign results…';
+      issues.textContent='Checking sending outcomes…';
+      caption.textContent=id?'Totals for the selected campaign.':'Delivery totals across all campaigns.';
       counts=null;
       draw();
       try {
-        if (!id) return;
-        const result=await api(campaignsPath + '/' + encodeURIComponent(id) + '/report');
+        let result;
+        if(id) {
+          result=await api(campaignsPath+'/'+encodeURIComponent(id)+'/report');
+        } else {
+          if(reloadCampaigns) {
+            const refreshed=await api(campaignsPath);
+            if(request!==reportRequest) return;
+            updateCampaigns(refreshed.campaigns);
+          }
+          const dispatched=listing.filter(campaign=>['queued','sending','completed','partial_failure','cancelled'].includes(campaign.status));
+          const totals=Object.create(null);
+          for(let index=0;index<dispatched.length;index+=5) {
+            const batch=await Promise.all(dispatched.slice(index,index+5).map(campaign=>
+              api(campaignsPath+'/'+encodeURIComponent(campaign.id)+'/report')));
+            if(request!==reportRequest) return;
+            for(const report of batch) {
+              for(const [key,value] of Object.entries(report.counts)) totals[key]=(totals[key]??0)+value;
+            }
+          }
+          result={counts:totals};
+        }
         if(request!==reportRequest) return;
         const {campaign,uncertain_jobs,delivery_controls_available}=result;
         counts=result.counts;
         const listed=listing.find(item=>item.id===id);
         if(listed) Object.assign(listed,{status:campaign.status,paused_at:campaign.paused_at});
-        reportStatus.textContent = Object.keys(counts).length
-          ? `${campaign.title} · ${campaign.paused_at?'paused':campaign.status.replaceAll('_',' ')}`
-          : `${campaign.title} has no delivery jobs yet.`;
+        if(campaign) {
+          reportStatus.textContent=Object.keys(counts).length
+            ? `${campaign.title} · ${campaign.paused_at?'paused':campaign.status.replaceAll('_',' ')}`
+            : `${campaign.title} has no delivery jobs yet.`;
+        } else {
+          reportStatus.textContent=Object.keys(counts).length
+            ? 'All campaigns · Delivery outcomes'
+            : 'No campaign delivery jobs have been recorded.';
+          if(listing.length>=100) {
+            reportStatus.textContent+=' Totals cover the 100 most recent campaign records.';
+            caption.textContent='Delivery totals for the 100 most recent campaign records.';
+          }
+        }
         deliveryActions.hidden = !delivery_controls_available;
-        pause.hidden = Boolean(campaign.paused_at);
-        resume.hidden = !campaign.paused_at;
+        pause.hidden = Boolean(campaign?.paused_at);
+        resume.hidden = !campaign?.paused_at;
         for (const job of uncertain_jobs ?? []) {
           const item = document.createElement('li');
           item.textContent = `${job.email} · ${job.attempt_count} attempt${job.attempt_count===1?'':'s'}`;
@@ -397,6 +454,7 @@
         issues.textContent=Object.keys(counts).length
           ? `${countFor('failed')} failed · ${countFor('bounced')} hard bounces · ${countFor('complained')} complaints · ${countFor('uncertain')} uncertain`
           : 'No delivery jobs have been recorded.';
+        if(!id && countFor('uncertain')) issues.textContent+=' Select a campaign to review its uncertain jobs.';
         for (const [key,label] of labels) {
           const card = document.createElement('div');
           const name = document.createElement('dt');
@@ -412,11 +470,12 @@
         if(request===reportRequest) {
           reportStatus.textContent = error.message;
           issues.textContent='Sending outcomes could not be loaded.';
+          draw();
         }
       } finally {
         if(request===reportRequest) {
           selectReport.disabled = false;
-          refresh.disabled = !id;
+          refresh.disabled = false;
         }
       }
     }
@@ -433,7 +492,7 @@
       showHistory.textContent=open?'Show recent campaigns':'Show all loaded campaigns';
       drawHistory();
     });
-      refresh.addEventListener('click',loadReport);
+      refresh.addEventListener('click',()=>loadReport({reloadCampaigns:true}));
       selectReport.addEventListener('change',()=>selectCampaign(selectReport.value));
       for (const [button,action] of [[pause,'pause'],[resume,'resume']]) {
         button.addEventListener('click',async () => {
@@ -455,17 +514,19 @@
           }
         });
       }
-    return {select:selectCampaign,show(){
-      const section=document.getElementById('campaign-analytics');
-      section.hidden=false;
-      if(location.hash==='#campaign-analytics') section.scrollIntoView();
-    },updateCampaigns(items){
+    function updateCampaigns(items) {
       listing=items;
       const selected=selectReport.value;
-      selectReport.replaceChildren(new Option('Select a campaign',''));
+      selectReport.replaceChildren(new Option('All campaigns',''));
       for(const campaign of listing) selectReport.add(new Option(campaign.title,campaign.id));
       selectReport.value=selected;
       drawHistory();
-    }};
+    }
+    return {select:selectCampaign,show(){
+      const section=document.getElementById('campaign-analytics');
+      section.hidden=false;
+      loadReport();
+      if(location.hash==='#campaign-analytics') section.scrollIntoView();
+    },updateCampaigns};
   }
 })();
