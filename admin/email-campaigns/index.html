@@ -6,7 +6,7 @@
   <title>TCZK Email Campaigns</title>
   <link rel="icon" href="/assets/img/icon-ad58375fc5.webp">
   <link rel="stylesheet" href="/css/admin.css?v=20261117-initial-remodel">
-  <link rel="stylesheet" href="/css/admin-email-campaigns.css?v=5">
+  <link rel="stylesheet" href="/css/admin-email-campaigns.css?v=6">
 </head>
 <body data-admin-protected data-admin-role="admin">
   <div class="admin-shell">
@@ -97,12 +97,32 @@
             <p id="reportStatus" role="status">Select a campaign to view its results.</p>
             <dl id="reportMetrics" class="campaign-metrics"></dl>
           </section>
-          <div class="campaign-analytics-grid">
+          <div class="campaign-chart-grid">
+            <section class="panel campaign-report" aria-labelledby="trendsHeading">
+              <div class="panel-head"><h3 id="trendsHeading">Campaign trends</h3></div>
+              <div class="campaign-report-toolbar" aria-describedby="trendAvailability">
+                <label for="campaignTrendMetric">Metric</label>
+                <select id="campaignTrendMetric" disabled>
+                  <option>Deliveries</option><option>Sends</option><option>Hard bounces</option>
+                  <option>Failures</option><option>Subscriptions</option><option>Unsubscribes</option>
+                </select>
+                <label for="campaignTrendRange">Date range</label>
+                <select id="campaignTrendRange" disabled>
+                  <option>Last 30 days</option><option>Last 7 days</option><option>Last 90 days</option>
+                </select>
+              </div>
+              <div class="campaign-trend-empty">
+                <p id="trendAvailability">Date-based trends aren’t available yet. Delivery totals are available in the breakdown.</p>
+              </div>
+            </section>
             <section class="panel campaign-report" aria-labelledby="outcomesHeading">
               <div class="panel-head"><h3 id="outcomesHeading">Delivery breakdown</h3></div>
+              <p class="campaign-chart-caption" id="campaignOutcomeCaption">Totals for the selected campaign.</p>
               <label>Outcome <select id="campaignMetric"><option value="">All outcomes</option></select></label>
-              <div id="campaignOutcomeChart" class="campaign-chart"><p>Select a campaign to view outcomes.</p></div>
+              <div id="campaignOutcomeChart" class="campaign-chart" role="group" aria-labelledby="outcomesHeading" aria-describedby="campaignOutcomeCaption"><p>Select a campaign to view outcomes.</p></div>
             </section>
+          </div>
+          <div class="campaign-analytics-grid campaign-history-grid">
             <section class="panel campaign-report" aria-labelledby="historyHeading">
               <div class="panel-head"><h3 id="historyHeading" class="campaign-icon-label"><img src="/assets/admin-icons/email-campaigns/history.png" alt="" width="20" height="20">Recent campaigns</h3></div>
               <div class="table-wrap"><table class="campaign-history"><thead><tr><th scope="col">Campaign</th><th scope="col">Created</th><th scope="col">Status</th></tr></thead><tbody id="campaignHistory"></tbody></table></div>
@@ -137,6 +157,6 @@
   <script src="/js/admin-config.js?v=20260910-public7-1"></script>
   <script src="/js/admin-auth.js?v=20261117-cutover"></script>
   <script src="/js/admin.js?v=20261123-email-campaigns"></script>
-  <script src="/js/admin-email-campaigns.js?v=5"></script>
+  <script src="/js/admin-email-campaigns.js?v=6"></script>
 </body>
 </html>

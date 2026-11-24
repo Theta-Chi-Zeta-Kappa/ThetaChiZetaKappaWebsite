@@ -333,6 +333,8 @@
         const bar=document.createElement('meter');
         const value=document.createElement('strong');
         name.textContent=label;
+        bar.className='campaign-bar';
+        bar.dataset.outcome=key;
         bar.max=max;
         bar.value=countFor(key);
         bar.setAttribute('aria-label',label);

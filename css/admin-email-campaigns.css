@@ -11,7 +11,27 @@
 .campaign-send-review form { display: flex; gap: .6rem; flex-wrap: wrap; align-items: end; }
 .campaign-report-toolbar { display: flex; gap: .75rem; flex-wrap: wrap; align-items: end; }
 .campaign-report-toolbar label { display: grid; gap: .35rem; min-width: min(22rem, 100%); }
-.campaign-report-toolbar select { min-height: 42px; border: 1px solid var(--line, #e2ddd5); border-radius: 8px; padding: .4rem; }
+.campaign-workspace select {
+  appearance:none;
+  min-height:42px;
+  max-width:100%;
+  padding:.55rem 2.2rem .55rem .75rem;
+  border:1px solid var(--line,#e2ddd5);
+  border-radius:8px;
+  background-color:var(--paper,#fff);
+  background-image:linear-gradient(45deg,transparent 50%,var(--ox-red-dark) 50%),linear-gradient(135deg,var(--ox-red-dark) 50%,transparent 50%);
+  background-position:right 1rem center,right .7rem center;
+  background-size:.31rem .31rem;
+  background-repeat:no-repeat;
+  color:var(--ink);
+  font:inherit;
+  cursor:pointer;
+}
+.campaign-workspace select:hover:enabled { border-color:var(--ox-gold); }
+.campaign-workspace select:focus-visible { outline:2px solid var(--ox-gold); outline-offset:2px; }
+.campaign-workspace select:disabled { background-color:var(--canvas); color:var(--muted); cursor:default; }
+.campaign-workspace .gm-form-grid #campaignSelect { padding-right:2.2rem; }
+@media (forced-colors:active) { .campaign-workspace select { appearance:auto; background-image:none; } }
 .campaign-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: .75rem; margin: 1rem 0 0; }
 .campaign-metrics div { border: 1px solid var(--line, #e2ddd5); padding: .85rem; border-radius: 8px; }
 .campaign-metrics dt { color: var(--muted, #555); font-size: .85rem; }
@@ -36,6 +56,23 @@
 .campaign-chart { display:grid; gap:.55rem; margin-top:.9rem; }
 .campaign-chart > div { display:grid; grid-template-columns:minmax(6rem,1fr) minmax(3rem,1.2fr) auto; align-items:center; gap:.4rem; font-size:.85rem; }
 .campaign-chart meter { width:100%; }
+.campaign-chart-grid { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:1rem; margin-top:1rem; align-items:stretch; }
+.campaign-chart-grid .panel-head { padding:0 0 .6rem; }
+.campaign-chart-grid .panel-head h3 { margin:0; }
+.campaign-history-grid { grid-template-columns:minmax(0,1.35fr) minmax(0,1fr); }
+.campaign-chart-caption { margin:0 0 .65rem; color:var(--muted); font-size:.875rem; }
+.campaign-chart-grid .campaign-report-toolbar label { min-width:0; display:inline; font-weight:700; align-self:center; }
+.campaign-chart-grid select { min-width:0; max-width:100%; }
+.campaign-trend-empty { display:grid; place-items:center; min-height:13rem; margin-top:.9rem; padding:1rem; border:1px solid var(--line); border-radius:8px; background:#faf8f5; color:var(--muted); text-align:center; }
+.campaign-trend-empty p { max-width:25ch; margin:0; }
+.campaign-chart .campaign-bar { height:.75rem; appearance:none; }
+.campaign-bar::-webkit-meter-bar { background:var(--canvas); border:0; box-shadow:none; }
+.campaign-bar::-webkit-meter-optimum-value { background:var(--ox-gold); }
+.campaign-bar::-moz-meter-bar { background:var(--ox-gold); }
+.campaign-bar[data-outcome=delivered]::-webkit-meter-optimum-value { background:var(--success); }
+.campaign-bar[data-outcome=delivered]::-moz-meter-bar { background:var(--success); }
+.campaign-bar:is([data-outcome=bounced],[data-outcome=complained],[data-outcome=failed])::-webkit-meter-optimum-value { background:var(--ox-red); }
+.campaign-bar:is([data-outcome=bounced],[data-outcome=complained],[data-outcome=failed])::-moz-meter-bar { background:var(--ox-red); }
 .campaign-history { width:100%; border-collapse:collapse; text-align:left; font-size:.85rem; }
 .campaign-history th,.campaign-history td { padding:.55rem .35rem; border-bottom:1px solid var(--line); }
 .campaign-history td:last-child { text-transform:capitalize; }
@@ -47,5 +84,5 @@
   .campaign-analytics-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
 @media (max-width: 850px) {
-  .campaign-layout,.campaign-analytics-grid { grid-template-columns:minmax(0,1fr); }
+  .campaign-layout,.campaign-analytics-grid,.campaign-chart-grid { grid-template-columns:minmax(0,1fr); }
 }
