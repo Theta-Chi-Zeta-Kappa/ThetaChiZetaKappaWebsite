@@ -320,6 +320,97 @@
     }};
   }
 
+  function initTrends(selectCampaign) {
+    const metric=document.getElementById('campaignTrendMetric');
+    const range=document.getElementById('campaignTrendRange');
+    const status=document.getElementById('trendAvailability');
+    const plot=document.getElementById('campaignTrendPlot');
+    const canvas=document.getElementById('campaignTrendCanvas');
+    const details=document.getElementById('campaignTrendDetails');
+    const rows=document.getElementById('campaignTrendRows');
+    let points=[];
+    let request=0;
+    function draw() {
+      if(plot.hidden || !points.length) return;
+      const {width,height}=canvas.getBoundingClientRect();
+      if(width<100 || height<60) return;
+      const scale=window.devicePixelRatio || 1;
+      canvas.width=Math.round(width*scale);
+      canvas.height=Math.round(height*scale);
+      const ctx=canvas.getContext('2d');
+      if(!ctx) return;
+      ctx.scale(scale,scale);
+      ctx.font='12px system-ui';
+      ctx.fillStyle='#49423b';
+      const max=Math.max(1,...points.map(point=>point.count));
+      const step=Math.ceil(max/4);
+      const top=16, bottom=height-30, left=50, right=width-28;
+      const x=i=>left+(right-left)*i/(points.length-1);
+      const y=count=>bottom-(bottom-top)*count/(step*4);
+      ctx.strokeStyle='#ddd6cf';
+      ctx.textAlign='right';
+      for(let i=0;i<=4;i++) {
+        const value=i*step;
+        const line=y(value);
+        ctx.beginPath();
+        ctx.moveTo(left,line);
+        ctx.lineTo(right,line);
+        ctx.stroke();
+        ctx.fillText(value.toLocaleString(),left-6,line+4);
+      }
+      ctx.textAlign='center';
+      for(const i of [0,Math.floor(points.length/2),points.length-1]) {
+        ctx.fillText(points[i].date.slice(5),x(i),height-9);
+      }
+      ctx.strokeStyle='#8b1532';
+      ctx.lineWidth=2.5;
+      ctx.beginPath();
+      ctx.moveTo(x(0),y(points[0].count));
+      for(let i=1;i<points.length;i++) ctx.lineTo(x(i),y(points[i].count));
+      ctx.stroke();
+    }
+    async function load() {
+      const current=++request;
+      const id=selectCampaign.value;
+      for(const option of metric.options) {
+        option.disabled=Boolean(id) && ['subscriptions','unsubscribes'].includes(option.value);
+      }
+      if(metric.selectedOptions[0]?.disabled) metric.value='delivered';
+      const query=new URLSearchParams({metric:metric.value,days:range.value});
+      if(id) query.set('campaign_id',id);
+      status.textContent='Loading daily counts…';
+      plot.hidden=true;
+      details.hidden=true;
+      try {
+        const result=await api(campaignsPath+'/trends?'+query);
+        if(current!==request) return;
+        points=result.points;
+        rows.replaceChildren();
+        for(const point of points) {
+          const row=rows.insertRow();
+          row.insertCell().textContent=point.date;
+          row.insertCell().textContent=point.count.toLocaleString();
+        }
+        const label=metric.selectedOptions[0].textContent;
+        const total=points.reduce((sum,point)=>sum+point.count,0);
+        status.textContent=`${label}: ${total.toLocaleString()} over ${points.length} UTC days, including today so far.`;
+        canvas.setAttribute('aria-label',`Daily trend for ${label.toLowerCase()}`);
+        metric.disabled=false;
+        range.disabled=false;
+        plot.hidden=false;
+        details.hidden=false;
+        draw();
+      } catch(error) {
+        if(current!==request) return;
+        status.textContent=error.status===404?'Daily trends are unavailable on the current newsletter API.':'Daily counts could not be loaded.';
+      }
+    }
+    metric.addEventListener('change',load);
+    range.addEventListener('change',load);
+    new ResizeObserver(draw).observe(plot);
+    return load;
+  }
+
   function initReport() {
     const selectReport = document.getElementById('reportCampaign');
     const refresh = document.getElementById('refreshReport');
@@ -336,6 +427,7 @@
     const metric=document.getElementById('campaignMetric');
     const chart=document.getElementById('campaignOutcomeChart');
     const caption=document.getElementById('campaignOutcomeCaption');
+    const loadTrends=initTrends(selectReport);
     let listing=[];
     let counts=null;
     let reportRequest=0;
@@ -390,6 +482,7 @@
     }
     async function loadReport({reloadCampaigns=false}={}) {
       const id = selectReport.value;
+      loadTrends();
       const request=++reportRequest;
       refresh.disabled = true;
       selectReport.disabled = true;
@@ -404,6 +497,7 @@
       draw();
       try {
         let result;
+        let usedRecentCampaigns=false;
         if(id) {
           result=await api(campaignsPath+'/'+encodeURIComponent(id)+'/report');
         } else {
@@ -412,6 +506,15 @@
             if(request!==reportRequest) return;
             updateCampaigns(refreshed.campaigns);
           }
+          try {
+            result=await api(campaignsPath+'/overview');
+          } catch(error) {
+            if(error.status!==404) throw error;
+            usedRecentCampaigns=true;
+          }
+        }
+        if(usedRecentCampaigns) {
+          if(request!==reportRequest) return;
           const dispatched=listing.filter(campaign=>['queued','sending','completed','partial_failure','cancelled'].includes(campaign.status));
           const totals=Object.create(null);
           for(let index=0;index<dispatched.length;index+=5) {
@@ -437,7 +540,7 @@
           reportStatus.textContent=Object.keys(counts).length
             ? 'All campaigns · Delivery outcomes'
             : 'No campaign delivery jobs have been recorded.';
-          if(listing.length>=100) {
+          if(usedRecentCampaigns && listing.length>=100) {
             reportStatus.textContent+=' Totals cover the 100 most recent campaign records.';
             caption.textContent='Delivery totals for the 100 most recent campaign records.';
           }

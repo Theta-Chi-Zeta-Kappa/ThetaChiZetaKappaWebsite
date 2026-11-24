@@ -6,7 +6,7 @@
   <title>TCZK Email Campaigns</title>
   <link rel="icon" href="/assets/img/icon-ad58375fc5.webp">
   <link rel="stylesheet" href="/css/admin.css?v=20261117-initial-remodel">
-  <link rel="stylesheet" href="/css/admin-email-campaigns.css?v=6">
+  <link rel="stylesheet" href="/css/admin-email-campaigns.css?v=7">
 </head>
 <body data-admin-protected data-admin-role="admin">
   <div class="admin-shell">
@@ -103,17 +103,23 @@
               <div class="campaign-report-toolbar" aria-describedby="trendAvailability">
                 <label for="campaignTrendMetric">Metric</label>
                 <select id="campaignTrendMetric" disabled>
-                  <option>Deliveries</option><option>Sends</option><option>Hard bounces</option>
-                  <option>Failures</option><option>Subscriptions</option><option>Unsubscribes</option>
+                  <option value="delivered">Deliveries</option><option value="sent">Sends accepted by SES</option>
+                  <option value="bounced">Hard bounces</option><option value="complained">Complaints</option>
+                  <option value="failed">Failures</option><option value="subscriptions">Confirmed subscriptions</option>
+                  <option value="unsubscribes">Unsubscribes</option>
                 </select>
                 <label for="campaignTrendRange">Date range</label>
                 <select id="campaignTrendRange" disabled>
-                  <option>Last 30 days</option><option>Last 7 days</option><option>Last 90 days</option>
+                  <option value="30">Last 30 days</option><option value="7">Last 7 days</option><option value="90">Last 90 days</option>
                 </select>
               </div>
-              <div class="campaign-trend-empty">
-                <p id="trendAvailability">Date-based trends aren’t available yet. Delivery totals are available in the breakdown.</p>
+              <p id="trendAvailability" role="status">Checking availability of dated results…</p>
+              <div id="campaignTrendPlot" class="campaign-trend-plot" hidden>
+                <canvas id="campaignTrendCanvas" role="img" aria-describedby="trendAvailability" aria-label="Daily campaign trend"></canvas>
               </div>
+              <details id="campaignTrendDetails" hidden><summary>View daily counts</summary>
+                <div class="table-wrap"><table class="campaign-history"><thead><tr><th scope="col">Date (UTC)</th><th scope="col">Count</th></tr></thead><tbody id="campaignTrendRows"></tbody></table></div>
+              </details>
             </section>
             <section class="panel campaign-report" aria-labelledby="outcomesHeading">
               <div class="panel-head"><h3 id="outcomesHeading">Delivery breakdown</h3></div>
@@ -157,6 +163,6 @@
   <script src="/js/admin-config.js?v=20260910-public7-1"></script>
   <script src="/js/admin-auth.js?v=20261117-cutover"></script>
   <script src="/js/admin.js?v=20261123-email-campaigns"></script>
-  <script src="/js/admin-email-campaigns.js?v=9"></script>
+  <script src="/js/admin-email-campaigns.js?v=10"></script>
 </body>
 </html>
