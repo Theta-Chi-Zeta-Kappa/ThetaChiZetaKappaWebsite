@@ -3,54 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="refresh" content="0; url=/admin/email-campaigns/#campaign-analytics">
   <title>TCZK Campaign Analytics</title>
-  <link rel="icon" href="/assets/img/icon-ad58375fc5.webp">
-  <link rel="stylesheet" href="/css/admin.css?v=20261117-initial-remodel">
-  <link rel="stylesheet" href="/css/admin-email-campaigns.css?v=2">
 </head>
-<body data-admin-protected data-admin-role="admin" data-campaign-report>
-  <div class="admin-shell">
-    <aside class="admin-sidebar" id="adminSidebar">
-      <div class="admin-brand"><img src="/assets/img/mainlogo-f0ec40d73e.webp" alt="Theta Chi Zeta Kappa"><small>ADMIN PORTAL</small></div>
-      <nav class="admin-nav" aria-label="Admin navigation"></nav>
-      <div class="admin-logout"></div>
-    </aside>
-    <main class="admin-main">
-      <header class="admin-topbar">
-        <button class="menu-toggle" data-admin-menu aria-label="Open menu">☰</button>
-        <h1>Campaign Analytics</h1>
-        <div class="admin-user" data-admin-user>Administrator</div>
-      </header>
-      <div class="admin-content campaign-workspace">
-        <div class="page-head">
-          <div><h2>Delivery results</h2><p>Review recipient outcomes reported by Amazon SES and the delivery queue.</p></div>
-          <a class="secondary-btn" href="/admin/email-campaigns/">Back to campaigns</a>
-        </div>
-        <p id="campaignNotice" class="account-notice" role="status">Checking access…</p>
-        <section id="campaignReport" class="panel campaign-report" hidden>
-          <div class="campaign-report-toolbar">
-            <label>Campaign<select id="reportCampaign"><option value="">Select a campaign</option></select></label>
-            <button id="refreshReport" type="button" class="secondary-btn" disabled>Refresh results</button>
-          </div>
-          <p id="reportStatus"></p>
-          <dl id="reportMetrics" class="campaign-metrics"></dl>
-          <div id="campaignDeliveryActions" class="campaign-report-toolbar" hidden>
-            <button id="pauseCampaign" type="button" class="secondary-btn">Pause pending sends</button>
-            <button id="resumeCampaign" type="button" class="primary-btn">Resume pending sends</button>
-          </div>
-          <section id="uncertainCampaignJobs" hidden>
-            <h3>Submissions to review</h3>
-            <p>SES acceptance is unknown for these recipients. The queue will not resend them automatically.</p>
-            <ul id="uncertainCampaignList"></ul>
-          </section>
-        </section>
-      </div>
-      <footer class="site-admin-footer"><span>© 2026 Zeta Kappa Chapter of Theta Chi Fraternity Admin Portal</span><a href="/">Return to Main Website</a></footer>
-    </main>
-  </div>
-  <script src="/js/admin-config.js?v=20260910-public7-1"></script>
-  <script src="/js/admin-auth.js?v=20261117-cutover"></script>
-  <script src="/js/admin.js?v=20261123-email-campaigns"></script>
-  <script src="/js/admin-email-campaigns.js?v=3"></script>
+<body>
+  <p><a href="/admin/email-campaigns/#campaign-analytics">Open Campaign Analytics</a></p>
 </body>
 </html>

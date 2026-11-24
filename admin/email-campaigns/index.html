@@ -6,7 +6,7 @@
   <title>TCZK Email Campaigns</title>
   <link rel="icon" href="/assets/img/icon-ad58375fc5.webp">
   <link rel="stylesheet" href="/css/admin.css?v=20261117-initial-remodel">
-  <link rel="stylesheet" href="/css/admin-email-campaigns.css?v=2">
+  <link rel="stylesheet" href="/css/admin-email-campaigns.css?v=4">
 </head>
 <body data-admin-protected data-admin-role="admin">
   <div class="admin-shell">
@@ -26,8 +26,8 @@
       </header>
       <div class="admin-content campaign-workspace">
         <div class="page-head">
-          <div><h2>Campaign workspace</h2><p>Create a draft, review your audience, and send yourself a test.</p></div>
-          <a class="secondary-btn" href="/admin/email-campaigns/analytics/">Campaign analytics</a>
+          <div><h2>Campaign workspace</h2><p>Create, preview, and send campaigns, then review delivery results.</p></div>
+          <a class="secondary-btn" href="#campaign-analytics">Campaign analytics</a>
         </div>
         <p id="campaignNotice" class="account-notice" role="status" aria-live="polite">Checking access…</p>
         <div id="campaignControls" class="campaign-layout" hidden>
@@ -47,7 +47,8 @@
             </form>
           </section>
           <section class="panel" aria-labelledby="draftHeading">
-            <div class="panel-head"><h2 id="draftHeading">Review and test</h2></div>
+            <div class="panel-head"><h2 id="draftHeading">Review, preview, and send</h2></div>
+            <div class="campaign-review-layout">
             <div class="gm-form-grid">
               <label class="gm-span-2">Campaign<select id="campaignSelect"><option value="">Select a campaign</option></select></label>
               <form id="campaignUpload" class="gm-span-2">
@@ -69,8 +70,66 @@
                 </form>
               </section>
             </div>
+            <section class="campaign-preview" aria-labelledby="previewHeading">
+              <h3 id="previewHeading">Email preview</h3>
+              <div class="campaign-preview-toolbar" role="group" aria-label="Preview display">
+                <button id="previewDesktop" class="secondary-btn" type="button" aria-pressed="true">Desktop</button>
+                <button id="previewMobile" class="secondary-btn" type="button" aria-pressed="false">Mobile</button>
+                <button id="expandPreview" class="secondary-btn" type="button" disabled>Expand</button>
+              </div>
+              <p id="previewStatus" role="status">Choose an HTML file to preview it. Saved drafts can be previewed by selecting their original HTML file again.</p>
+              <div id="previewViewport" class="campaign-preview-viewport" hidden>
+                <iframe id="campaignPreviewFrame" title="Sandboxed email preview" sandbox referrerpolicy="no-referrer"></iframe>
+              </div>
+            </section>
+            </div>
           </section>
         </div>
+        <section id="campaign-analytics" class="campaign-analytics" aria-labelledby="analyticsHeading" hidden>
+          <div class="page-head">
+            <div><h2 id="analyticsHeading">Campaign analytics</h2><p>Review delivery outcomes reported by Amazon SES and the campaign queue.</p></div>
+          </div>
+          <section id="campaignReport" class="panel campaign-report" aria-label="Selected campaign results">
+            <div class="campaign-report-toolbar">
+              <label>Campaign <select id="reportCampaign"><option value="">Select a campaign</option></select></label>
+              <button id="refreshReport" type="button" class="secondary-btn" disabled>Refresh results</button>
+            </div>
+            <p id="reportStatus" role="status">Select a campaign to view its results.</p>
+            <dl id="reportMetrics" class="campaign-metrics"></dl>
+          </section>
+          <div class="campaign-analytics-grid">
+            <section class="panel campaign-report" aria-labelledby="outcomesHeading">
+              <div class="panel-head"><h3 id="outcomesHeading">Delivery breakdown</h3></div>
+              <label>Outcome <select id="campaignMetric"><option value="">All outcomes</option></select></label>
+              <div id="campaignOutcomeChart" class="campaign-chart"><p>Select a campaign to view outcomes.</p></div>
+            </section>
+            <section class="panel campaign-report" aria-labelledby="historyHeading">
+              <div class="panel-head"><h3 id="historyHeading">Recent campaigns</h3></div>
+              <div class="table-wrap"><table class="campaign-history"><thead><tr><th scope="col">Campaign</th><th scope="col">Created</th><th scope="col">Status</th></tr></thead><tbody id="campaignHistory"></tbody></table></div>
+              <button id="showCampaignHistory" class="secondary-btn" type="button" aria-expanded="false" hidden>Show all loaded campaigns</button>
+            </section>
+            <section class="panel campaign-report" aria-labelledby="sendingHeading">
+              <div class="panel-head"><h3 id="sendingHeading">Sending status</h3></div>
+              <p id="campaignIssuesStatus">Select a campaign to review sending issues.</p>
+              <div id="campaignDeliveryActions" class="campaign-report-toolbar" hidden>
+                <button id="pauseCampaign" type="button" class="secondary-btn">Pause pending sends</button>
+                <button id="resumeCampaign" type="button" class="primary-btn">Resume pending sends</button>
+              </div>
+              <section id="uncertainCampaignJobs" hidden>
+                <h4>Submissions to review</h4>
+                <p>SES acceptance is unknown. These jobs aren’t resent automatically.</p>
+                <ul id="uncertainCampaignList"></ul>
+              </section>
+            </section>
+          </div>
+        </section>
+        <dialog id="expandedEmailPreview" class="campaign-preview-dialog" aria-labelledby="expandedPreviewHeading">
+          <div class="campaign-preview-toolbar">
+            <h3 id="expandedPreviewHeading">Expanded email preview</h3>
+            <form method="dialog"><button class="secondary-btn" type="submit" autofocus>Close preview</button></form>
+          </div>
+          <div id="expandedPreviewViewport"></div>
+        </dialog>
       </div>
       <footer class="site-admin-footer"><span>© 2026 Zeta Kappa Chapter of Theta Chi Fraternity Admin Portal</span><a href="/">Return to Main Website</a></footer>
     </main>
@@ -78,6 +137,6 @@
   <script src="/js/admin-config.js?v=20260910-public7-1"></script>
   <script src="/js/admin-auth.js?v=20261117-cutover"></script>
   <script src="/js/admin.js?v=20261123-email-campaigns"></script>
-  <script src="/js/admin-email-campaigns.js?v=3"></script>
+  <script src="/js/admin-email-campaigns.js?v=4"></script>
 </body>
 </html>

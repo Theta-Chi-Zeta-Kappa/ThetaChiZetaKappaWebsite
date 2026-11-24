@@ -5,10 +5,6 @@
   const campaignsPath = '/api/v1/admin/campaigns';
   const auth = window.TCZKAdminAuth;
   const notice = document.getElementById('campaignNotice');
-  if (document.body.hasAttribute('data-campaign-report')) {
-    document.addEventListener('DOMContentLoaded',initReport);
-    return;
-  }
   const controls = document.getElementById('campaignControls');
   const createForm = document.getElementById('newCampaign');
   const uploadForm = document.getElementById('campaignUpload');
@@ -20,6 +16,8 @@
   const audienceNotice = document.getElementById('campaignAudience');
   const create = createForm.querySelector('button');
   const upload = uploadForm.querySelector('button');
+  const preview = initPreview();
+  const report = initReport();
   let campaigns = [];
   let busy = false;
   let reviewed = null;
@@ -77,6 +75,8 @@
     uploadForm.reset();
     resetReview();
     updateControls();
+    preview.select(select.value);
+    report.select(select.value);
   });
 
   function resetReview() {
@@ -106,6 +106,9 @@
       uploadForm.reset();
       resetReview();
       showCampaigns(result.id);
+      preview.select(result.id);
+      report.updateCampaigns(campaigns);
+      report.select(result.id);
       return 'Draft created. Import the campaign HTML to test it.';
     });
   });
@@ -119,7 +122,9 @@
       return;
     }
     run('Importing HTML…', async () => {
-      await api(selectedCampaignPath() + '/html', {method: 'POST', contentType: 'text/html', body: await file.text()});
+      const html=await file.text();
+      await api(selectedCampaignPath() + '/html', {method: 'POST', contentType: 'text/html', body: html});
+      preview.remember(select.value,html);
       uploadForm.reset();
       resetReview();
       return 'HTML imported.';
@@ -173,6 +178,14 @@
         method:'POST',contentType:'application/json',body:JSON.stringify({...reviewed,confirmation:typed})
       });
       resetReview();
+      const listing=await api(campaignsPath).catch(()=>null);
+      if(listing) {
+        const id=select.value;
+        campaigns=listing.campaigns;
+        showCampaigns(id);
+        report.updateCampaigns(campaigns);
+      }
+      report.select(select.value);
       return `${result.queued_jobs.toLocaleString()} delivery jobs queued. See Campaign Analytics for outcomes.`;
     });
   });
@@ -188,10 +201,99 @@
     showCampaigns();
     document.getElementById('campaignTestRecipient').textContent = `Sandbox tests go to your signed-in address, ${session.user.email}.`;
     controls.hidden = false;
+    report.updateCampaigns(campaigns);
+    report.show();
     return campaigns.length ? 'Select a campaign or create a draft.' : 'Create a draft to get started.';
   }));
 
-  async function initReport() {
+  function initPreview() {
+    const viewport=document.getElementById('previewViewport');
+    const frame=document.getElementById('campaignPreviewFrame');
+    const previewStatus=document.getElementById('previewStatus');
+    const desktop=document.getElementById('previewDesktop');
+    const mobile=document.getElementById('previewMobile');
+    const expand=document.getElementById('expandPreview');
+    const dialog=document.getElementById('expandedEmailPreview');
+    const expanded=document.getElementById('expandedPreviewViewport');
+    const parent=viewport.parentElement;
+    const cache=new Map();
+    let width=660;
+    let request=0;
+
+    function resize() {
+      const scale=Math.min(1,Math.max(0.1,viewport.clientWidth/width));
+      frame.style.width=width+'px';
+      frame.style.zoom=scale;
+      frame.style.height=Math.floor(viewport.clientHeight/scale)+'px';
+    }
+    new ResizeObserver(resize).observe(viewport);
+    function render(html,message) {
+      previewStatus.textContent=message;
+      viewport.hidden=!html;
+      expand.disabled=!html;
+      if(!html) {
+        frame.removeAttribute('srcdoc');
+        return;
+      }
+      // Templates are inert. Strip navigation before placing the content in the sandbox.
+      const template=document.createElement('template');
+      template.innerHTML=html;
+      template.content.querySelectorAll('script,base,meta,iframe,frame,object,embed,form,link,template,animate,animateMotion,animateTransform,set')
+        .forEach(node=>node.remove());
+      template.content.querySelectorAll('a,area').forEach(node=>{
+        node.removeAttribute('href');
+        node.removeAttribute('xlink:href');
+      });
+      frame.srcdoc=`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">${template.innerHTML}`;
+      resize();
+    }
+    function choose(id) {
+      request++;
+      const html=cache.get(id);
+      render(html,html?'Imported HTML preview. External images are blocked and the managed footer is added at send time.':
+        'Choose an HTML file to preview it. For a saved draft, select its original HTML file again.');
+    }
+    htmlInput.addEventListener('change',async()=>{
+      const file=htmlInput.files[0];
+      if(!file) return choose(select.value);
+      const current=++request;
+      if(!file.size || file.size>1024*1024) {
+        render(null,'Choose a non-empty HTML file of 1 MB or less.');
+        return;
+      }
+      try {
+        const html=await file.text();
+        if(current===request) render(html,'Local file preview. External images are blocked and the managed footer is added at send time.');
+      } catch {
+        if(current===request) render(null,'This file could not be read.');
+      }
+    });
+    for(const [button,size] of [[desktop,660],[mobile,360]]) {
+      button.addEventListener('click',()=>{
+        width=size;
+        desktop.setAttribute('aria-pressed',String(button===desktop));
+        mobile.setAttribute('aria-pressed',String(button===mobile));
+        resize();
+      });
+    }
+    expand.addEventListener('click',()=>{
+      expanded.append(viewport);
+      dialog.showModal();
+      resize();
+    });
+    dialog.addEventListener('close',()=>{
+      parent.append(viewport);
+      resize();
+      expand.focus();
+    });
+    return {select:choose,remember(id,html){
+      if(!cache.has(id) && cache.size>=5) cache.delete(cache.keys().next().value);
+      cache.set(id,html);
+      choose(id);
+    }};
+  }
+
+  function initReport() {
     const selectReport = document.getElementById('reportCampaign');
     const refresh = document.getElementById('refreshReport');
     const reportStatus = document.getElementById('reportStatus');
@@ -201,13 +303,64 @@
     const resume = document.getElementById('resumeCampaign');
     const uncertain = document.getElementById('uncertainCampaignJobs');
     const uncertainList = document.getElementById('uncertainCampaignList');
+    const issues=document.getElementById('campaignIssuesStatus');
+    const history=document.getElementById('campaignHistory');
+    const showHistory=document.getElementById('showCampaignHistory');
+    const metric=document.getElementById('campaignMetric');
+    const chart=document.getElementById('campaignOutcomeChart');
+    let listing=[];
+    let counts=null;
+    let reportRequest=0;
     const labels = [
       ['queued','Queued'],['submitted','Awaiting delivery feedback'],['delivered','Delivered'],
       ['bounced','Hard bounces'],['complained','Complaints'],['failed','Failed'],
       ['uncertain','Uncertain'],['skipped','Skipped']
     ];
+    const countFor=key=> (counts?.[key] ?? 0)+(key==='queued'?(counts?.submitting ?? 0):0);
+    function draw() {
+      chart.replaceChildren();
+      if(!counts || !Object.keys(counts).length) {
+        const text=document.createElement('p');
+        text.textContent=counts?'No delivery jobs to chart.':'Select a campaign to view outcomes.';
+        chart.append(text);
+        return;
+      }
+      const max=Math.max(1,...labels.map(([key])=>countFor(key)));
+      for(const [key,label] of labels.filter(([key])=>!metric.value || key===metric.value)) {
+        const row=document.createElement('div');
+        const name=document.createElement('span');
+        const bar=document.createElement('meter');
+        const value=document.createElement('strong');
+        name.textContent=label;
+        bar.max=max;
+        bar.value=countFor(key);
+        bar.setAttribute('aria-label',label);
+        value.textContent=countFor(key).toLocaleString();
+        row.append(name,bar,value);
+        chart.append(row);
+      }
+    }
+    function drawHistory() {
+      history.replaceChildren();
+      const all=showHistory.getAttribute('aria-expanded')==='true';
+      showHistory.hidden=listing.length<=6;
+      for(const campaign of (all?listing:listing.slice(0,6))) {
+        const row=history.insertRow();
+        const button=document.createElement('button');
+        button.type='button';
+        button.className='campaign-history-link';
+        button.textContent=campaign.title;
+        button.setAttribute('aria-pressed',String(selectReport.value===campaign.id));
+        button.addEventListener('click',()=>selectCampaign(campaign.id));
+        row.insertCell().append(button);
+        const date=new Date(String(campaign.created_at??'').replace(' ','T')+(campaign.created_at && !/[zZ]|[+-]\d\d:\d\d$/.test(campaign.created_at)?'Z':''));
+        row.insertCell().textContent=Number.isNaN(+date)?'—':date.toLocaleDateString();
+        row.insertCell().textContent=campaign.paused_at?'Paused':campaign.status.replaceAll('_',' ');
+      }
+    }
     async function loadReport() {
       const id = selectReport.value;
+      const request=++reportRequest;
       refresh.disabled = true;
       selectReport.disabled = true;
       metrics.replaceChildren();
@@ -215,9 +368,17 @@
       uncertain.hidden = true;
       uncertainList.replaceChildren();
       reportStatus.textContent = id ? 'Loading delivery results…' : 'Select a campaign.';
+      issues.textContent=id?'Checking sending outcomes…':'Select a campaign to review sending issues.';
+      counts=null;
+      draw();
       try {
         if (!id) return;
-        const {campaign,counts,uncertain_jobs,delivery_controls_available} = await api(campaignsPath + '/' + encodeURIComponent(id) + '/report');
+        const result=await api(campaignsPath + '/' + encodeURIComponent(id) + '/report');
+        if(request!==reportRequest) return;
+        const {campaign,uncertain_jobs,delivery_controls_available}=result;
+        counts=result.counts;
+        const listed=listing.find(item=>item.id===id);
+        if(listed) Object.assign(listed,{status:campaign.status,paused_at:campaign.paused_at});
         reportStatus.textContent = Object.keys(counts).length
           ? `${campaign.title} · ${campaign.paused_at?'paused':campaign.status.replaceAll('_',' ')}`
           : `${campaign.title} has no delivery jobs yet.`;
@@ -230,6 +391,9 @@
           uncertainList.append(item);
         }
         uncertain.hidden = !uncertainList.childElementCount;
+        issues.textContent=Object.keys(counts).length
+          ? `${countFor('failed')} failed · ${countFor('bounced')} hard bounces · ${countFor('complained')} complaints · ${countFor('uncertain')} uncertain`
+          : 'No delivery jobs have been recorded.';
         for (const [key,label] of labels) {
           const card = document.createElement('div');
           const name = document.createElement('dt');
@@ -240,23 +404,34 @@
           card.append(name,amount);
           metrics.append(card);
         }
+        draw();
       } catch (error) {
-        reportStatus.textContent = error.message;
+        if(request===reportRequest) {
+          reportStatus.textContent = error.message;
+          issues.textContent='Sending outcomes could not be loaded.';
+        }
       } finally {
-        selectReport.disabled = false;
-        refresh.disabled = !id;
+        if(request===reportRequest) {
+          selectReport.disabled = false;
+          refresh.disabled = !id;
+        }
       }
     }
-    try {
-      const session = await auth.requireAuth();
-      if (!session || session.user?.role !== 'admin' || ![1,2].includes(Number(session.user.priority))) {
-        notice.textContent = 'Campaign analytics requires P1 or P2 access.';
-        return;
-      }
-      const result = await api(campaignsPath);
-      for (const campaign of result.campaigns) selectReport.add(new Option(campaign.title,campaign.id));
+    function selectCampaign(id) {
+      selectReport.value=id;
+      drawHistory();
+      loadReport();
+    }
+    for(const [key,label] of labels) metric.add(new Option(label,key));
+    metric.addEventListener('change',draw);
+    showHistory.addEventListener('click',()=>{
+      const open=showHistory.getAttribute('aria-expanded')!=='true';
+      showHistory.setAttribute('aria-expanded',String(open));
+      showHistory.textContent=open?'Show recent campaigns':'Show all loaded campaigns';
+      drawHistory();
+    });
       refresh.addEventListener('click',loadReport);
-      selectReport.addEventListener('change',loadReport);
+      selectReport.addEventListener('change',()=>selectCampaign(selectReport.value));
       for (const [button,action] of [[pause,'pause'],[resume,'resume']]) {
         button.addEventListener('click',async () => {
           const id=selectReport.value;
@@ -277,10 +452,17 @@
           }
         });
       }
-      document.getElementById('campaignReport').hidden = false;
-      notice.hidden = true;
-    } catch (error) {
-      notice.textContent = error.message;
-    }
+    return {select:selectCampaign,show(){
+      const section=document.getElementById('campaign-analytics');
+      section.hidden=false;
+      if(location.hash==='#campaign-analytics') section.scrollIntoView();
+    },updateCampaigns(items){
+      listing=items;
+      const selected=selectReport.value;
+      selectReport.replaceChildren(new Option('Select a campaign',''));
+      for(const campaign of listing) selectReport.add(new Option(campaign.title,campaign.id));
+      selectReport.value=selected;
+      drawHistory();
+    }};
   }
 })();
