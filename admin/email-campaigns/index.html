@@ -43,6 +43,8 @@
                 <label class="content-check"><input type="checkbox" name="category" value="active_member"> Active Member</label>
                 <label class="content-check"><input type="checkbox" name="category" value="supporter"> Supporter</label>
               </fieldset>
+              <label>Category matching<select name="audience_match"><option value="any">Any selected category</option><option value="all">Every selected category</option></select></label>
+              <label>Verified on or after (optional)<input name="verified_on_or_after" type="date"></label>
               <div><button class="primary-btn" type="submit">Create draft</button></div>
             </form>
           </section>
@@ -68,6 +70,12 @@
                   <label>Type SEND to confirm<input name="confirmation" required pattern="SEND" autocomplete="off"></label>
                   <button class="primary-btn campaign-icon-label" type="submit"><img src="/assets/admin-icons/email-campaigns/send.png" alt="" width="18" height="18"><span id="queueCampaignLabel">Queue campaign</span></button>
                 </form>
+                <form id="scheduleCampaign" hidden>
+                  <label>Send date and time (your local time)<input name="send_at" type="datetime-local" required></label>
+                  <label>Type SCHEDULE to confirm<input name="confirmation" required pattern="SCHEDULE" autocomplete="off"></label>
+                  <button class="secondary-btn" type="submit">Schedule campaign</button>
+                </form>
+                <button id="cancelCampaignSchedule" class="secondary-btn" type="button" hidden>Cancel scheduled send</button>
               </section>
             </div>
             <section class="campaign-preview" aria-labelledby="previewHeading">
@@ -107,6 +115,8 @@
                   <option value="bounced">Hard bounces</option><option value="complained">Complaints</option>
                   <option value="failed">Failures</option><option value="subscriptions">Confirmed subscriptions</option>
                   <option value="unsubscribes">Unsubscribes</option>
+                  <option value="opens">Unique recorded opens</option>
+                  <option value="clicks">Unique recorded clicks</option>
                 </select>
                 <label for="campaignTrendRange">Date range</label>
                 <select id="campaignTrendRange" disabled>
@@ -163,6 +173,6 @@
   <script src="/js/admin-config.js?v=20260910-public7-1"></script>
   <script src="/js/admin-auth.js?v=20261117-cutover"></script>
   <script src="/js/admin.js?v=20261123-email-campaigns"></script>
-  <script src="/js/admin-email-campaigns.js?v=20261124-analytics"></script>
+  <script src="/js/admin-email-campaigns.js?v=20261124-officer-controls"></script>
 </body>
 </html>

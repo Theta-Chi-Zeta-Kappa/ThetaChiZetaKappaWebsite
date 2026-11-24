@@ -13,6 +13,8 @@
   const validate = document.getElementById('validateCampaign');
   const send = document.getElementById('sendCampaignTest');
   const confirmation = document.getElementById('confirmCampaign');
+  const scheduleForm = document.getElementById('scheduleCampaign');
+  const cancelSchedule = document.getElementById('cancelCampaignSchedule');
   const queueCampaignLabel = document.getElementById('queueCampaignLabel');
   const audienceNotice = document.getElementById('campaignAudience');
   const create = createForm.querySelector('button');
@@ -50,6 +52,8 @@
     validate.disabled = busy || !campaign;
     send.disabled = busy || !campaign;
     confirmation.querySelector('button').disabled = busy;
+    scheduleForm.querySelector('button').disabled = busy;
+    cancelSchedule.disabled = busy;
   }
 
   async function run(message, action) {
@@ -88,6 +92,9 @@
     reviewed = null;
     confirmation.reset();
     confirmation.hidden = true;
+    scheduleForm.reset();
+    scheduleForm.hidden = true;
+    cancelSchedule.hidden = true;
     audienceNotice.textContent = 'Check the draft to review the eligible audience.';
   }
 
@@ -111,7 +118,9 @@
       const result = await api(campaignsPath, {
         method: 'POST',
         contentType: 'application/json',
-        body: JSON.stringify({title, subject: fields.get('subject').trim(), audience: {categories}})
+        body: JSON.stringify({title, subject: fields.get('subject').trim(), audience: {
+          categories, match:fields.get('audience_match'), verified_on_or_after:fields.get('verified_on_or_after') || null
+        }})
       });
       campaigns.unshift({id: result.id, title, status: result.status});
       createForm.reset();
@@ -154,6 +163,12 @@
     if (result.errors.includes('HTML_INVALID')) return 'The saved file is invalid. Re-import the extracted HTML before testing.';
     if (result.errors.includes('SUBJECT_MISSING')) return 'The draft needs a subject.';
     if (!result.ok) return 'The draft could not be validated.';
+    if(result.scheduled_for) {
+      const scheduledFor=new Date(result.scheduled_for);
+      audienceNotice.textContent=`Scheduled for ${scheduledFor.toLocaleString()}.`;
+      cancelSchedule.hidden=scheduledFor.getTime()<=Date.now();
+      return 'Scheduled campaign checked.';
+    }
     if (result.frozen_audience_size > 0) {
       if (result.paused) {
         audienceNotice.textContent = 'This campaign is paused. Resume pending sends in Campaign Analytics.';
@@ -177,6 +192,7 @@
       reviewed = {revision_id:result.revision_id,eligible_subscribers:count};
       queueCampaignLabel.textContent = 'Queue campaign';
       confirmation.hidden = false;
+      scheduleForm.hidden = !result.scheduling_available;
     }
     return 'Draft check complete.';
   }));
@@ -185,6 +201,45 @@
     const result = await api(selectedCampaignPath() + '/test', {method: 'POST'});
     return `SES accepted the test. Check your inbox. Test ID ${result.test_id}.`;
   }));
+
+  scheduleForm.addEventListener('submit',event=>{
+    event.preventDefault();
+    const fields=new FormData(scheduleForm);
+    if(!reviewed || fields.get('confirmation')!=='SCHEDULE') return;
+    const when=new Date(fields.get('send_at'));
+    if(!Number.isFinite(+when)) {
+      notice.textContent='Choose a valid send date and time.';
+      return;
+    }
+    run('Scheduling the reviewed campaign…',async()=>{
+      const result=await api(selectedCampaignPath()+'/schedule',{
+        method:'POST',contentType:'application/json',
+        body:JSON.stringify({...reviewed,confirmation:'SCHEDULE',send_at:when.toISOString()})
+      });
+      resetReview();
+      audienceNotice.textContent=`Scheduled for ${new Date(result.send_at).toLocaleString()}.`;
+      cancelSchedule.hidden=false;
+      const campaign=campaigns.find(item=>item.id===select.value);
+      if(campaign) campaign.status='queued';
+      showCampaigns(select.value);
+      report.select(select.value);
+      return 'Campaign scheduled.';
+    });
+  });
+  cancelSchedule.addEventListener('click',()=>{
+    if(!window.confirm('Cancel this scheduled send?')) return;
+    run('Cancelling scheduled send…',async()=>{
+      await api(selectedCampaignPath()+'/cancel-schedule',{
+        method:'POST',contentType:'application/json',body:JSON.stringify({confirmation:'CANCEL'})
+      });
+      resetReview();
+      const campaign=campaigns.find(item=>item.id===select.value);
+      if(campaign) campaign.status='cancelled';
+      showCampaigns(select.value);
+      report.select(select.value);
+      return 'Scheduled send cancelled.';
+    });
+  });
 
   confirmation.addEventListener('submit',event => {
     event.preventDefault();
@@ -394,6 +449,9 @@
         const label=metric.selectedOptions[0].textContent;
         const total=points.reduce((sum,point)=>sum+point.count,0);
         status.textContent=`${label}: ${total.toLocaleString()} over ${points.length} UTC days, including today so far.`;
+        if(['opens','clicks'].includes(metric.value)) {
+          status.textContent+=' Counts cover emails sent with engagement tracking enabled.';
+        }
         canvas.setAttribute('aria-label',`Daily trend for ${label.toLowerCase()}`);
         metric.disabled=false;
         range.disabled=false;
@@ -402,7 +460,8 @@
         draw();
       } catch(error) {
         if(current!==request) return;
-        status.textContent=error.status===404?'Daily trends are unavailable on the current newsletter API.':'Daily counts could not be loaded.';
+        status.textContent=error.status===404?'Daily trends are unavailable on the current newsletter API.'
+          :error.status===409?error.message:'Daily counts could not be loaded.';
       }
     }
     metric.addEventListener('change',load);
@@ -422,6 +481,9 @@
     const uncertain = document.getElementById('uncertainCampaignJobs');
     const uncertainList = document.getElementById('uncertainCampaignList');
     const issues=document.getElementById('campaignIssuesStatus');
+    const issueDetails=document.createElement('ul');
+    issueDetails.hidden=true;
+    issues.after(issueDetails);
     const history=document.getElementById('campaignHistory');
     const showHistory=document.getElementById('showCampaignHistory');
     const metric=document.getElementById('campaignMetric');
@@ -492,6 +554,8 @@
       uncertainList.replaceChildren();
       reportStatus.textContent = id ? 'Loading delivery results…' : 'Loading all campaign results…';
       issues.textContent='Checking sending outcomes…';
+      issueDetails.hidden=true;
+      issueDetails.replaceChildren();
       caption.textContent=id?'Totals for the selected campaign.':'Delivery totals across all campaigns.';
       counts=null;
       draw();
@@ -558,6 +622,12 @@
           ? `${countFor('failed')} failed · ${countFor('bounced')} hard bounces · ${countFor('complained')} complaints · ${countFor('uncertain')} uncertain`
           : 'No delivery jobs have been recorded.';
         if(!id && countFor('uncertain')) issues.textContent+=' Select a campaign to review its uncertain jobs.';
+        for(const issue of result.sending_issues ?? []) {
+          const item=document.createElement('li');
+          item.textContent=`${issue.label} · ${issue.count.toLocaleString()}`;
+          issueDetails.append(item);
+        }
+        issueDetails.hidden=!issueDetails.childElementCount;
         for (const [key,label] of labels) {
           const card = document.createElement('div');
           const name = document.createElement('dt');
@@ -567,6 +637,17 @@
           amount.textContent = count.toLocaleString();
           card.append(name,amount);
           metrics.append(card);
+        }
+        if(result.engagement) {
+          for(const [key,label] of [['opens','Unique recorded opens'],['clicks','Unique recorded clicks']]) {
+            const card=document.createElement('div');
+            const name=document.createElement('dt');
+            const amount=document.createElement('dd');
+            name.textContent=label;
+            amount.textContent=result.engagement[key].toLocaleString();
+            card.append(name,amount);
+            metrics.append(card);
+          }
         }
         draw();
       } catch (error) {
