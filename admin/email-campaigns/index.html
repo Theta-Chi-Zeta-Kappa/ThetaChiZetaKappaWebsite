@@ -6,7 +6,7 @@
   <title>TCZK Email Campaigns</title>
   <link rel="icon" href="/assets/img/icon-ad58375fc5.webp">
   <link rel="stylesheet" href="/css/admin.css?v=20261117-initial-remodel">
-  <link rel="stylesheet" href="/css/admin-email-campaigns.css?v=4">
+  <link rel="stylesheet" href="/css/admin-email-campaigns.css?v=5">
 </head>
 <body data-admin-protected data-admin-role="admin">
   <div class="admin-shell">
@@ -32,7 +32,7 @@
         <p id="campaignNotice" class="account-notice" role="status" aria-live="polite">Checking access…</p>
         <div id="campaignControls" class="campaign-layout" hidden>
           <section class="panel" aria-labelledby="newCampaignHeading">
-            <div class="panel-head"><h2 id="newCampaignHeading">New campaign draft</h2></div>
+            <div class="panel-head"><h2 id="newCampaignHeading" class="campaign-icon-label"><img src="/assets/admin-icons/email-campaigns/draft.png" alt="" width="24" height="24">New campaign draft</h2></div>
             <form id="newCampaign" class="gm-form-grid">
               <label>Title<input name="title" maxlength="150" required></label>
               <label>Subject<input name="subject" maxlength="250" required></label>
@@ -58,7 +58,7 @@
               </form>
               <div class="gm-span-2">
                 <button id="validateCampaign" class="secondary-btn" type="button" disabled>Check draft</button>
-                <button id="sendCampaignTest" class="primary-btn" type="button" disabled>Send test to myself</button>
+                <button id="sendCampaignTest" class="primary-btn campaign-icon-label" type="button" disabled><img src="/assets/admin-icons/email-campaigns/send.png" alt="" width="18" height="18">Send test to myself</button>
                 <p id="campaignTestRecipient"></p>
               </div>
               <section class="gm-span-2 campaign-send-review" aria-labelledby="sendReviewHeading">
@@ -66,16 +66,16 @@
                 <p id="campaignAudience">Check the draft to review the eligible audience.</p>
                 <form id="confirmCampaign" hidden>
                   <label>Type SEND to confirm<input name="confirmation" required pattern="SEND" autocomplete="off"></label>
-                  <button class="primary-btn" type="submit">Queue campaign</button>
+                  <button class="primary-btn campaign-icon-label" type="submit"><img src="/assets/admin-icons/email-campaigns/send.png" alt="" width="18" height="18"><span id="queueCampaignLabel">Queue campaign</span></button>
                 </form>
               </section>
             </div>
             <section class="campaign-preview" aria-labelledby="previewHeading">
-              <h3 id="previewHeading">Email preview</h3>
+              <h3 id="previewHeading" class="campaign-icon-label"><img src="/assets/admin-icons/email-campaigns/preview.png" alt="" width="20" height="20">Email preview</h3>
               <div class="campaign-preview-toolbar" role="group" aria-label="Preview display">
-                <button id="previewDesktop" class="secondary-btn" type="button" aria-pressed="true">Desktop</button>
-                <button id="previewMobile" class="secondary-btn" type="button" aria-pressed="false">Mobile</button>
-                <button id="expandPreview" class="secondary-btn" type="button" disabled>Expand</button>
+                <button id="previewDesktop" class="secondary-btn campaign-icon-label" type="button" aria-pressed="true"><img src="/assets/admin-icons/email-campaigns/desktop.png" alt="" width="16" height="16">Desktop</button>
+                <button id="previewMobile" class="secondary-btn campaign-icon-label" type="button" aria-pressed="false"><img src="/assets/admin-icons/email-campaigns/mobile.png" alt="" width="16" height="16">Mobile</button>
+                <button id="expandPreview" class="secondary-btn campaign-icon-label" type="button" disabled><img src="/assets/admin-icons/email-campaigns/expand.png" alt="" width="16" height="16">Expand</button>
               </div>
               <p id="previewStatus" role="status">Choose an HTML file to preview it. Saved drafts can be previewed by selecting their original HTML file again.</p>
               <div id="previewViewport" class="campaign-preview-viewport" hidden>
@@ -87,7 +87,7 @@
         </div>
         <section id="campaign-analytics" class="campaign-analytics" aria-labelledby="analyticsHeading" hidden>
           <div class="page-head">
-            <div><h2 id="analyticsHeading">Campaign analytics</h2><p>Review delivery outcomes reported by Amazon SES and the campaign queue.</p></div>
+            <div><h2 id="analyticsHeading" class="campaign-icon-label"><img src="/assets/admin-icons/email-campaigns/analytics.png" alt="" width="24" height="24">Campaign analytics</h2><p>Review delivery outcomes reported by Amazon SES and the campaign queue.</p></div>
           </div>
           <section id="campaignReport" class="panel campaign-report" aria-label="Selected campaign results">
             <div class="campaign-report-toolbar">
@@ -104,12 +104,12 @@
               <div id="campaignOutcomeChart" class="campaign-chart"><p>Select a campaign to view outcomes.</p></div>
             </section>
             <section class="panel campaign-report" aria-labelledby="historyHeading">
-              <div class="panel-head"><h3 id="historyHeading">Recent campaigns</h3></div>
+              <div class="panel-head"><h3 id="historyHeading" class="campaign-icon-label"><img src="/assets/admin-icons/email-campaigns/history.png" alt="" width="20" height="20">Recent campaigns</h3></div>
               <div class="table-wrap"><table class="campaign-history"><thead><tr><th scope="col">Campaign</th><th scope="col">Created</th><th scope="col">Status</th></tr></thead><tbody id="campaignHistory"></tbody></table></div>
               <button id="showCampaignHistory" class="secondary-btn" type="button" aria-expanded="false" hidden>Show all loaded campaigns</button>
             </section>
             <section class="panel campaign-report" aria-labelledby="sendingHeading">
-              <div class="panel-head"><h3 id="sendingHeading">Sending status</h3></div>
+              <div class="panel-head"><h3 id="sendingHeading" class="campaign-icon-label"><img src="/assets/admin-icons/email-campaigns/alert.png" alt="" width="20" height="20">Sending status</h3></div>
               <p id="campaignIssuesStatus">Select a campaign to review sending issues.</p>
               <div id="campaignDeliveryActions" class="campaign-report-toolbar" hidden>
                 <button id="pauseCampaign" type="button" class="secondary-btn">Pause pending sends</button>
@@ -137,6 +137,6 @@
   <script src="/js/admin-config.js?v=20260910-public7-1"></script>
   <script src="/js/admin-auth.js?v=20261117-cutover"></script>
   <script src="/js/admin.js?v=20261123-email-campaigns"></script>
-  <script src="/js/admin-email-campaigns.js?v=4"></script>
+  <script src="/js/admin-email-campaigns.js?v=5"></script>
 </body>
 </html>

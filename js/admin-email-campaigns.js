@@ -13,6 +13,7 @@
   const validate = document.getElementById('validateCampaign');
   const send = document.getElementById('sendCampaignTest');
   const confirmation = document.getElementById('confirmCampaign');
+  const queueCampaignLabel = document.getElementById('queueCampaignLabel');
   const audienceNotice = document.getElementById('campaignAudience');
   const create = createForm.querySelector('button');
   const upload = uploadForm.querySelector('button');
@@ -144,7 +145,7 @@
       }
       reviewed = {revision_id:result.revision_id,eligible_subscribers:result.frozen_audience_size};
       audienceNotice.textContent = `Frozen audience: ${result.frozen_audience_size.toLocaleString()}. Resume queueing pending jobs if dispatch was interrupted.`;
-      confirmation.querySelector('button').textContent = 'Resume queueing';
+      queueCampaignLabel.textContent = 'Resume queueing';
       confirmation.hidden = false;
       return 'Frozen campaign checked.';
     }
@@ -158,7 +159,7 @@
     }
     if (result.ready_to_send && count > 0) {
       reviewed = {revision_id:result.revision_id,eligible_subscribers:count};
-      confirmation.querySelector('button').textContent = 'Queue campaign';
+      queueCampaignLabel.textContent = 'Queue campaign';
       confirmation.hidden = false;
     }
     return 'Draft check complete.';

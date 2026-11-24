@@ -1,4 +1,6 @@
 .campaign-workspace .page-head a { text-decoration: none; }
+.campaign-workspace .campaign-icon-label { display: flex; align-items: center; gap: .45rem; }
+.campaign-icon-label img { display: block; flex: none; object-fit: contain; }
 .campaign-layout { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 1rem; align-items: start; }
 .campaign-layout > .panel, .campaign-report { padding: 1.25rem; }
 .campaign-layout .panel-head { padding: 0 0 1rem; }
