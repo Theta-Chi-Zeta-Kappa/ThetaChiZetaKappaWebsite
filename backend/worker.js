@@ -38,7 +38,7 @@ export default {
         const password = String(body.password || "");
         if (!email || !password) return json({ok:false,error:"Email and password are required."},400,headers);
 
-        const user = await env.DB.prepare(`SELECT id,email,display_name,password_hash,role,priority,active FROM admin_users WHERE lower(email)=? LIMIT 1`).bind(email).first();
+        const user = await env.DB.prepare(`SELECT id,email,display_name,password_hash,role,CASE WHEN system_admin=1 THEN 0 ELSE priority END AS priority,active FROM admin_users WHERE lower(email)=? LIMIT 1`).bind(email).first();
         if (!user || !user.active || !user.password_hash) { await sleep(300); return json({ok:false,error:"Invalid email or password."},401,headers); }
         const valid = await verifyPassword(password,user.password_hash);
         if (!valid) { await sleep(300); return json({ok:false,error:"Invalid email or password."},401,headers); }
@@ -61,6 +61,87 @@ export default {
         const auth=bearerToken(request);
         if(auth){const tokenHash=await sha256Hex(auth);await env.DB.prepare("DELETE FROM admin_sessions WHERE token_hash=?").bind(tokenHash).run();}
         return json({ok:true},200,headers);
+      }
+
+      if (url.pathname === "/api/auth/password" && request.method === "POST") {
+        const session=await requireSession(request,env);
+        if(!session) return json({ok:false,error:"Unauthorized."},401,headers);
+        const body=await safeJson(request);
+        const current=body?.currentPassword, next=body?.newPassword;
+        if(typeof current!=="string" || current.length>1024 || typeof next!=="string" || next.length<12 || next.length>1024 || current===next) {
+          return json({ok:false,error:"Provide your current password and a different new password of 12 to 1024 characters."},400,headers);
+        }
+        const user=await env.DB.prepare("SELECT password_hash FROM admin_users WHERE id=? AND active=1 AND deleted_at IS NULL").bind(session.user_id).first();
+        if(!user?.password_hash || !await verifyPassword(current,user.password_hash)) {
+          await sleep(300);
+          return json({ok:false,error:"Invalid current password."},403,headers);
+        }
+        const hash=await makePasswordRecord(next);
+        const [result]=await env.DB.batch([
+          env.DB.prepare("UPDATE admin_users SET password_hash=?,updated_at=CURRENT_TIMESTAMP WHERE id=? AND password_hash=? AND active=1 AND deleted_at IS NULL").bind(hash,session.user_id,user.password_hash),
+          accountAudit(env,session.user_id,"password_changed",session.user_id,{}),
+          env.DB.prepare("DELETE FROM admin_sessions WHERE user_id=? AND changes()=1").bind(session.user_id)
+        ]);
+        if(result.meta.changes!==1) return json({ok:false,error:"Account state changed."},409,headers);
+        return json({ok:true},200,headers);
+      }
+
+      // Gallery v2 production gateway. Admin sessions checked at the existing source of truth.
+      // GALLERY_API service binding targets tczk-gallery-api; GALLERY_API_ADMIN_TOKEN is encrypted.
+      if(url.pathname.startsWith('/api/gallery-v19/')||url.pathname.startsWith('/api/gallery-guest/')){
+        const p=url.pathname,method=request.method,publicGuest=p.startsWith('/api/gallery-guest/');
+        let target=null,binary=false,session=null;
+        if(publicGuest){
+          const suffix=p.slice('/api/gallery-guest'.length);
+          if(suffix==='/event'&&method==='GET')target='/api/guest/event';
+          if(suffix==='/submissions'&&method==='POST')target='/api/guest/submissions';
+          if(/^\/submissions\/submission-[a-f0-9-]+\/images$/.test(suffix)&&method==='POST')target='/api/guest'+suffix;
+          if(/^\/submissions\/submission-[a-f0-9-]+\/images\/upload-[a-f0-9-]+\/(display|thumb)$/.test(suffix)&&method==='PUT'){target='/api/guest'+suffix;binary=true;}
+          if(/^\/submissions\/submission-[a-f0-9-]+\/images\/upload-[a-f0-9-]+\/finalize$/.test(suffix)&&method==='POST')target='/api/guest'+suffix;
+          if(/^\/submissions\/submission-[a-f0-9-]+\/finalize$/.test(suffix)&&method==='POST')target='/api/guest'+suffix;
+        }else{
+          session=await requireSession(request,env);
+          if(!session)return json({ok:false,error:'Unauthorized'},401,headers);
+          const isAdmin=session.role==='admin'&&Number(session.priority)<=2;
+          let m;
+          if(p==='/api/gallery-v19/events'&&['GET','POST'].includes(method))target='/api/admin/upload-events';
+          if((m=p.match(/^\/api\/gallery-v19\/events\/(event-[a-f0-9-]+)$/))&&method==='PATCH')target='/api/admin/upload-events/'+m[1];
+          if((m=p.match(/^\/api\/gallery-v19\/events\/(event-[a-f0-9-]+)\/links$/))&&['GET','POST'].includes(method))target='/api/admin/upload-events/'+m[1]+'/links';
+          if((m=p.match(/^\/api\/gallery-v19\/events\/(event-[a-f0-9-]+)\/submissions$/))&&method==='GET')target='/api/admin/upload-events/'+m[1]+'/submissions';
+          if((m=p.match(/^\/api\/gallery-v19\/links\/(link-[a-f0-9-]+)\/revoke$/))&&method==='POST')target='/api/admin/guest-links/'+m[1]+'/revoke';
+          if(p==='/api/gallery-v19/review/batches'&&method==='GET')target='/api/admin/pending/batches';
+          if((m=p.match(/^\/api\/gallery-v19\/review\/batches\/(batch-[a-f0-9-]+)$/))&&method==='GET')target='/api/admin/pending/batches/'+m[1];
+          if((m=p.match(/^\/api\/gallery-v19\/review\/images\/(upload-[a-f0-9-]+)$/))&&['GET','PATCH'].includes(method))target='/api/admin/pending/images/'+m[1];
+          if((m=p.match(/^\/api\/gallery-v19\/review\/images\/(upload-[a-f0-9-]+)\/preview$/))&&method==='GET'){target='/api/admin/pending/images/'+m[1]+'/preview?kind='+(url.searchParams.get('kind')==='display'?'display':'thumb');binary=true;}
+          if((m=p.match(/^\/api\/gallery-v19\/review\/images\/(upload-[a-f0-9-]+)\/(approve|reject|status|recover)$/))&&((['status'].includes(m[2])&&method==='GET')||(!['status'].includes(m[2])&&method==='POST')))target='/api/admin/pending/images/'+m[1]+'/'+m[2];
+          if(p==='/api/gallery-v19/staging/batches'&&method==='POST')target='/api/staging/batches';
+          if((m=p.match(/^\/api\/gallery-v19\/staging\/batches\/(batch-[a-f0-9-]+)$/))&&['GET','POST'].includes(method))target='/api/staging/batches/'+m[1];
+          if((m=p.match(/^\/api\/gallery-v19\/staging\/batches\/(batch-[a-f0-9-]+)\/images$/))&&method==='POST')target='/api/staging/batches/'+m[1]+'/images';
+          if((m=p.match(/^\/api\/gallery-v19\/staging\/images\/(upload-[a-f0-9-]+)\/(display|thumb)$/))&&method==='PUT'){target='/api/staging/images/'+m[1]+'/'+m[2];binary=true;}
+          if((m=p.match(/^\/api\/gallery-v19\/staging\/images\/(upload-[a-f0-9-]+)\/finalize$/))&&method==='POST')target='/api/staging/images/'+m[1]+'/finalize';
+          if(p==='/api/gallery-v19/manage'&&method==='GET')target='/api/admin/manage';
+          if((m=p.match(/^\/api\/gallery-v19\/manage\/images\/(zk-[a-z0-9-]+)$/))&&method==='PATCH')target='/api/admin/manage/images/'+m[1];
+          if((m=p.match(/^\/api\/gallery-v19\/manage\/images\/(zk-[a-z0-9-]+)\/request$/))&&method==='POST')target='/api/admin/manage/images/'+m[1]+'/request';
+          if((m=p.match(/^\/api\/gallery-v19\/manage\/images\/(zk-[a-z0-9-]+)\/history$/))&&method==='GET')target='/api/admin/manage/images/'+m[1]+'/history';
+          if(p==='/api/gallery-v19/manage/requests'&&method==='GET')target='/api/admin/manage/requests';
+          if((m=p.match(/^\/api\/gallery-v19\/manage\/requests\/(gcr[-_][a-zA-Z0-9_-]+)\/decision$/))&&method==='POST')target='/api/admin/manage/requests/'+m[1]+'/decision';
+          if(!target)return json({ok:false,error:'Unsupported gallery operation'},404,headers);
+          if(!isAdmin&&(target.startsWith('/api/admin/upload-events')||target.startsWith('/api/admin/guest-links')||target.startsWith('/api/admin/pending')||target.endsWith('/decision')||target.endsWith('/approve')||target.endsWith('/recover')||target.endsWith('/reject')||/\/api\/admin\/manage\/images\/[^/]+$/.test(target)))return json({ok:false,error:'Administrator access required'},403,headers);
+        }
+        if(!target)return json({ok:false,error:'Unsupported guest request'},404,headers);
+        if(!env.GALLERY_API||(!publicGuest&&!env.GALLERY_API_ADMIN_TOKEN))return json({ok:false,error:'Gallery bridge not configured'},503,headers);
+        const max=binary?8*1024*1024:16000;
+        const declared=Number(request.headers.get('Content-Length')||0);
+        if(declared>max)return json({ok:false,error:'Request too large'},413,headers);
+        let body;if(method!=='GET'&&method!=='HEAD'){body=await request.arrayBuffer();if(body.byteLength>max)return json({ok:false,error:'Request too large'},413,headers);}
+        const h=new Headers();h.set('Authorization',publicGuest?(request.headers.get('Authorization')||''):'Bearer '+env.GALLERY_API_ADMIN_TOKEN);
+        // The gallery bridge uses P1 as its highest transport tier. The account session retains P0.
+        if(session){h.set('X-TCZK-Actor-Id',String(session.user_id));h.set('X-TCZK-Actor-Priority',String(session.priority===0 ? 1 : session.priority));}
+        if(body)h.set('Content-Type',binary?'image/webp':'application/json');
+        if(binary&&body)h.set('Content-Length',String(body.byteLength));
+        let upstream;try{upstream=await env.GALLERY_API.fetch('https://gallery.internal'+target,{method,headers:h,body});}catch(e){console.error('Gallery bridge failed',e);return json({ok:false,error:'Gallery service unavailable'},502,headers);}
+        const out={...headers,'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'};
+        return new Response(upstream.body,{status:upstream.status,headers:binary&&method==='GET'&&upstream.ok?{...out,'Content-Type':'image/webp'}:out});
       }
 
       // Authenticated dashboard activity feed. Routine login events are omitted so this stays focused on content/system changes.
@@ -95,7 +176,7 @@ export default {
         if(!invite) return json({ok:false,error:"This setup link is invalid."},404,headers);
         const state=inviteState(invite);
         if(state!=="pending") return json({ok:false,error:state==="expired"?"This setup link has expired.":"This setup link is no longer active."},410,headers);
-        return json({ok:true,invite:{email:invite.email,displayName:invite.display_name,role:invite.role,priority:Number(invite.priority)||3,expiresAt:invite.expires_at}},200,headers);
+        return json({ok:true,invite:{email:invite.email,displayName:invite.display_name,role:invite.role,priority:(normalizePriority(invite.priority)??3),expiresAt:invite.expires_at}},200,headers);
       }
 
       if (url.pathname === "/api/auth/setup" && request.method === "POST") {
@@ -113,18 +194,18 @@ export default {
         if(existing) return json({ok:false,error:"An account already exists for this email. Ask an administrator to reactivate it if needed."},409,headers);
 
         const passwordHash=await makePasswordRecord(password);
-        const create=env.DB.prepare(`INSERT INTO admin_users (email,display_name,password_hash,role,priority,active,created_at,updated_at) VALUES (?,?,?,?,?,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`).bind(invite.email,invite.display_name,passwordHash,invite.role,Number(invite.priority)||3);
+        const create=env.DB.prepare(`INSERT INTO admin_users (email,display_name,password_hash,role,priority,active,created_at,updated_at) VALUES (?,?,?,?,?,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`).bind(invite.email,invite.display_name,passwordHash,invite.role,(normalizePriority(invite.priority)??3));
         const consume=env.DB.prepare(`UPDATE admin_invites SET used_at=CURRENT_TIMESTAMP, token_plaintext=NULL WHERE id=? AND used_at IS NULL AND revoked_at IS NULL AND datetime(expires_at)>datetime('now')`).bind(invite.id);
         await env.DB.batch([create,consume]);
         const newUser=await env.DB.prepare(`SELECT id,email,display_name,role,priority,active FROM admin_users WHERE lower(email)=lower(?) LIMIT 1`).bind(invite.email).first();
-        await writeAudit(env,newUser?.id||null,"account_activated","admin_user",String(newUser?.id||""),{email:invite.email,role:invite.role,priority:Number(invite.priority)||3,inviteId:invite.id});
+        await writeAudit(env,newUser?.id||null,"account_activated","admin_user",String(newUser?.id||""),{email:invite.email,role:invite.role,priority:(normalizePriority(invite.priority)??3),inviteId:invite.id});
         return json({ok:true,message:"Account setup complete. You can now sign in."},200,headers);
       }
 
       if (url.pathname === "/api/admin/accounts" && request.method === "GET") {
         const admin=await requireAdmin(request,env);
         if(!admin) return json({ok:false,error:"Administrator access required."},403,headers);
-        const users=await env.DB.prepare(`SELECT id,email,display_name,role,priority,active,created_at,updated_at,last_login_at FROM admin_users WHERE deleted_at IS NULL ORDER BY active DESC, lower(display_name), lower(email)`).all();
+        const users=await env.DB.prepare(`SELECT id,email,display_name,role,CASE WHEN system_admin=1 THEN 0 ELSE priority END AS priority,active,created_at,updated_at,last_login_at FROM admin_users WHERE deleted_at IS NULL ORDER BY active DESC, lower(display_name), lower(email)`).all();
         const invites=await env.DB.prepare(`SELECT id,email,display_name,role,priority,created_by,created_at,expires_at,used_at,revoked_at FROM admin_invites ORDER BY created_at DESC LIMIT 100`).all();
         return json({ok:true,users:(users.results||[]).map(mapUserRow),invites:(invites.results||[]).map(i=>({...mapInviteRow(i),status:inviteState(i)}))},200,headers);
       }
@@ -134,9 +215,10 @@ export default {
         if(!admin) return json({ok:false,error:"Administrator access required."},403,headers);
         const body=await safeJson(request); if(!body) return json({ok:false,error:"Invalid JSON body."},400,headers);
         const email=normalizeEmail(body.email), displayName=String(body.displayName||"").trim(), priority=normalizePriority(body.priority), role=priority===3?"editor":"admin";
+        if(priority===0) return json({ok:false,error:"Appoint a System Administrator by promoting an active account."},400,headers);
         if(!email||!isEmail(email)) return json({ok:false,error:"Enter a valid email address."},400,headers);
         if(displayName.length<2||displayName.length>120) return json({ok:false,error:"Display name must be between 2 and 120 characters."},400,headers);
-        if(!priority) return json({ok:false,error:"Access level must be Primary Admin, Secondary Admin, or Editor."},400,headers);
+        if(priority===null) return json({ok:false,error:"Invalid access level."},400,headers);
         if(!canManagePriority(admin,priority)) return json({ok:false,error:"Secondary Admins cannot create Primary Admin accounts."},403,headers);
         const existing=await env.DB.prepare(`SELECT id,active FROM admin_users WHERE lower(email)=? LIMIT 1`).bind(email).first();
         if(existing) return json({ok:false,error:existing.active?"An active account already uses this email.":"A disabled account already uses this email. Reactivate that account instead of creating a new invitation."},409,headers);
@@ -164,7 +246,7 @@ export default {
         const inviteId=String(body.inviteId||"").trim();
         const invite=await env.DB.prepare(`SELECT id,email,priority,expires_at,used_at,revoked_at,token_plaintext FROM admin_invites WHERE id=? LIMIT 1`).bind(inviteId).first();
         if(!invite) return json({ok:false,error:"Invitation not found."},404,headers);
-        if(!canManagePriority(admin,Number(invite.priority)||3)) return json({ok:false,error:"Secondary Admins cannot view Primary Admin invitation links."},403,headers);
+        if(!canManagePriority(admin,(normalizePriority(invite.priority)??3))) return json({ok:false,error:"Secondary Admins cannot view Primary Admin invitation links."},403,headers);
         if(inviteState(invite)!=="pending") return json({ok:false,error:"Only active pending invitation links can be viewed."},409,headers);
         if(!invite.token_plaintext) return json({ok:false,error:"This invitation was created before saved-link recovery was enabled. Revoke it and create a new invitation if a replacement link is needed."},409,headers);
         const setupUrl=`https://www.tczk.org/admin/setup/?token=${encodeURIComponent(invite.token_plaintext)}`;
@@ -179,7 +261,7 @@ export default {
         const inviteId=String(body.inviteId||"").trim();
         const invite=await env.DB.prepare(`SELECT id,email,priority,used_at,revoked_at FROM admin_invites WHERE id=? LIMIT 1`).bind(inviteId).first();
         if(!invite) return json({ok:false,error:"Invitation not found."},404,headers);
-        if(!canManagePriority(admin,Number(invite.priority)||3)) return json({ok:false,error:"Secondary Admins cannot manage Primary Admin invitations."},403,headers);
+        if(!canManagePriority(admin,(normalizePriority(invite.priority)??3))) return json({ok:false,error:"Secondary Admins cannot manage Primary Admin invitations."},403,headers);
         if(invite.used_at) return json({ok:false,error:"Activated invitations cannot be revoked."},409,headers);
         if(!invite.revoked_at) await env.DB.prepare(`UPDATE admin_invites SET revoked_at=CURRENT_TIMESTAMP, token_plaintext=NULL WHERE id=?`).bind(inviteId).run();
         await writeAudit(env,admin.user_id,"invite_revoked","admin_invite",inviteId,{email:invite.email});
@@ -193,7 +275,7 @@ export default {
         const inviteId=String(body.inviteId||"").trim();
         const invite=await env.DB.prepare(`SELECT id,email,priority,expires_at,used_at,revoked_at FROM admin_invites WHERE id=? LIMIT 1`).bind(inviteId).first();
         if(!invite)return json({ok:false,error:"Invitation not found."},404,headers);
-        if(!canManagePriority(admin,Number(invite.priority)||3)) return json({ok:false,error:"Secondary Admins cannot manage Primary Admin invitations."},403,headers);
+        if(!canManagePriority(admin,(normalizePriority(invite.priority)??3))) return json({ok:false,error:"Secondary Admins cannot manage Primary Admin invitations."},403,headers);
         const state=inviteState(invite);
         if(!["revoked","expired"].includes(state))return json({ok:false,error:"Only revoked or expired invitations can be deleted."},409,headers);
         await env.DB.prepare(`DELETE FROM admin_invites WHERE id=?`).bind(inviteId).run();
@@ -207,19 +289,30 @@ export default {
         const body=await safeJson(request); if(!body) return json({ok:false,error:"Invalid JSON body."},400,headers);
         const userId=Number(body.userId);
         if(!Number.isInteger(userId)||userId<=0) return json({ok:false,error:"A valid user ID is required."},400,headers);
-        const target=await env.DB.prepare(`SELECT id,email,display_name,role,priority,active FROM admin_users WHERE id=? LIMIT 1`).bind(userId).first();
+        const target=await env.DB.prepare(`SELECT id,email,display_name,role,CASE WHEN system_admin=1 THEN 0 ELSE priority END AS priority,active FROM admin_users WHERE id=? AND deleted_at IS NULL LIMIT 1`).bind(userId).first();
         if(!target) return json({ok:false,error:"Account not found."},404,headers);
         const displayName=body.displayName===undefined?target.display_name:String(body.displayName||"").trim();
-        const priority=body.priority===undefined?(Number(target.priority)||3):normalizePriority(body.priority);
+        const priority=body.priority===undefined?((normalizePriority(target.priority)??3)):normalizePriority(body.priority);
         const role=priority===3?"editor":"admin";
         const active=body.active===undefined?Number(target.active):body.active?1:0;
         if(displayName.length<2||displayName.length>120) return json({ok:false,error:"Display name must be between 2 and 120 characters."},400,headers);
-        if(!priority) return json({ok:false,error:"Access level must be Primary Admin, Secondary Admin, or Editor."},400,headers);
-        if(!canManagePriority(admin,Number(target.priority)||3) || !canManagePriority(admin,priority)) return json({ok:false,error:"Secondary Admins cannot manage or assign Primary Admin access."},403,headers);
+        if(priority===null) return json({ok:false,error:"Invalid access level."},400,headers);
+        if(!canManagePriority(admin,(normalizePriority(target.priority)??3)) || !canManagePriority(admin,priority)) return json({ok:false,error:"You cannot manage this account or assign the requested access level."},403,headers);
 
+        const protectedChange = Number(target.priority)===0 || priority===0;
+        const email = body.email===undefined ? target.email : normalizeEmail(body.email);
+        if(body.email!==undefined && (Number(target.priority)!==0 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length>254)) {
+          return json({ok:false,error:"Provide a valid email for a protected account."},400,headers);
+        }
+        if(protectedChange){
+          if(Number(admin.user_id)===userId || !await reauthenticateSystemAdmin(env,admin,body.currentPassword)) {
+            return json({ok:false,error:"A different active System Administrator must confirm with their current password."},403,headers);
+          }
+          if(priority===0 && Number(target.priority)!==0 && (Number(target.active)!==1 || active!==1)) return json({ok:false,error:"Only active accounts can be promoted."},400,headers);
+        }
         const removingPrimary = Number(target.active)===1 && Number(target.priority)===1 && (active===0 || priority!==1);
-        if(removingPrimary){
-          const count=await env.DB.prepare(`SELECT COUNT(*) AS count FROM admin_users WHERE active=1 AND priority=1 AND id<>?`).bind(userId).first();
+        if(removingPrimary && priority!==0){
+          const count=await env.DB.prepare(`SELECT COUNT(*) AS count FROM admin_users WHERE active=1 AND system_admin=0 AND priority=1 AND deleted_at IS NULL AND id<>?`).bind(userId).first();
           if(Number(count?.count||0)<1) return json({ok:false,error:"You cannot disable or demote the last active Primary Admin account."},409,headers);
         }
 
@@ -229,10 +322,26 @@ export default {
           if(Number(count?.count||0)<1) return json({ok:false,error:"You cannot disable or demote the last active Admin account."},409,headers);
         }
 
-        await env.DB.prepare(`UPDATE admin_users SET display_name=?,role=?,priority=?,active=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(displayName,role,priority,active,userId).run();
-        if(active===0) await env.DB.prepare(`DELETE FROM admin_sessions WHERE user_id=?`).bind(userId).run();
-        await writeAudit(env,admin.user_id,"account_updated","admin_user",String(userId),{email:target.email,displayName,role,priority,active:Boolean(active)});
-        return json({ok:true,user:{id:userId,email:target.email,displayName,role,priority,active:Boolean(active)}},200,headers);
+        const update=env.DB.prepare(`UPDATE admin_users SET display_name=?,email=?,role=?,priority=CASE WHEN ?=0 THEN CASE WHEN priority=3 THEN 2 ELSE priority END ELSE ? END,system_admin=?,active=?,updated_at=CURRENT_TIMESTAMP
+          WHERE id=? AND (CASE WHEN system_admin=1 THEN 0 ELSE priority END)=? AND active=? AND email=? AND deleted_at IS NULL
+          AND (?=0 OR EXISTS (SELECT 1 FROM admin_users WHERE id=? AND system_admin=1 AND role='admin' AND active=1 AND deleted_at IS NULL))
+          AND (system_admin<>1 OR active<>1 OR (?=0 AND ?=1) OR EXISTS
+            (SELECT 1 FROM admin_users WHERE id<>? AND system_admin=1 AND active=1 AND role='admin' AND deleted_at IS NULL))`)
+          .bind(displayName,email,role,priority,priority,Number(priority===0),active,userId,target.priority,target.active,target.email,Number(protectedChange),admin.user_id,priority,active,userId);
+        try {
+          const [result]=await env.DB.batch([
+            update,
+            accountAudit(env,admin.user_id,"account_updated",userId,{email,previousEmail:target.email,previousPriority:Number(target.priority),displayName,role,priority,active:Boolean(active)}),
+            env.DB.prepare(`DELETE FROM admin_sessions WHERE user_id=? AND EXISTS
+              (SELECT 1 FROM admin_users WHERE id=? AND (active=0 OR (?=1 AND (CASE WHEN system_admin=1 THEN 0 ELSE priority END)=? AND email=?))) AND changes()=1`)
+              .bind(userId,userId,Number(protectedChange),priority,email)
+          ]);
+          if(result.meta.changes!==1) return json({ok:false,error:"Account state changed or this is the last active System Administrator."},409,headers);
+        } catch(error) {
+          if(String(error).includes("UNIQUE constraint failed")) return json({ok:false,error:"Email is already registered."},409,headers);
+          throw error;
+        }
+        return json({ok:true,user:{id:userId,email,displayName,role,priority,active:Boolean(active)}},200,headers);
       }
 
 
@@ -243,20 +352,42 @@ export default {
         const userId=Number(body.userId);
         if(!Number.isInteger(userId)||userId<=0) return json({ok:false,error:"A valid user ID is required."},400,headers);
         if(Number(admin.user_id)===userId) return json({ok:false,error:"You cannot permanently delete your own account."},409,headers);
-        const target=await env.DB.prepare(`SELECT id,email,display_name,role,priority,active FROM admin_users WHERE id=? LIMIT 1`).bind(userId).first();
+        const target=await env.DB.prepare(`SELECT id,email,display_name,role,CASE WHEN system_admin=1 THEN 0 ELSE priority END AS priority,active FROM admin_users WHERE id=? AND deleted_at IS NULL LIMIT 1`).bind(userId).first();
         if(!target) return json({ok:false,error:"Account not found."},404,headers);
         if(Number(target.active)===1) return json({ok:false,error:"Archive the account before permanently deleting it."},409,headers);
-        if(!canManagePriority(admin,Number(target.priority)||3)) return json({ok:false,error:"Secondary Admins cannot delete Primary Admin accounts."},403,headers);
+        if(!canManagePriority(admin,(normalizePriority(target.priority)??3))) return json({ok:false,error:"You cannot delete this account."},403,headers);
 
         // Preserve the numeric user row as a tombstone because historical content, gallery,
         // invitation, email, and audit records may still reference this user ID through foreign keys.
         // The original email is released immediately so the person can receive a brand-new invitation later.
-        await writeAudit(env,admin.user_id,"account_deleted","admin_user",String(userId),{email:target.email,displayName:target.display_name,role:target.role,priority:Number(target.priority)||3});
-        await env.DB.prepare(`DELETE FROM admin_sessions WHERE user_id=?`).bind(userId).run();
+        const protectedAccount=Number(target.priority)===0;
+        if(protectedAccount && !await reauthenticateSystemAdmin(env,admin,body.currentPassword)) {
+          return json({ok:false,error:"Confirm with your current System Administrator password."},403,headers);
+        }
         const deletedEmail=`deleted-${userId}-${crypto.randomUUID()}@deleted.invalid`;
         const deadPassword=`deleted:${crypto.randomUUID()}:${crypto.randomUUID()}`;
-        await env.DB.prepare(`UPDATE admin_users SET email=?,display_name='Deleted account',password_hash=?,active=0,deleted_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP WHERE id=? AND active=0`).bind(deletedEmail,deadPassword,userId).run();
+        const [result]=await env.DB.batch([
+          env.DB.prepare(`UPDATE admin_users SET email=?,display_name='Deleted account',password_hash=?,active=0,deleted_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP
+            WHERE id=? AND active=0 AND (CASE WHEN system_admin=1 THEN 0 ELSE priority END)=? AND email=? AND deleted_at IS NULL
+            AND (?=0 OR EXISTS (SELECT 1 FROM admin_users WHERE id=? AND system_admin=1 AND role='admin' AND active=1 AND deleted_at IS NULL))`)
+            .bind(deletedEmail,deadPassword,userId,target.priority,target.email,Number(protectedAccount),admin.user_id),
+          accountAudit(env,admin.user_id,"account_deleted",userId,{email:target.email,displayName:target.display_name,priority:Number(target.priority)}),
+          env.DB.prepare(`DELETE FROM admin_sessions WHERE user_id=? AND changes()=1`).bind(userId)
+        ]);
+        if(result.meta.changes!==1) return json({ok:false,error:"Account state changed."},409,headers);
         return json({ok:true,deleted:true,id:userId,email:target.email},200,headers);
+      }
+
+      if (url.pathname === "/api/admin/email-distribution") {
+        const admin=await requirePrimaryAdmin(request,env);
+        if(!admin) return json({ok:false,error:"P0 or P1 access required."},403,headers);
+        if(!env.EMAIL_ROUTER) return json({ok:false,error:"Email router is unavailable."},503,headers);
+        if(!["GET","PUT"].includes(request.method)) return json({ok:false,error:"Method not allowed."},405,headers);
+        const forwardedHeaders={Authorization:request.headers.get("Authorization"),"Content-Type":"application/json"};
+        const body=request.method==="PUT" ? await request.text() : undefined;
+        if(body?.length>32768) return json({ok:false,error:"Configuration is too large."},413,headers);
+        const result=await env.EMAIL_ROUTER.fetch("https://router.internal/admin/settings",{method:request.method,headers:forwardedHeaders,body});
+        return new Response(result.body,{status:result.status,headers:{...headers,"Cache-Control":"no-store"}});
       }
 
       if (url.pathname === "/api/admin/email/test" && request.method === "POST") {
@@ -568,195 +699,10 @@ export default {
       }
 
 
-      if (url.pathname === "/api/gallery/workflow/create" && request.method === "POST") {
-        const session=await requireSession(request,env);
-        if(!session) return json({ok:false,error:"Unauthorized."},401,headers);
-        const body=await safeJson(request); if(!body) return json({ok:false,error:"Invalid JSON body."},400,headers);
-        const images=Array.isArray(body.images)?body.images:[];
-        const sourceBatchId=String(body.sourceBatchId||"").trim(), processorVersion=String(body.processorVersion||"Gallery v3").trim(), sourceFileName=String(body.sourceFileName||"").trim();
-        if(!sourceBatchId||!images.length) return json({ok:false,error:"A batch ID and image records are required."},400,headers);
-        if(images.length>500) return json({ok:false,error:"A single approval batch is limited to 500 images."},400,headers);
-        const clean=[]; let activeCount=0,removedCount=0;
-        for(let index=0;index<images.length;index++){
-          const i=images[index]||{}, removed=Boolean(i.removed), digest=String(i.digest||"").trim().toLowerCase(), webFile=String(i.webFile||"").trim(), sourceId=String(i.sourceId||i.id||"").trim();
-          const year=i.year==null?null:Number(i.year), rotation=normalizeRotation(i.rotation);
-          if(!sourceId||!digest||!webFile||!/^[a-zA-Z0-9._-]+\.webp$/i.test(webFile)) return json({ok:false,error:`Invalid image record at position ${index+1}.`},400,headers);
-          if(!removed&&(!Number.isInteger(year)||year<1900||year>2099)) return json({ok:false,error:`${webFile} needs a valid year before submission.`},400,headers);
-          if(!removed){const dupe=await env.DB.prepare(`SELECT id FROM gallery_images WHERE lower(digest)=? LIMIT 1`).bind(digest).first();if(dupe)return json({ok:false,error:`${webFile} is already present in the live gallery.`},409,headers);activeCount++;}else removedCount++;
-          clean.push({sourceId,digest,originalName:String(i.originalName||webFile).slice(0,500),webFile,width:Number(i.width)||0,height:Number(i.height)||0,rotation,year,decade:year?`${Math.floor(year/10)*10}s`:String(i.decade||"").slice(0,20),alt:String(i.alt||i.originalName||webFile).slice(0,500),removed:removed?1:0,sortOrder:Number.isInteger(Number(i.sortOrder))?Number(i.sortOrder):index});
-        }
-        if(!activeCount) return json({ok:false,error:"At least one active image is required."},400,headers);
-        const id=crypto.randomUUID();
-        const statements=[env.DB.prepare(`INSERT INTO gallery_approval_batches (id,source_batch_id,processor_version,source_file_name,status,image_count,active_count,removed_count,submitted_by) VALUES (?,?,?,?, 'draft_uploading',?,?,?,?)`).bind(id,sourceBatchId,processorVersion,sourceFileName,clean.length,activeCount,removedCount,session.user_id)];
-        for(const i of clean)statements.push(env.DB.prepare(`INSERT INTO gallery_approval_images (approval_batch_id,source_id,digest,original_name,web_file,width,height,rotation,year,decade,alt,removed,sort_order) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`).bind(id,i.sourceId,i.digest,i.originalName,i.webFile,i.width,i.height,i.rotation,i.year,i.decade,i.alt,i.removed,i.sortOrder));
-        await env.DB.batch(statements);
-        await writeAudit(env,session.user_id,"gallery_submission_created","gallery_approval_batch",id,{sourceBatchId,activeCount,removedCount});
-        return json({ok:true,batch:{id,status:"draft_uploading",activeCount,removedCount}},201,headers);
-      }
-
-      if (url.pathname === "/api/gallery/workflow/upload" && request.method === "POST") {
-        const session=await requireSession(request,env); if(!session)return json({ok:false,error:"Unauthorized."},401,headers);
-        const batchId=String(url.searchParams.get("batchId")||""), imageId=String(url.searchParams.get("imageId")||""), variant=String(url.searchParams.get("variant")||"");
-        if(!batchId||!imageId||!["display","thumb"].includes(variant))return json({ok:false,error:"batchId, imageId, and a valid variant are required."},400,headers);
-        const batchRow=await env.DB.prepare(`SELECT id,status,submitted_by FROM gallery_approval_batches WHERE id=? LIMIT 1`).bind(batchId).first();
-        if(!batchRow)return json({ok:false,error:"Approval batch not found."},404,headers);
-        if(batchRow.status!=="draft_uploading")return json({ok:false,error:"This submission is no longer accepting files."},409,headers);
-        if(Number(batchRow.submitted_by)!==Number(session.user_id)&&session.role!=="admin")return json({ok:false,error:"You cannot upload files to another user's submission."},403,headers);
-        const img=await env.DB.prepare(`SELECT source_id,web_file,removed FROM gallery_approval_images WHERE approval_batch_id=? AND source_id=? LIMIT 1`).bind(batchId,imageId).first();
-        if(!img||img.removed)return json({ok:false,error:"Active image record not found."},404,headers);
-        const length=Number(request.headers.get("Content-Length")||0);if(length>20*1024*1024)return json({ok:false,error:"Individual WebP files are limited to 20 MB."},413,headers);
-        const bytes=await request.arrayBuffer();if(!bytes.byteLength||bytes.byteLength>20*1024*1024)return json({ok:false,error:"The uploaded WebP is empty or too large."},400,headers);
-        const folder=variant==="thumb"?"thumbs":"display", key=`staging/${batchId}/${folder}/${img.web_file}`;
-        await env.GALLERY.put(key,bytes,{httpMetadata:{contentType:"image/webp"},customMetadata:{approvalBatchId:batchId,sourceId:imageId,variant}});
-        return json({ok:true,key,size:bytes.byteLength},200,headers);
-      }
-
-      if (url.pathname === "/api/gallery/workflow/submit" && request.method === "POST") {
-        const session=await requireSession(request,env);if(!session)return json({ok:false,error:"Unauthorized."},401,headers);
-        const body=await safeJson(request);const batchId=String(body?.batchId||"");
-        const b=await env.DB.prepare(`SELECT * FROM gallery_approval_batches WHERE id=? LIMIT 1`).bind(batchId).first();if(!b)return json({ok:false,error:"Approval batch not found."},404,headers);
-        if(b.status!=="draft_uploading")return json({ok:false,error:"This batch cannot be submitted in its current state."},409,headers);
-        if(Number(b.submitted_by)!==Number(session.user_id)&&session.role!=="admin")return json({ok:false,error:"You cannot submit another user's batch."},403,headers);
-        const imgs=(await env.DB.prepare(`SELECT source_id,web_file,removed FROM gallery_approval_images WHERE approval_batch_id=? ORDER BY sort_order`).bind(batchId).all()).results||[];
-        for(const i of imgs.filter(x=>!x.removed)){for(const folder of ["display","thumbs"]){const obj=await env.GALLERY.head(`staging/${batchId}/${folder}/${i.web_file}`);if(!obj)return json({ok:false,error:`Staged ${folder}/${i.web_file} is missing.`},409,headers);}}
-        await env.DB.prepare(`UPDATE gallery_approval_batches SET status='submitted',submitted_at=CURRENT_TIMESTAMP WHERE id=?`).bind(batchId).run();
-        await writeAudit(env,session.user_id,"gallery_submitted","gallery_approval_batch",batchId,{activeCount:b.active_count});
-        await notifyAdminGroup(env,"approval_required",{
-          subject:"Approval required: Gallery upload",
-          heading:"Gallery upload awaiting approval",
-          bodyHtml:`<p><strong>${escapeHtml(session.display_name||session.email)}</strong> submitted a gallery batch with <strong>${Number(b.active_count)||0}</strong> active image(s).</p>${emailButton("Review Gallery Upload","https://www.tczk.org/admin/gallery/approvals/")}`,
-          text:`${session.display_name||session.email} submitted a gallery batch with ${Number(b.active_count)||0} active image(s). Review: https://www.tczk.org/admin/gallery/approvals/`,
-          entityType:"gallery_approval_batch",entityId:batchId,actorUserId:session.user_id
-        });
-        return json({ok:true,batch:{id:batchId,status:"submitted"}},200,headers);
-      }
-
-      if (url.pathname === "/api/gallery/workflow/cancel" && request.method === "POST") {
-        const session=await requireSession(request,env);if(!session)return json({ok:false,error:"Unauthorized."},401,headers);const body=await safeJson(request);const batchId=String(body?.batchId||"");
-        const b=await env.DB.prepare(`SELECT id,status,submitted_by FROM gallery_approval_batches WHERE id=? LIMIT 1`).bind(batchId).first();if(!b)return json({ok:true},200,headers);
-        if(Number(b.submitted_by)!==Number(session.user_id)&&session.role!=="admin")return json({ok:false,error:"Forbidden."},403,headers);
-        if(b.status==="published")return json({ok:false,error:"Published batches cannot be cancelled."},409,headers);
-        await env.DB.prepare(`UPDATE gallery_approval_batches SET status='cancelled' WHERE id=?`).bind(batchId).run();
-        await deleteStaging(env,batchId);return json({ok:true},200,headers);
-      }
-
-      if (url.pathname === "/api/gallery/approvals" && request.method === "GET") {
-        const admin=await requireAdmin(request,env);if(!admin)return json({ok:false,error:"Administrator access required."},403,headers);
-        const rows=(await env.DB.prepare(`SELECT b.*,u.email AS submitter_email,u.display_name AS submitter_name FROM gallery_approval_batches b LEFT JOIN admin_users u ON u.id=b.submitted_by WHERE b.status<>'cancelled' ORDER BY CASE b.status WHEN 'submitted' THEN 0 WHEN 'changes_requested' THEN 1 WHEN 'published' THEN 2 ELSE 3 END, COALESCE(b.submitted_at,b.created_at) DESC LIMIT 100`).all()).results||[];
-        return json({ok:true,batches:rows.map(mapApprovalBatch)},200,headers);
-      }
-
-      if (url.pathname === "/api/gallery/approval" && request.method === "GET") {
-        const admin=await requireAdmin(request,env);if(!admin)return json({ok:false,error:"Administrator access required."},403,headers);const id=String(url.searchParams.get("id")||"");
-        const b=await env.DB.prepare(`SELECT b.*,u.email AS submitter_email,u.display_name AS submitter_name FROM gallery_approval_batches b LEFT JOIN admin_users u ON u.id=b.submitted_by WHERE b.id=? LIMIT 1`).bind(id).first();if(!b)return json({ok:false,error:"Submission not found."},404,headers);
-        const imgs=(await env.DB.prepare(`SELECT source_id,digest,original_name,web_file,width,height,rotation,year,decade,alt,removed,sort_order FROM gallery_approval_images WHERE approval_batch_id=? ORDER BY sort_order`).bind(id).all()).results||[];
-        return json({ok:true,batch:{...mapApprovalBatch(b),images:imgs.map(mapApprovalImage)}},200,headers);
-      }
-
-      if (url.pathname === "/api/gallery/approval-image" && request.method === "GET") {
-        const admin=await requireAdmin(request,env);if(!admin)return json({ok:false,error:"Administrator access required."},403,headers);const batchId=String(url.searchParams.get("batchId")||""),imageId=String(url.searchParams.get("imageId")||""),variant=String(url.searchParams.get("variant")||"thumb");if(!["display","thumb"].includes(variant))return json({ok:false,error:"Invalid variant."},400,headers);
-        const img=await env.DB.prepare(`SELECT web_file,removed FROM gallery_approval_images WHERE approval_batch_id=? AND source_id=? LIMIT 1`).bind(batchId,imageId).first();if(!img||img.removed)return json({ok:false,error:"Image not found."},404,headers);const folder=variant==="thumb"?"thumbs":"display",obj=await env.GALLERY.get(`staging/${batchId}/${folder}/${img.web_file}`);if(!obj)return json({ok:false,error:"Staged image not found."},404,headers);
-        return new Response(obj.body,{status:200,headers:{...headers,"Content-Type":"image/webp","Cache-Control":"private, no-store"}});
-      }
-
-      if (url.pathname === "/api/gallery/approval/return" && request.method === "POST") {
-        const admin=await requireAdmin(request,env);if(!admin)return json({ok:false,error:"Administrator access required."},403,headers);const body=await safeJson(request),batchId=String(body?.batchId||""),note=String(body?.note||"").trim();if(note.length<3)return json({ok:false,error:"Add a short note describing the required changes."},400,headers);
-        const b=await env.DB.prepare(`SELECT id,status,submitted_by FROM gallery_approval_batches WHERE id=? LIMIT 1`).bind(batchId).first();if(!b)return json({ok:false,error:"Submission not found."},404,headers);if(b.status!=="submitted")return json({ok:false,error:"Only submitted batches can be returned."},409,headers);
-        await env.DB.prepare(`UPDATE gallery_approval_batches SET status='changes_requested',reviewed_by=?,reviewed_at=CURRENT_TIMESTAMP,review_note=? WHERE id=?`).bind(admin.user_id,note,batchId).run();
-        await writeAudit(env,admin.user_id,"gallery_changes_requested","gallery_approval_batch",batchId,{note});
-        await notifyUserById(env,b.submitted_by,{subject:"Changes requested: Gallery upload",heading:"Changes requested",bodyHtml:`<p>Your gallery upload was reviewed and needs changes before it can be published.</p><p><strong>Reviewer note:</strong></p><p>${escapeHtml(note)}</p>${emailButton("Open Gallery Uploads","https://www.tczk.org/admin/gallery/")}`,text:`Changes were requested for your gallery upload. Reviewer note: ${note} Open: https://www.tczk.org/admin/gallery/`,category:"submission_changes_requested",entityType:"gallery_approval_batch",entityId:batchId,actorUserId:admin.user_id});
-        return json({ok:true},200,headers);
-      }
-
-      if (url.pathname === "/api/gallery/approval/publish" && request.method === "POST") {
-        const admin=await requireAdmin(request,env);if(!admin)return json({ok:false,error:"Administrator access required."},403,headers);const body=await safeJson(request),batchId=String(body?.batchId||"");
-        const b=await env.DB.prepare(`SELECT * FROM gallery_approval_batches WHERE id=? LIMIT 1`).bind(batchId).first();if(!b)return json({ok:false,error:"Submission not found."},404,headers);if(b.status!=="submitted")return json({ok:false,error:"Only submitted batches can be published."},409,headers);
-        const imgs=(await env.DB.prepare(`SELECT * FROM gallery_approval_images WHERE approval_batch_id=? AND removed=0 ORDER BY sort_order`).bind(batchId).all()).results||[];if(!imgs.length)return json({ok:false,error:"This batch has no active images."},409,headers);
-        const finalKeys=[];
-        for(const i of imgs){const dupe=await env.DB.prepare(`SELECT id FROM gallery_images WHERE lower(digest)=lower(?) LIMIT 1`).bind(i.digest).first();if(dupe)return json({ok:false,error:`${i.web_file} became a duplicate after submission. Return the batch for changes.`},409,headers);for(const folder of ["display","thumbs"]){const finalKey=`${folder}/${i.web_file}`;if(await env.GALLERY.head(finalKey))return json({ok:false,error:`R2 already contains ${finalKey}; publication stopped to avoid overwriting an existing object.`},409,headers);if(!(await env.GALLERY.head(`staging/${batchId}/${folder}/${i.web_file}`)))return json({ok:false,error:`Staged ${folder}/${i.web_file} is missing.`},409,headers);}}
-        try{
-          for(const i of imgs){for(const folder of ["display","thumbs"]){const src=await env.GALLERY.get(`staging/${batchId}/${folder}/${i.web_file}`);const key=`${folder}/${i.web_file}`;await env.GALLERY.put(key,src.body,{httpMetadata:{contentType:"image/webp"}});finalKeys.push(key);}}
-          const now=new Date().toISOString(),r2Base="https://pub-05d60b8c7fd242b1a2d873d6fdce99be.r2.dev";
-          const stmts=[env.DB.prepare(`INSERT INTO gallery_batches (id,status,processor_version,image_count,published_count,duplicate_count,created_at,reviewed_at,published_at) VALUES (?,?,?,?,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`).bind(batchId,"published",b.processor_version||"Gallery v3",Number(b.image_count)||imgs.length,imgs.length,0)];
-          for(const i of imgs){const gid=`zk-${String(i.digest).slice(0,12)}`;stmts.push(env.DB.prepare(`INSERT INTO gallery_images (id,digest,original_name,web_file,batch_id,width,height,rotation,year,decade,alt,caption,event,source,hidden,legacy,thumb_url,display_url,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,0,0,?,?,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)`).bind(gid,i.digest,i.original_name,i.web_file,batchId,i.width||0,i.height||0,normalizeRotation(i.rotation),i.year,i.decade||"",i.alt||i.original_name,"","","",`${r2Base}/thumbs/${encodeURIComponent(i.web_file)}`,`${r2Base}/display/${encodeURIComponent(i.web_file)}`));}
-          stmts.push(env.DB.prepare(`UPDATE gallery_approval_batches SET status='published',reviewed_by=?,reviewed_at=CURRENT_TIMESTAMP,review_note=NULL,published_at=CURRENT_TIMESTAMP WHERE id=?`).bind(admin.user_id,batchId));
-          await env.DB.batch(stmts);
-        }catch(e){for(const key of finalKeys){try{await env.GALLERY.delete(key);}catch(_e){}}throw e;}
-        await deleteStaging(env,batchId);await writeAudit(env,admin.user_id,"gallery_published","gallery_approval_batch",batchId,{publishedCount:imgs.length});return json({ok:true,publishedCount:imgs.length,batchId},200,headers);
-      }
-
-
-      // Full Gallery Manager -------------------------------------------------
-      if (url.pathname === "/api/gallery/manage" && request.method === "GET") {
-        const session=await requireSession(request,env);if(!session)return json({ok:false,error:"Unauthorized."},401,headers);
-        const result=await env.DB.prepare(`SELECT id,digest,original_name,web_file,batch_id,width,height,rotation,year,decade,alt,caption,event,source,hidden,legacy,thumb_url,display_url,created_at,updated_at FROM gallery_images ORDER BY created_at DESC,id DESC`).all();
-        const imgs=(result.results||[]).map(mapManagedImage);
-        return json({ok:true,user:publicSessionUser(session),stats:galleryStats(imgs),images:imgs},200,headers);
-      }
-
-      if (url.pathname === "/api/gallery/manage/history" && request.method === "GET") {
-        const session=await requireSession(request,env);if(!session)return json({ok:false,error:"Unauthorized."},401,headers);
-        const id=String(url.searchParams.get("id")||"").trim();if(!id)return json({ok:false,error:"Image id is required."},400,headers);
-        const r=await env.DB.prepare(`SELECT a.id,a.action,a.details,a.created_at,u.email,u.display_name FROM audit_log a LEFT JOIN admin_users u ON u.id=a.user_id WHERE a.entity_type='gallery_image' AND a.entity_id=? ORDER BY a.created_at DESC LIMIT 100`).bind(id).all();
-        const history=(r.results||[]).map(x=>{let d={};try{d=JSON.parse(x.details||"{}")}catch{}return{id:x.id,action:x.action,actionLabel:galleryActionLabel(x.action),summary:galleryAuditSummary(x.action,d),createdAt:x.created_at,userEmail:x.email||"",userName:x.display_name||""};});
-        return json({ok:true,history},200,headers);
-      }
-
-      if (url.pathname === "/api/gallery/manage/update" && request.method === "POST") {
-        const session=await requireSession(request,env);if(!session)return json({ok:false,error:"Unauthorized."},401,headers);
-        if(session.role!=="admin")return json({ok:false,error:"Editors must submit published-image changes for approval."},403,headers);
-        const body=await safeJson(request);if(!body)return json({ok:false,error:"Invalid JSON body."},400,headers);
-        const id=String(body.id||"").trim();const current=await env.DB.prepare(`SELECT * FROM gallery_images WHERE id=? LIMIT 1`).bind(id).first();if(!current)return json({ok:false,error:"Gallery image not found."},404,headers);
-        const clean=cleanGalleryChanges(body.changes,current);if(clean.error)return json({ok:false,error:clean.error},400,headers);
-        await env.DB.prepare(`UPDATE gallery_images SET year=?,decade=?,alt=?,caption=?,event=?,source=?,hidden=?,rotation=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(clean.year,clean.decade,clean.alt,clean.caption,clean.event,clean.source,clean.hidden?1:0,clean.rotation,id).run();
-        const changed=galleryDiff(current,clean);await writeAudit(env,session.user_id,"gallery_image_updated","gallery_image",id,{changes:changed});
-        const updated=mapManagedImage(await env.DB.prepare(`SELECT * FROM gallery_images WHERE id=?`).bind(id).first());
-        const all=(await env.DB.prepare(`SELECT hidden,legacy,year FROM gallery_images`).all()).results||[];
-        return json({ok:true,image:updated,stats:{total:all.length,visible:all.filter(x=>!x.hidden).length,hidden:all.filter(x=>x.hidden).length,needsYear:all.filter(x=>x.year==null).length,legacy:all.filter(x=>x.legacy).length}},200,headers);
-      }
-
-      if (url.pathname === "/api/gallery/manage/bulk" && request.method === "POST") {
-        const admin=await requireAdmin(request,env);if(!admin)return json({ok:false,error:"Administrator access required."},403,headers);
-        const body=await safeJson(request);if(!body)return json({ok:false,error:"Invalid JSON body."},400,headers);
-        const ids=[...new Set((Array.isArray(body.ids)?body.ids:[]).map(x=>String(x||"").trim()).filter(Boolean))].slice(0,500);if(!ids.length)return json({ok:false,error:"Select at least one image."},400,headers);
-        const action=String(body.action||"");let year=null;if(action==="set_year"){year=Number(body.year);if(!Number.isInteger(year)||year<1900||year>2099)return json({ok:false,error:"Year must be between 1900 and 2099."},400,headers);}else if(!["hide","show"].includes(action))return json({ok:false,error:"Unsupported bulk action."},400,headers);
-        let count=0;for(const id of ids){const row=await env.DB.prepare(`SELECT id,year,decade,hidden FROM gallery_images WHERE id=?`).bind(id).first();if(!row)continue;if(action==="set_year"){const decade=`${Math.floor(year/10)*10}s`;await env.DB.prepare(`UPDATE gallery_images SET year=?,decade=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(year,decade,id).run();await writeAudit(env,admin.user_id,"gallery_year_changed","gallery_image",id,{from:row.year,to:year,decade});}else{const hidden=action==="hide"?1:0;await env.DB.prepare(`UPDATE gallery_images SET hidden=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(hidden,id).run();await writeAudit(env,admin.user_id,hidden?"gallery_image_hidden":"gallery_image_restored","gallery_image",id,{from:Boolean(row.hidden),to:Boolean(hidden)});}count++;}
-        const r=await env.DB.prepare(`SELECT * FROM gallery_images ORDER BY created_at DESC,id DESC`).all();const imgs=(r.results||[]).map(mapManagedImage);return json({ok:true,updatedCount:count,images:imgs,stats:galleryStats(imgs)},200,headers);
-      }
-
-      if (url.pathname === "/api/gallery/manage/change-request" && request.method === "POST") {
-        const session=await requireSession(request,env);if(!session)return json({ok:false,error:"Unauthorized."},401,headers);
-        const body=await safeJson(request);if(!body)return json({ok:false,error:"Invalid JSON body."},400,headers);
-        const imageId=String(body.imageId||"").trim();const current=await env.DB.prepare(`SELECT * FROM gallery_images WHERE id=? LIMIT 1`).bind(imageId).first();if(!current)return json({ok:false,error:"Gallery image not found."},404,headers);
-        const clean=cleanGalleryChanges(body.proposed,current);if(clean.error)return json({ok:false,error:clean.error},400,headers);
-        if(session.role==="admin")return json({ok:false,error:"Admins can save gallery changes directly from the Gallery Manager."},409,headers);
-        const existing=await env.DB.prepare(`SELECT id FROM gallery_change_requests WHERE image_id=? AND status='submitted' LIMIT 1`).bind(imageId).first();if(existing)return json({ok:false,error:"This image already has a pending change request."},409,headers);
-        const id=`gcr_${Date.now()}_${randomToken(6)}`;const snapshot=managedSnapshot(current);const proposed={year:clean.year,decade:clean.decade,alt:clean.alt,caption:clean.caption,event:clean.event,source:clean.source,hidden:clean.hidden,rotation:clean.rotation};
-        await env.DB.prepare(`INSERT INTO gallery_change_requests (id,image_id,status,current_json,proposed_json,request_note,requested_by) VALUES (?,?,'submitted',?,?,?,?)`).bind(id,imageId,JSON.stringify(snapshot),JSON.stringify(proposed),String(body.note||"").trim().slice(0,1000),session.user_id).run();
-        await writeAudit(env,session.user_id,"gallery_change_requested","gallery_image",imageId,{requestId:id,changes:galleryDiff(current,clean)});
-        await notifyAdminGroup(env,"approval_required",{
-          subject:"Approval required: Gallery change",
-          heading:"Gallery change awaiting approval",
-          bodyHtml:`<p><strong>${escapeHtml(session.display_name||session.email)}</strong> requested changes to <strong>${escapeHtml(current.original_name||imageId)}</strong>.</p>${emailButton("Review Gallery Changes","https://www.tczk.org/admin/gallery/changes/")}`,
-          text:`${session.display_name||session.email} requested gallery changes. Review: https://www.tczk.org/admin/gallery/changes/`,
-          entityType:"gallery_change_request",entityId:id,actorUserId:session.user_id
-        });
-        return json({ok:true,id,status:"submitted"},200,headers);
-      }
-
-      if (url.pathname === "/api/gallery/manage/change-requests" && request.method === "GET") {
-        const session=await requireSession(request,env);if(!session)return json({ok:false,error:"Unauthorized."},401,headers);
-        const where=session.role==="admin"?`c.status='submitted'`:`c.requested_by=? AND c.status IN ('submitted','changes_requested')`;
-        const stmt=env.DB.prepare(`SELECT c.*,u.email AS requester_email,u.display_name AS requester_name,g.original_name,g.thumb_url,g.display_url,g.legacy FROM gallery_change_requests c LEFT JOIN admin_users u ON u.id=c.requested_by LEFT JOIN gallery_images g ON g.id=c.image_id WHERE ${where} ORDER BY c.created_at DESC`);const r=session.role==="admin"?await stmt.all():await stmt.bind(session.user_id).all();
-        const requests=(r.results||[]).map(mapGalleryChangeRequest);return json({ok:true,requests},200,headers);
-      }
-
-      if (url.pathname === "/api/gallery/manage/change-request/review" && request.method === "POST") {
-        const admin=await requireAdmin(request,env);if(!admin)return json({ok:false,error:"Administrator access required."},403,headers);
-        const body=await safeJson(request);if(!body)return json({ok:false,error:"Invalid JSON body."},400,headers);const id=String(body.id||"").trim(),decision=String(body.decision||"").trim(),note=String(body.note||"").trim().slice(0,2000);if(!["approve","return","reject"].includes(decision))return json({ok:false,error:"Invalid review decision."},400,headers);if((decision==="return"||decision==="reject")&&!note)return json({ok:false,error:"A review note is required."},400,headers);
-        const req=await env.DB.prepare(`SELECT * FROM gallery_change_requests WHERE id=? LIMIT 1`).bind(id).first();if(!req)return json({ok:false,error:"Change request not found."},404,headers);if(req.status!=="submitted")return json({ok:false,error:"Only submitted requests can be reviewed."},409,headers);
-        if(decision==="approve"){const current=await env.DB.prepare(`SELECT * FROM gallery_images WHERE id=? LIMIT 1`).bind(req.image_id).first();if(!current)return json({ok:false,error:"Gallery image no longer exists."},404,headers);let proposed={};try{proposed=JSON.parse(req.proposed_json||"{}")}catch{return json({ok:false,error:"Stored change request is malformed."},500,headers)}const clean=cleanGalleryChanges(proposed,current);if(clean.error)return json({ok:false,error:clean.error},400,headers);await env.DB.prepare(`UPDATE gallery_images SET year=?,decade=?,alt=?,caption=?,event=?,source=?,hidden=?,rotation=?,updated_at=CURRENT_TIMESTAMP WHERE id=?`).bind(clean.year,clean.decade,clean.alt,clean.caption,clean.event,clean.source,clean.hidden?1:0,clean.rotation,req.image_id).run();await env.DB.prepare(`UPDATE gallery_change_requests SET status='approved',reviewed_by=?,reviewed_at=CURRENT_TIMESTAMP,review_note=? WHERE id=?`).bind(admin.user_id,note,id).run();await writeAudit(env,admin.user_id,"gallery_change_approved","gallery_image",req.image_id,{requestId:id,changes:galleryDiff(current,clean),note});await notifyUserById(env,req.requested_by,{subject:"Gallery change approved",heading:"Change approved",bodyHtml:`<p>Your requested changes to a gallery image were approved and applied.</p>${note?`<p><strong>Reviewer note:</strong></p><p>${escapeHtml(note)}</p>`:""}${emailButton("Open Gallery Manager","https://www.tczk.org/admin/gallery/manager/")}`,text:`Your requested gallery changes were approved and applied.${note?` Reviewer note: ${note}`:""}`,category:"submission_approved",entityType:"gallery_change_request",entityId:id,actorUserId:admin.user_id});return json({ok:true,status:"approved"},200,headers);}
-        const newStatus=decision==="return"?"changes_requested":"rejected";await env.DB.prepare(`UPDATE gallery_change_requests SET status=?,reviewed_by=?,reviewed_at=CURRENT_TIMESTAMP,review_note=? WHERE id=?`).bind(newStatus,admin.user_id,note,id).run();await writeAudit(env,admin.user_id,decision==="return"?"gallery_change_returned":"gallery_change_rejected","gallery_image",req.image_id,{requestId:id,note});await notifyUserById(env,req.requested_by,{subject:decision==="return"?"Changes requested: Gallery change":"Gallery change rejected",heading:decision==="return"?"Changes requested":"Change rejected",bodyHtml:`<p>${decision==="return"?"Your gallery change request needs revisions before it can be approved.":"Your gallery change request was rejected."}</p><p><strong>Reviewer note:</strong></p><p>${escapeHtml(note)}</p>${emailButton("Open Gallery Manager","https://www.tczk.org/admin/gallery/manager/")}`,text:`${decision==="return"?"Changes were requested for your gallery change request.":"Your gallery change request was rejected."} Reviewer note: ${note}`,category:decision==="return"?"submission_changes_requested":"submission_rejected",entityType:"gallery_change_request",entityId:id,actorUserId:admin.user_id});return json({ok:true,status:newStatus},200,headers);
+      // Retired gallery processor, v3/v4 workflow, and original management routes.
+      // Their read-only historical tables remain in production D1 until archived.
+      if(url.pathname.startsWith('/api/gallery/processor/')||url.pathname.startsWith('/api/gallery/workflow/')||url.pathname.startsWith('/api/gallery/approval')||url.pathname.startsWith('/api/gallery/approvals')||url.pathname.startsWith('/api/gallery/manage')){
+        return json({ok:false,error:'Legacy gallery API retired. Use the unified Gallery portal.'},410,headers);
       }
 
       if (url.pathname === "/api/gallery-data.js" && request.method === "GET") {
@@ -769,22 +715,6 @@ export default {
         const result=await env.DB.prepare(`SELECT id,digest,original_name,web_file,batch_id,width,height,rotation,year,decade,alt,caption,event,source,hidden,legacy,thumb_url,display_url,created_at,updated_at FROM gallery_images WHERE hidden=0 ORDER BY created_at ASC,id ASC`).all();
         return json({ok:true,count:result.results?.length??0,images:result.results??[]},200,headers);
       }
-
-      if (url.pathname === "/api/gallery/check-duplicates" && request.method === "POST") {
-        const session=await requireSession(request,env);
-        if(!session) return json({ok:false,error:"Unauthorized."},401,headers);
-        const body=await safeJson(request); if(!body) return json({ok:false,error:"Invalid JSON body."},400,headers);
-        const digests=Array.isArray(body?.digests)?body.digests:[];
-        if(!digests.length) return json({ok:true,checked:0,duplicates:[],newDigests:[]},200,headers);
-        const clean=[...new Set(digests.map(x=>String(x||"").trim().toLowerCase()).filter(Boolean))];
-        const duplicates=[],newDigests=[];
-        for(const digest of clean){
-          const row=await env.DB.prepare(`SELECT id,digest,web_file,year,decade,hidden,legacy,thumb_url,display_url FROM gallery_images WHERE lower(digest)=? LIMIT 1`).bind(digest).first();
-          if(row)duplicates.push(row);else newDigests.push(digest);
-        }
-        return json({ok:true,checked:clean.length,duplicateCount:duplicates.length,newCount:newDigests.length,duplicates,newDigests},200,headers);
-      }
-
 
       // Family tree ----------------------------------------------------------
       // D1 is the authoritative family-tree store. The existing public viewer
@@ -2098,16 +2028,12 @@ async function findSquareModifierListDetailed(env,listName){
 }
 
 function csvCell(v){v=Array.isArray(v)?v.join(" | "):String(v??"");return `"${v.replace(/"/g,'""')}"`;}
-function surveyDetailedCsv(b){const heads=["Response ID","Submitted At",...b.questions.map(q=>q.label)];const rows=b.responses.map(r=>[r.id,r.submittedAt,...b.questions.map(q=>r.answers?.[q.key]??"")]);return '\uFEFF'+[heads,...rows].map(row=>row.map(csvCell).join(',')).join('\r\n');}
-function surveySummaryCsv(b){const s=surveySummary(b.questions,b.responses),rows=[["Survey",b.survey.title],["Generated",new Date().toISOString()],["Total Responses",b.responses.length],[],["Question","Response","Count","Percent"]];for(const q of s){if(q.options.length)for(const o of q.options)rows.push([q.label,o.label,o.count,o.percent.toFixed(1)+"%"]);else rows.push([q.label,"Answered",q.answered,b.responses.length?(q.answered/b.responses.length*100).toFixed(1)+"%":"0.0%"]);}return '\uFEFF'+rows.map(row=>row.map(csvCell).join(',')).join('\r\n');}
-function surveySummaryPdfLines(b){const lines=[b.survey.title,"Survey Summary",`Generated: ${new Date().toLocaleString('en-US')}`,`Total responses: ${b.responses.length}`,""];for(const q of surveySummary(b.questions,b.responses)){lines.push(q.label);if(q.options.length)q.options.forEach(o=>lines.push(`  ${o.label}: ${o.count} (${o.percent.toFixed(1)}%)`));else lines.push(`  Answered: ${q.answered}`);lines.push("");}return lines;}
-function surveyDetailedPdfLines(b){const lines=[b.survey.title,"Detailed Responses",`Generated: ${new Date().toLocaleString('en-US')}`,`Total responses: ${b.responses.length}`,""];b.responses.forEach((r,i)=>{lines.push(`Response ${i+1} - ${r.respondentName||'Unnamed'} - ${r.submittedAt}`);for(const q of b.questions){const v=r.answers?.[q.key];lines.push(`${q.label}: ${Array.isArray(v)?v.join(' | '):(v||'—')}`);}lines.push("");});return lines;}
 function fileResponse(body,filename,contentType,baseHeaders={}){const h=new Headers(baseHeaders);h.set('Content-Type',contentType);h.set('Content-Disposition',`attachment; filename="${filename.replace(/"/g,'')}"`);h.set('Cache-Control','no-store');return new Response(body,{status:200,headers:h});}
 
 async function requireSession(request,env){
   const token=bearerToken(request);if(!token)return null;
   const tokenHash=await sha256Hex(token);
-  const row=await env.DB.prepare(`SELECT s.id AS session_id,s.user_id,s.expires_at,u.email,u.display_name,u.role,u.priority,u.active FROM admin_sessions s JOIN admin_users u ON u.id=s.user_id WHERE s.token_hash=? LIMIT 1`).bind(tokenHash).first();
+  const row=await env.DB.prepare(`SELECT s.id AS session_id,s.user_id,s.expires_at,u.email,u.display_name,u.role,CASE WHEN u.system_admin=1 THEN 0 ELSE u.priority END AS priority,u.active FROM admin_sessions s JOIN admin_users u ON u.id=s.user_id WHERE s.token_hash=? LIMIT 1`).bind(tokenHash).first();
   if(!row||!row.active)return null;
   const expires=Date.parse(row.expires_at);
   if(!Number.isFinite(expires)||expires<=Date.now()){await env.DB.prepare("DELETE FROM admin_sessions WHERE id=?").bind(row.session_id).run();return null;}
@@ -2122,15 +2048,26 @@ function historyDownloadFilename(name){return historySafeFilename(name).replace(
 function historyFormatBytes(n){n=Number(n)||0;if(n<1024)return`${n} B`;if(n<1048576)return`${(n/1024).toFixed(1)} KB`;return`${(n/1048576).toFixed(1)} MB`;}
 function historySubmissionJson(r){return{publicId:r.public_id,submitterName:r.submitter_name,submitterEmail:r.submitter_email,category:r.category,historicalDate:r.historical_date||"",description:r.description,status:r.status,reviewNotes:r.review_notes||"",reviewedBy:r.reviewed_by||"",reviewedAt:r.reviewed_at||null,actedUponAt:r.acted_upon_at||null,createdAt:r.created_at,updatedAt:r.updated_at,fileCount:Number(r.file_count)||0,totalBytes:Number(r.total_bytes)||0};}
 function historyFileJson(f){return{id:Number(f.id),originalFilename:f.original_filename,contentType:f.content_type||"application/octet-stream",sizeBytes:Number(f.size_bytes)||0,createdAt:f.created_at};}
-async function requireAdmin(request,env){const s=await requireSession(request,env);return s&&s.role==="admin"&&Number(s.priority)<=2?s:null;}
-async function requirePrimaryAdmin(request,env){const s=await requireSession(request,env);return s&&s.role==="admin"&&Number(s.priority)===1?s:null;}
-function normalizePriority(v){const n=Number(v);return [1,2,3].includes(n)?n:null;}
-function accessLabel(p){return p===1?"Primary Admin":p===2?"Secondary Admin":"Editor";}
-function canManagePriority(actor,targetPriority){const p=Number(actor?.priority)||3;return p===1 || (p===2 && Number(targetPriority)>=2);}
-function publicUser(u){return{id:u.id,email:u.email,displayName:u.display_name,role:u.role,priority:Number(u.priority)||3,accessLabel:accessLabel(Number(u.priority)||3)};}
-function publicSessionUser(s){return{id:s.user_id,email:s.email,displayName:s.display_name,role:s.role,priority:Number(s.priority)||3,accessLabel:accessLabel(Number(s.priority)||3)};}
-function mapUserRow(u){return{id:u.id,email:u.email,displayName:u.display_name,role:u.role,priority:Number(u.priority)||3,accessLabel:accessLabel(Number(u.priority)||3),active:Boolean(u.active),createdAt:u.created_at,updatedAt:u.updated_at,lastLoginAt:u.last_login_at};}
-function mapInviteRow(i){return{id:i.id,email:i.email,displayName:i.display_name,role:i.role,priority:Number(i.priority)||3,accessLabel:accessLabel(Number(i.priority)||3),createdBy:i.created_by,createdAt:i.created_at,expiresAt:i.expires_at,usedAt:i.used_at,revokedAt:i.revoked_at};}
+async function requireAdmin(request,env){const s=await requireSession(request,env);return s&&s.role==="admin"&&[0,1,2].includes(normalizePriority(s.priority))?s:null;}
+async function requirePrimaryAdmin(request,env){const s=await requireSession(request,env);return s&&s.role==="admin"&&[0,1].includes(normalizePriority(s.priority))?s:null;}
+function normalizePriority(v){if(typeof v!=="number" && !["0","1","2","3"].includes(v))return null;const n=Number(v);return [0,1,2,3].includes(n)?n:null;}
+async function reauthenticateSystemAdmin(env,actor,password){
+  if(actor.role!=="admin" || Number(actor.priority)!==0 || typeof password!=="string" || !password || password.length>1024) return false;
+  const user=await env.DB.prepare("SELECT password_hash FROM admin_users WHERE id=? AND system_admin=1 AND active=1 AND deleted_at IS NULL").bind(actor.user_id).first();
+  if(user?.password_hash && await verifyPassword(password,user.password_hash)) return true;
+  await sleep(300);
+  return false;
+}
+function accountAudit(env,actor,action,target,details){
+  return env.DB.prepare("INSERT INTO audit_log (user_id,action,entity_type,entity_id,details) SELECT ?,?,'admin_user',?,? WHERE changes()=1")
+    .bind(actor,action,String(target),JSON.stringify(details));
+}
+function accessLabel(p){return p===0?"System Administrator (P0)":p===1?"Primary Admin":p===2?"Secondary Admin":"Editor";}
+function canManagePriority(actor,targetPriority){const p=normalizePriority(actor?.priority);return p===0 || (p===1 && targetPriority>=1) || (p===2 && targetPriority>=2);}
+function publicUser(u){return{id:u.id,email:u.email,displayName:u.display_name,role:u.role,priority:(normalizePriority(u.priority)??3),accessLabel:accessLabel((normalizePriority(u.priority)??3))};}
+function publicSessionUser(s){return{id:s.user_id,email:s.email,displayName:s.display_name,role:s.role,priority:(normalizePriority(s.priority)??3),accessLabel:accessLabel((normalizePriority(s.priority)??3))};}
+function mapUserRow(u){return{id:u.id,email:u.email,displayName:u.display_name,role:u.role,priority:(normalizePriority(u.priority)??3),accessLabel:accessLabel((normalizePriority(u.priority)??3)),active:Boolean(u.active),createdAt:u.created_at,updatedAt:u.updated_at,lastLoginAt:u.last_login_at};}
+function mapInviteRow(i){return{id:i.id,email:i.email,displayName:i.display_name,role:i.role,priority:(normalizePriority(i.priority)??3),accessLabel:accessLabel((normalizePriority(i.priority)??3)),createdBy:i.created_by,createdAt:i.created_at,expiresAt:i.expires_at,usedAt:i.used_at,revokedAt:i.revoked_at};}
 async function getInviteByToken(env,token){const h=await sha256Hex(token);return env.DB.prepare(`SELECT id,email,display_name,role,priority,created_by,created_at,expires_at,used_at,revoked_at FROM admin_invites WHERE token_hash=? LIMIT 1`).bind(h).first();}
 function inviteState(i){if(i.used_at)return"used";if(i.revoked_at)return"revoked";const t=Date.parse(i.expires_at);if(!Number.isFinite(t)||t<=Date.now())return"expired";return"pending";}
 

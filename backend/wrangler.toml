@@ -1,0 +1,41 @@
+name = "tczk-admin-api"
+account_id = "89e385ad97fe868fb47738754fbba6a0"
+main = "worker.js"
+compatibility_date = "2026-09-10"
+keep_vars = true
+preview_urls = false
+
+[observability.logs]
+enabled = true
+
+[[d1_databases]]
+binding = "DB"
+database_name = "tczk-admin"
+database_id = "76213f70-1fcb-4694-99ca-fc75bf8d4082"
+
+[[r2_buckets]]
+binding = "GALLERY"
+bucket_name = "zk-gallery-test"
+
+[[r2_buckets]]
+binding = "HISTORY_UPLOADS"
+bucket_name = "tczk-history-submissions"
+
+[[r2_buckets]]
+binding = "Publications"
+bucket_name = "zk-publications"
+
+[[services]]
+binding = "GALLERY_API"
+service = "tczk-gallery-api"
+environment = "production"
+
+[[services]]
+binding = "NEWSLETTER_API"
+service = "tczk-newsletter-api"
+environment = "production"
+
+[[services]]
+binding = "EMAIL_ROUTER"
+service = "tczk-email-router-api"
+environment = "production"

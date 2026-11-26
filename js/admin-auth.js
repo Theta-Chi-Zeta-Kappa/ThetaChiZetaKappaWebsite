@@ -67,7 +67,7 @@
 
   function applyRoleUI(user){
     document.querySelectorAll('[data-admin-only]').forEach(el=>{el.hidden=user?.role!=='admin'||Number(user?.priority)>2;});
-    document.querySelectorAll('[data-primary-only]').forEach(el=>{el.hidden=Number(user?.priority)!==1;});
+    document.querySelectorAll('[data-primary-only]').forEach(el=>{el.hidden=!([0,1].includes(user?.priority));});
   }
 
   async function logout(){

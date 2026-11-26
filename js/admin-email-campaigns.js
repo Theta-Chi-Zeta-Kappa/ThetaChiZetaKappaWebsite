@@ -265,7 +265,7 @@
   document.addEventListener('DOMContentLoaded', () => run('Checking access…', async () => {
     const session = await auth.requireAuth();
     if (!session) return 'Sign in to continue.';
-    if (session.user?.role !== 'admin' || ![1, 2].includes(Number(session.user.priority))) {
+    if (session.user?.role !== 'admin' || ![0, 1, 2].includes(session.user.priority)) {
       return 'Email Campaigns requires P1 or P2 access.';
     }
     const result = await api(campaignsPath);

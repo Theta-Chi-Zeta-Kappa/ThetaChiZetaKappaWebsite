@@ -4,7 +4,7 @@ const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const state={user:null,families:[],sequences:[],members:[],requests:[],total:0,offset:0,limit:100,editing:null,request:null,bigTimer:null};
 const isAdmin=()=>state.user?.role==='admin'&&Number(state.user?.priority)<=2;
-const isPrimary=()=>Number(state.user?.priority)===1;
+const isPrimary=()=>[0,1].includes(state.user?.priority);
 const typeLabel=t=>({lineage:'Lineage',lost_to_time:'Lost to Time',honorary:'Honorary'}[t]||t||'—');
 const statusLabel=s=>String(s||'').replaceAll('_',' ').replace(/\b\w/g,c=>c.toUpperCase());
 function notice(message,kind=''){const el=$('ftNotice');if(!el)return;el.hidden=!message;el.textContent=message||'';el.className='account-notice'+(kind?` ${kind}`:'');if(message)el.scrollIntoView({block:'nearest'});}
