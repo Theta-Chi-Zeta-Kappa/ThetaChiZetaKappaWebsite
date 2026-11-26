@@ -49,6 +49,8 @@
     settings.senderCopy.checked = config.ccSender;
     settings.retention.value = config.retentionDays;
     settings.senders.value = config.allowedSenders.join("\n");
+    const domains = config.allowedDomains ?? [];
+    settings.domains.value = domains.join("\n");
     recipients.replaceChildren();
     config.recipients.forEach(addRecipient);
     showHistory("[data-router-status-list]", data.status, record =>
@@ -57,7 +59,8 @@
     showHistory("[data-router-audit-list]", data.audit, record =>
       new Date(record.created_at.replace(" ", "T") + "Z").toLocaleString() + " · Revision " + record.revision + " · Administrator " + record.actor_id
     );
-    testLink.hidden = !config.enabled || !config.allowedSenders.includes(auth.storedUser()?.email?.toLowerCase());
+    const email = auth.storedUser()?.email?.toLowerCase() ?? "";
+    testLink.hidden = !config.enabled || !(config.allowedSenders.includes(email) || domains.includes(email.split("@")[1]));
     testLink.href = "mailto:" + config.relay + "?subject=TCZK%20BOD%20relay%20test";
     form.hidden = false;
   }
@@ -89,6 +92,7 @@
           enabled:settings.enabled.checked,
           ccSender:settings.senderCopy.checked,
           allowedSenders:settings.senders.value.split(/\s+/).filter(Boolean),
+          allowedDomains:settings.domains.value.split(/\s+/).filter(Boolean),
           retentionDays:Number(settings.retention.value),
         });
       }
@@ -128,7 +132,7 @@
     const session = await auth.requireAuth();
     if (!session || ![0,1].includes(session.user.priority)) return;
     systemAdmin = session.user.priority === 0;
-    for (const field of [settings.enabled, settings.senderCopy, settings.retention, settings.senders]) {
+    for (const field of [settings.enabled, settings.senderCopy, settings.retention, settings.senders, settings.domains]) {
       field.disabled = !systemAdmin;
     }
     panel.hidden = false;
